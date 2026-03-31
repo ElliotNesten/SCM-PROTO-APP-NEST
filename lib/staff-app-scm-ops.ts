@@ -393,7 +393,8 @@ function formatWorkedTimeLabel(checkedIn: string | undefined, checkedOut: string
     return undefined;
   }
 
-  const start = new Date(checkedIn);
+  const checkedInValue = checkedIn;
+  const start = new Date(checkedInValue);
 
   if (Number.isNaN(start.getTime())) {
     return undefined;

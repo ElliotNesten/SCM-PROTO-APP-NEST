@@ -302,7 +302,7 @@ export function ScmStaffProfileEditor({
   }
 
   return (
-    <>
+    <div className="staff-profile-editor">
       <PageHeader
         title={profile.displayName}
         subtitle={getScopeSubtitle(profile)}
@@ -649,6 +649,6 @@ export function ScmStaffProfileEditor({
           </div>
         </div>
       ) : null}
-    </>
+    </div>
   );
 }

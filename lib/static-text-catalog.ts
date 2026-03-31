@@ -76,6 +76,10 @@ function shouldIncludeStringLiteral(node: ts.StringLiteralLike) {
 
   while (currentAttributeOwner) {
     if (ts.isJsxAttribute(currentAttributeOwner)) {
+      if (!ts.isIdentifier(currentAttributeOwner.name)) {
+        return false;
+      }
+
       const attributeName = currentAttributeOwner.name.text;
 
       if (excludedJsxAttributeNames.has(attributeName)) {

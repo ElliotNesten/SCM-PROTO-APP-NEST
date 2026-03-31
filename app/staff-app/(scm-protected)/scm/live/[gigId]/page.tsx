@@ -2,7 +2,10 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { formatStaffAppDate } from "@/lib/staff-app-data";
+import {
+  formatStaffAppDate,
+  formatStaffAppTimestamp,
+} from "@/lib/staff-app-data";
 import {
   getStaffAppScmGigConversationThreads,
   getStaffAppScmGigWorkspace,

@@ -1,0 +1,20 @@
+[
+  {
+    "token": "afc4f8cb-5cf1-4069-9c54-47b632468566",
+    "subjectType": "scmStaff",
+    "scmStaffProfileId": "office-1",
+    "createdAt": "2026-03-30T19:27:58.836Z"
+  },
+  {
+    "token": "e8033410-ee51-4e35-8ab5-74e09fa8359a",
+    "subjectType": "staff",
+    "accountId": "staff-app-staff-9",
+    "createdAt": "2026-03-31T13:28:50.951Z"
+  },
+  {
+    "token": "6c61d3bb-f4e9-4ec3-a32e-1066331740fb",
+    "subjectType": "scmStaff",
+    "scmStaffProfileId": "office-1",
+    "createdAt": "2026-03-31T13:40:39.819Z"
+  }
+]

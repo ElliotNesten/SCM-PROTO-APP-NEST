@@ -1,0 +1,1019 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>SCM App Architecture Report</title>
+    <style>
+      :root { color-scheme: light; --ink: #172033; --muted: #5e687e; --line: #d5dce8; --soft: #eef3f9; --brand: #0f5d73; --brand-2: #e3f1f4; --paper: #ffffff; }
+      @page { size: A4; margin: 12mm; }
+      * { box-sizing: border-box; }
+      body { margin: 0; font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif; color: var(--ink); background: linear-gradient(180deg, #f7fbfd 0%, #ffffff 16%); font-size: 11px; line-height: 1.45; }
+      code { font-family: Consolas, "Courier New", monospace; font-size: 0.94em; }
+      .page { padding: 10px 0 24px; }
+      .hero { border: 1px solid var(--line); background: radial-gradient(circle at top right, rgba(15, 93, 115, 0.12), transparent 32%), linear-gradient(135deg, rgba(227, 241, 244, 0.75), rgba(255, 255, 255, 0.98)); border-radius: 18px; padding: 22px 24px; margin-bottom: 18px; }
+      .eyebrow { margin: 0 0 8px; color: var(--brand); font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+      h1 { margin: 0 0 8px; font-size: 28px; line-height: 1.05; }
+      h2 { margin: 0 0 10px; font-size: 18px; }
+      h3 { margin: 0 0 8px; font-size: 14px; }
+      p { margin: 0 0 10px; }
+      .meta { display: flex; gap: 16px; flex-wrap: wrap; color: var(--muted); }
+      .stats-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-bottom: 18px; }
+      .stat-card { border: 1px solid var(--line); background: var(--paper); border-radius: 14px; padding: 14px 12px; }
+      .stat-value { font-size: 22px; font-weight: 700; color: var(--brand); }
+      .stat-label { margin-top: 4px; color: var(--muted); }
+      .report-section { margin-bottom: 18px; }
+      .callout { border-left: 4px solid var(--brand); background: var(--soft); padding: 12px 14px; border-radius: 0 14px 14px 0; }
+      .layer-strip { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-top: 12px; }
+      .layer-box { border: 1px solid var(--line); border-radius: 14px; padding: 12px; background: var(--paper); }
+      .layer-box strong { display: block; margin-bottom: 4px; color: var(--brand); }
+      .domain-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+      .domain-card { border: 1px solid var(--line); border-radius: 14px; background: var(--paper); padding: 14px; }
+      .compact-list { margin: 8px 0 0; padding-left: 18px; }
+      .compact-list li { margin-bottom: 4px; }
+      .table-wrap { overflow: hidden; border: 1px solid var(--line); border-radius: 14px; background: var(--paper); }
+      table { width: 100%; border-collapse: collapse; }
+      th, td { border-bottom: 1px solid var(--line); vertical-align: top; text-align: left; padding: 8px 9px; }
+      th { background: #f5f8fc; font-size: 10px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); }
+      tr:last-child td { border-bottom: none; }
+      .badge { display: inline-block; margin: 0 4px 4px 0; padding: 3px 7px; border-radius: 999px; background: var(--brand-2); color: var(--brand); font-size: 10px; word-break: break-word; }
+      .muted, .empty { color: var(--muted); }
+      .findings { margin: 0; padding-left: 18px; }
+      .findings li { margin-bottom: 6px; }
+      .footer-note { margin-top: 8px; color: var(--muted); font-size: 10px; }
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <section class="hero">
+        <p class="eyebrow">SCM Platform Prototype</p>
+        <h1>Internal Connections And App Structure</h1>
+        <p>This report inventories the current workspace, maps the major module connections, and summarizes how routes, components, APIs, stores, and generated documents work together.</p>
+        <div class="meta">
+          <span><strong>Generated:</strong> 30 Mar 2026, 20:04</span>
+          <span><strong>Workspace:</strong> C:\Users\Anton\OneDrive\Desktop\SCM PLATFORM PROTOTYP</span>
+        </div>
+      </section>
+      <section class="report-section">
+        <h2>Executive Summary</h2>
+        <div class="callout">
+          <ul class="findings"><li>This workspace is a single Next.js App Router application that contains two product surfaces: an SCM admin platform and a standalone mobile staff app.</li><li>Persistence is file-backed. Business data, sessions, templates, and settings are stored under `data/` and wrapped by service-style modules in `lib/`.</li><li>The most connected layer is `lib/`, which acts as the boundary between routes/components and JSON stores, PDFs, attachment folders, and access-control logic.</li><li>The gig domain is the central integration point. Gigs connect to shifts, time reports, closeout, files, temporary managers, search indexing, and staff-app visibility windows.</li><li>System settings drive downstream behavior. Updated policy/template/SCM-info stores are read again by API routes, PDF builders, and staff-app guide surfaces.</li></ul>
+        </div>
+      </section>
+      <section class="report-section"><h2>At A Glance</h2><div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-value">179</div>
+          <div class="stat-label">Source files analysed</div>
+        </div>
+      
+        <div class="stat-card">
+          <div class="stat-value">15</div>
+          <div class="stat-label">Platform pages</div>
+        </div>
+      
+        <div class="stat-card">
+          <div class="stat-value">28</div>
+          <div class="stat-label">Staff-app pages</div>
+        </div>
+      
+        <div class="stat-card">
+          <div class="stat-value">24</div>
+          <div class="stat-label">API routes</div>
+        </div>
+      
+        <div class="stat-card">
+          <div class="stat-value">5</div>
+          <div class="stat-label">Server action files</div>
+        </div>
+      
+        <div class="stat-card">
+          <div class="stat-value">42</div>
+          <div class="stat-label">Reusable components</div>
+        </div>
+      
+        <div class="stat-card">
+          <div class="stat-value">31</div>
+          <div class="stat-label">Service/store libs</div>
+        </div>
+      
+        <div class="stat-card">
+          <div class="stat-value">17</div>
+          <div class="stat-label">JSON-backed data stores</div>
+        </div>
+      </div></section>
+      <section class="report-section">
+        <h2>Layer Model</h2>
+        <div class="layer-strip">
+          <div class="layer-box"><strong>Route Surface</strong><span>App Router pages, layouts, route handlers, and server actions in <code>app/</code>.</span></div>
+          <div class="layer-box"><strong>Reusable UI</strong><span>Shared platform and staff-app components in <code>components/</code>.</span></div>
+          <div class="layer-box"><strong>Business Services</strong><span>Session, policy, storage, access, and domain helpers in <code>lib/</code>.</span></div>
+          <div class="layer-box"><strong>Persistence + Assets</strong><span>JSON stores in <code>data/</code>, attachment folders, public files, and on-demand PDF buffers.</span></div>
+        </div>
+      </section>
+      <section class="report-section"><h2>Domain Connections</h2><div class="domain-grid">
+        <section class="domain-card">
+          <h3>Authentication And Session Control</h3>
+          <p>The platform and the staff app both use file-backed session stores. Platform auth can also elevate approved staff accounts into temporary gig-manager sessions when linked gig access exists.</p>
+          <ul class="compact-list"><li><code>app/auth-actions.ts</code></li><li><code>app/login/page.tsx</code></li><li><code>app/staff-app/actions.ts</code></li><li><code>app/staff-app/login/page.tsx</code></li><li><code>lib/auth-session.ts</code></li><li><code>lib/staff-app-session.ts</code></li><li><code>lib/scm-staff-store.ts</code></li><li><code>lib/staff-app-store.ts</code></li><li><code>lib/password-utils.ts</code></li><li><code>data/auth-sessions.json</code></li><li><code>data/staff-app-sessions.json</code></li><li><code>data/scm-staff-store.json</code></li><li><code>data/staff-app-account-store.json</code></li></ul>
+        </section>
+      
+        <section class="domain-card">
+          <h3>Gig And Shift Operations</h3>
+          <p>Gigs are the central operational entity. Gig routes fan out into overview editing, file management, shift planning, report documents, closeout, and temporary manager sharing. Shift state automatically syncs against gig creation and teardown.</p>
+          <ul class="compact-list"><li><code>app/(platform)/gigs/page.tsx</code></li><li><code>app/(platform)/gigs/new/page.tsx</code></li><li><code>app/(platform)/gigs/new/actions.ts</code></li><li><code>app/(platform)/gigs/[gigId]/page.tsx</code></li><li><code>app/(platform)/gigs/[gigId]/shifts/[shiftId]/page.tsx</code></li><li><code>components/gig-overview-editor.tsx</code></li><li><code>components/gig-files-manager.tsx</code></li><li><code>components/gig-shifts-panel.tsx</code></li><li><code>components/gig-report-documents.tsx</code></li><li><code>components/gig-report-closeout-panel.tsx</code></li><li><code>lib/gig-store.ts</code></li><li><code>lib/shift-store.ts</code></li><li><code>lib/gig-time-report-store.ts</code></li><li><code>lib/gig-closeout.ts</code></li><li><code>lib/gig-file-storage.ts</code></li><li><code>lib/shift-communication-store.ts</code></li><li><code>data/gig-store.json</code></li><li><code>data/shift-store.json</code></li><li><code>data/shift-communication-store.json</code></li><li><code>data/gig-file-attachments</code></li></ul>
+        </section>
+      
+        <section class="domain-card">
+          <h3>People, Profiles, And SCM Staff Administration</h3>
+          <p>The admin platform keeps two distinct people models: operational staff profiles in the People directory and internal SCM platform users in the SCM Staff area. Access control, search visibility, and scope rules are layered on top of those two stores.</p>
+          <ul class="compact-list"><li><code>app/(platform)/people/page.tsx</code></li><li><code>app/(platform)/people/new/page.tsx</code></li><li><code>app/(platform)/people/new/actions.ts</code></li><li><code>app/(platform)/people/[personId]/page.tsx</code></li><li><code>app/(platform)/profile/page.tsx</code></li><li><code>app/(platform)/scm-staff/page.tsx</code></li><li><code>app/(platform)/scm-staff/new/page.tsx</code></li><li><code>app/(platform)/scm-staff/new/actions.ts</code></li><li><code>app/(platform)/scm-staff/[personId]/page.tsx</code></li><li><code>components/staff-profile-editor.tsx</code></li><li><code>components/scm-staff-profile-editor.tsx</code></li><li><code>components/staff-documents-panel.tsx</code></li><li><code>components/scm-role-permission-guide.tsx</code></li><li><code>lib/staff-store.ts</code></li><li><code>lib/staff-document-store.ts</code></li><li><code>lib/scm-staff-store.ts</code></li><li><code>lib/platform-access.ts</code></li><li><code>types/scm-rbac.ts</code></li><li><code>types/staff-role.ts</code></li><li><code>data/staff-store.json</code></li><li><code>data/staff-document-store.json</code></li><li><code>data/scm-staff-store.json</code></li><li><code>data/old-staff-documents.json</code></li></ul>
+        </section>
+      
+        <section class="domain-card">
+          <h3>Staff App Experience</h3>
+          <p>The standalone mobile staff app is a second product surface inside the same Next.js project. It pulls from shared gig and staff data, then layers its own account, attendance, application, and guide stores on top.</p>
+          <ul class="compact-list"><li><code>app/staff-app/(protected)/layout.tsx</code></li><li><code>app/staff-app/(protected)/home/page.tsx</code></li><li><code>app/staff-app/(protected)/gigs/page.tsx</code></li><li><code>app/staff-app/(protected)/schedule/page.tsx</code></li><li><code>app/staff-app/(protected)/documents/page.tsx</code></li><li><code>app/staff-app/(protected)/messages/page.tsx</code></li><li><code>app/staff-app/(protected)/profile/page.tsx</code></li><li><code>components/staff-app/mobile-shell.tsx</code></li><li><code>components/staff-app/gig-flow.tsx</code></li><li><code>components/staff-app/documents-browser.tsx</code></li><li><code>components/staff-app/colleague-directory.tsx</code></li><li><code>lib/staff-app-data.ts</code></li><li><code>lib/staff-app-store.ts</code></li><li><code>lib/staff-app-session.ts</code></li><li><code>lib/staff-app-attendance-store.ts</code></li><li><code>lib/staff-app-gig-application-store.ts</code></li><li><code>lib/staff-app-guides.ts</code></li><li><code>data/staff-app-account-store.json</code></li><li><code>data/staff-app-sessions.json</code></li><li><code>data/staff-app-attendance-store.json</code></li><li><code>data/staff-app-gig-application-store.json</code></li></ul>
+        </section>
+      
+        <section class="domain-card">
+          <h3>System Settings, Search, And PDF Generation</h3>
+          <p>Search, policy content, SCM info, and generated PDFs are all configurable from within the app. The system-settings area updates JSON-backed templates that are then consumed by API routes and PDF builders.</p>
+          <ul class="compact-list"><li><code>app/(platform)/system-settings/page.tsx</code></li><li><code>components/global-search.tsx</code></li><li><code>components/system-settings-policy-uploader.tsx</code></li><li><code>components/system-settings-scm-info-editor.tsx</code></li><li><code>components/system-settings-template-editor.tsx</code></li><li><code>app/api/search/route.ts</code></li><li><code>app/api/staff-app/policy-pdf/route.ts</code></li><li><code>app/api/system-settings/policy/route.ts</code></li><li><code>app/api/system-settings/scm-info/route.ts</code></li><li><code>app/api/system-settings/scm-info-pdfs/route.ts</code></li><li><code>app/api/system-settings/templates/route.ts</code></li><li><code>lib/global-search.ts</code></li><li><code>lib/system-policy-store.ts</code></li><li><code>lib/system-scm-info-store.ts</code></li><li><code>lib/system-scm-info-pdf-store.ts</code></li><li><code>lib/system-template-store.ts</code></li><li><code>lib/staff-document-pdf.ts</code></li><li><code>lib/staff-app-policy-pdf.ts</code></li><li><code>data/system-policy-store.json</code></li><li><code>data/system-scm-info-store.json</code></li><li><code>data/system-scm-info-pdf-store.json</code></li><li><code>data/system-template-store.json</code></li></ul>
+        </section>
+      </div></section>
+      
+    <section class="report-section">
+      <h2>Platform Route Inventory</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Route</th>
+              <th>File</th>
+              <th>Direct UI</th>
+              <th>Direct Services / Actions</th>
+              <th>Transitive Stores</th>
+              <th>API Usage</th>
+            </tr>
+          </thead>
+          <tbody>
+            
+                  <tr>
+                    <td><code>/</code></td>
+                    <td><code>app/page.tsx</code></td>
+                    <td><span class="muted">None</span></td>
+                    <td><span class="badge">lib/auth-session.ts</span></td>
+                    <td><span class="badge">data/auth-sessions.json</span><span class="badge">data/gig-store.json</span><span class="badge">data/old-staff-documents.json</span><span class="badge">data/scm-staff-store.json</span><span class="badge">data/staff-document-store.json</span><span class="badge">data/staff-store.json</span><span class="badge">data/system-template-store.json</span></td>
+                    <td><span class="muted">None</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>/dashboard</code></td>
+                    <td><code>app/(platform)/dashboard/page.tsx</code></td>
+                    <td><span class="muted">None</span></td>
+                    <td><span class="badge">lib/auth-session.ts</span><span class="badge">lib/gig-store.ts</span><span class="badge">lib/platform-access.ts</span></td>
+                    <td><span class="badge">data/auth-sessions.json</span><span class="badge">data/gig-store.json</span><span class="badge">data/old-staff-documents.json</span><span class="badge">data/scm-staff-store.json</span><span class="badge">data/staff-document-store.json</span><span class="badge">data/staff-store.json</span><span class="badge">data/system-template-store.json</span></td>
+                    <td><span class="muted">None</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>/gigs</code></td>
+                    <td><code>app/(platform)/gigs/page.tsx</code></td>
+                    <td><span class="badge">components/gig-register-client.tsx</span></td>
+                    <td><span class="badge">lib/auth-session.ts</span><span class="badge">lib/gig-store.ts</span><span class="badge">lib/platform-access.ts</span></td>
+                    <td><span class="badge">data/auth-sessions.json</span><span class="badge">data/gig-store.json</span><span class="badge">data/old-staff-documents.json</span><span class="badge">data/response.json</span><span class="badge">data/scm-staff-store.json</span><span class="badge">data/staff-document-store.json</span><span class="badge">data/staff-store.json</span><span class="badge">data/system-template-store.json</span></td>
+                    <td><span class="badge">/api/gigs/</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>/gigs/[gigId]</code></td>
+                    <td><code>app/(platform)/gigs/[gigId]/page.tsx</code></td>
+                    <td><span class="badge">components/detail-tabs.tsx</span><span class="badge">components/gig-delete-action.tsx</span><span class="badge">components/gig-files-manager.tsx</span><span class="badge">components/gig-image-uploader.tsx</span><span class="badge">components/gig-overview-editor.tsx</span><span class="badge">components/gig-report-closeout-panel.tsx</span><span class="badge">components/gig-report-documents.tsx</span><span class="badge">components/gig-shifts-panel.tsx</span><span class="badge">components/gig-time-report-panel.tsx</span><span class="badge">components/page-header.tsx</span></td>
+                    <td><span class="badge">lib/auth-session.ts</span><span class="badge">lib/gig-archive.ts</span><span class="badge">lib/gig-closeout.ts</span><span class="badge">lib/gig-store.ts</span><span class="badge">lib/gig-time-report-store.ts</span><span class="badge">lib/platform-access.ts</span><span class="badge">lib/shift-communication-store.ts</span><span class="badge">lib/shift-store.ts</span><span class="badge">lib/staff-store.ts</span></td>
+                    <td><span class="badge">data/auth-sessions.json</span><span class="badge">data/gig-file-attachments</span><span class="badge">data/gig-store.json</span><span class="badge">data/old-staff-documents.json</span><span class="badge">data/response.json</span><span class="badge">data/scm-staff-store.json</span><span class="badge">data/shift-communication-store.json</span><span class="badge">data/shift-store.json</span><span class="badge">data/staff-app-account-store.json</span><span class="badge">data/staff-app-attendance-store.json</span><span class="badge">data/staff-document-store.json</span><span class="badge">data/staff-store.json</span><span class="badge">data/system-template-store.json</span></td>
+                    <td><span class="badge">/api/gigs/</span><span class="badge">/api/staff/</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>/gigs/[gigId]/shifts/[shiftId]</code></td>
+                    <td><code>app/(platform)/gigs/[gigId]/shifts/[shiftId]/page.tsx</code></td>
+                    <td><span class="badge">components/detail-tabs.tsx</span><span class="badge">components/page-header.tsx</span><span class="badge">components/shift-overview-editor.tsx</span></td>
+                    <td><span class="badge">lib/auth-session.ts</span><span class="badge">lib/gig-store.ts</span><span class="badge">lib/platform-access.ts</span><span class="badge">lib/shift-store.ts</span><span class="badge">lib/staff-store.ts</span></td>
+                    <td><span class="badge">data/auth-sessions.json</span><span class="badge">data/gig-store.json</span><span class="badge">data/old-staff-documents.json</span><span class="badge">data/response.json</span><span class="badge">data/scm-staff-store.json</span><span class="badge">data/shift-store.json</span><span class="badge">data/staff-document-store.json</span><span class="badge">data/staff-store.json</span><span class="badge">data/system-template-store.json</span></td>
+                    <td><span class="badge">/api/gigs/</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>/gigs/new</code></td>
+                    <td><code>app/(platform)/gigs/new/page.tsx</code></td>
+                    <td><span class="badge">components/equipment-section.tsx</span><span class="badge">components/gig-document-boxes.tsx</span><span class="badge">components/notes-planning-section.tsx</span><span class="badge">components/page-header.tsx</span></td>
+                    <td><span class="badge">lib/auth-session.ts</span><span class="badge">lib/gig-store.ts</span><span class="badge">lib/platform-access.ts</span><span class="badge">lib/scandinavian-countries.ts</span><span class="badge">app/(platform)/gigs/new/actions.ts</span></td>
+                    <td><span class="badge">data/auth-sessions.json</span><span class="badge">data/gig-file-attachments</span><span class="badge">data/gig-store.json</span><span class="badge">data/old-staff-documents.json</span><span class="badge">data/response.json</span><span class="badge">data/scm-staff-store.json</span><span class="badge">data/staff-document-store.json</span><span class="badge">data/staff-store.json</span><span class="badge">data/system-template-store.json</span></td>
+                    <td><span class="badge">/api/gigs/</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>/login</code></td>
+                    <td><code>app/login/page.tsx</code></td>
+                    <td><span class="badge">components/login-password-field.tsx</span></td>
+                    <td><span class="badge">lib/auth-session.ts</span><span class="badge">lib/brand-store.ts</span><span class="badge">app/auth-actions.ts</span></td>
+                    <td><span class="badge">data/auth-sessions.json</span><span class="badge">data/brand-store.json</span><span class="badge">data/gig-store.json</span><span class="badge">data/old-staff-documents.json</span><span class="badge">data/scm-staff-store.json</span><span class="badge">data/staff-app-account-store.json</span><span class="badge">data/staff-document-store.json</span><span class="badge">data/staff-store.json</span><span class="badge">data/system-template-store.json</span></td>
+                    <td><span class="muted">None</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>/people</code></td>
+                    <td><code>app/(platform)/people/page.tsx</code></td>
+                    <td><span class="badge">components/page-header.tsx</span><span class="badge">components/staff-region-edit-filter.tsx</span><span class="badge">components/status-badge.tsx</span></td>
+                    <td><span class="badge">lib/auth-session.ts</span><span class="badge">lib/platform-access.ts</span><span class="badge">lib/staff-store.ts</span></td>
+                    <td><span class="badge">data/auth-sessions.json</span><span class="badge">data/gig-store.json</span><span class="badge">data/old-staff-documents.json</span><span class="badge">data/scm-staff-store.json</span><span class="badge">data/staff-document-store.json</span><span class="badge">data/staff-store.json</span><span class="badge">data/system-template-store.json</span></td>
+                    <td><span class="muted">None</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>/people/[personId]</code></td>
+                    <td><code>app/(platform)/people/[personId]/page.tsx</code></td>
+                    <td><span class="badge">components/staff-profile-editor.tsx</span></td>
+                    <td><span class="badge">lib/auth-session.ts</span><span class="badge">lib/platform-access.ts</span><span class="badge">lib/staff-app-store.ts</span><span class="badge">lib/staff-document-store.ts</span><span class="badge">lib/staff-store.ts</span></td>
+                    <td><span class="badge">data/auth-sessions.json</span><span class="badge">data/gig-store.json</span><span class="badge">data/old-staff-documents.json</span><span class="badge">data/response.json</span><span class="badge">data/scm-staff-store.json</span><span class="badge">data/staff-app-account-store.json</span><span class="badge">data/staff-document-store.json</span><span class="badge">data/staff-store.json</span><span class="badge">data/system-template-store.json</span></td>
+                    <td><span class="badge">/api/staff/</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>/people/new</code></td>
+                    <td><code>app/(platform)/people/new/page.tsx</code></td>
+                    <td><span class="badge">components/page-header.tsx</span></td>
+                    <td><span class="badge">lib/auth-session.ts</span><span class="badge">lib/platform-access.ts</span><span class="badge">app/(platform)/people/new/actions.ts</span></td>
+                    <td><span class="badge">data/auth-sessions.json</span><span class="badge">data/gig-store.json</span><span class="badge">data/old-staff-documents.json</span><span class="badge">data/scm-staff-store.json</span><span class="badge">data/staff-app-account-store.json</span><span class="badge">data/staff-document-store.json</span><span class="badge">data/staff-store.json</span><span class="badge">data/system-template-store.json</span></td>
+                    <td><span class="muted">None</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>/profile</code></td>
+                    <td><code>app/(platform)/profile/page.tsx</code></td>
+                    <td><span class="badge">components/page-header.tsx</span><span class="badge">components/scm-staff-profile-editor.tsx</span></td>
+                    <td><span class="badge">lib/auth-session.ts</span><span class="badge">lib/gig-store.ts</span><span class="badge">lib/platform-access.ts</span></td>
+                    <td><span class="badge">data/auth-sessions.json</span><span class="badge">data/gig-store.json</span><span class="badge">data/old-staff-documents.json</span><span class="badge">data/response.json</span><span class="badge">data/scm-staff-store.json</span><span class="badge">data/staff-document-store.json</span><span class="badge">data/staff-store.json</span><span class="badge">data/system-template-store.json</span></td>
+                    <td><span class="badge">/api/scm-staff/</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>/scm-staff</code></td>
+                    <td><code>app/(platform)/scm-staff/page.tsx</code></td>
+                    <td><span class="badge">components/page-header.tsx</span><span class="badge">components/scm-role-permission-guide.tsx</span><span class="badge">components/status-badge.tsx</span></td>
+                    <td><span class="badge">lib/auth-session.ts</span><span class="badge">lib/gig-store.ts</span><span class="badge">lib/platform-access.ts</span><span class="badge">lib/scm-staff-store.ts</span><span class="badge">lib/staff-store.ts</span></td>
+                    <td><span class="badge">data/auth-sessions.json</span><span class="badge">data/gig-store.json</span><span class="badge">data/old-staff-documents.json</span><span class="badge">data/scm-staff-store.json</span><span class="badge">data/staff-document-store.json</span><span class="badge">data/staff-store.json</span><span class="badge">data/system-template-store.json</span></td>
+                    <td><span class="muted">None</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>/scm-staff/[personId]</code></td>
+                    <td><code>app/(platform)/scm-staff/[personId]/page.tsx</code></td>
+                    <td><span class="badge">components/scm-staff-profile-editor.tsx</span></td>
+                    <td><span class="badge">lib/auth-session.ts</span><span class="badge">lib/scm-staff-store.ts</span></td>
+                    <td><span class="badge">data/auth-sessions.json</span><span class="badge">data/gig-store.json</span><span class="badge">data/old-staff-documents.json</span><span class="badge">data/response.json</span><span class="badge">data/scm-staff-store.json</span><span class="badge">data/staff-document-store.json</span><span class="badge">data/staff-store.json</span><span class="badge">data/system-template-store.json</span></td>
+                    <td><span class="badge">/api/scm-staff/</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>/scm-staff/new</code></td>
+                    <td><code>app/(platform)/scm-staff/new/page.tsx</code></td>
+                    <td><span class="badge">components/page-header.tsx</span></td>
+                    <td><span class="badge">lib/auth-session.ts</span><span class="badge">app/(platform)/scm-staff/new/actions.ts</span></td>
+                    <td><span class="badge">data/auth-sessions.json</span><span class="badge">data/gig-store.json</span><span class="badge">data/old-staff-documents.json</span><span class="badge">data/scm-staff-store.json</span><span class="badge">data/staff-document-store.json</span><span class="badge">data/staff-store.json</span><span class="badge">data/system-template-store.json</span></td>
+                    <td><span class="muted">None</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>/system-settings</code></td>
+                    <td><code>app/(platform)/system-settings/page.tsx</code></td>
+                    <td><span class="badge">components/page-header.tsx</span><span class="badge">components/system-settings-policy-uploader.tsx</span><span class="badge">components/system-settings-scm-info-editor.tsx</span><span class="badge">components/system-settings-template-editor.tsx</span></td>
+                    <td><span class="badge">lib/auth-session.ts</span><span class="badge">lib/system-policy-store.ts</span><span class="badge">lib/system-scm-info-pdf-store.ts</span><span class="badge">lib/system-scm-info-store.ts</span><span class="badge">lib/system-template-store.ts</span></td>
+                    <td><span class="badge">data/auth-sessions.json</span><span class="badge">data/gig-store.json</span><span class="badge">data/old-staff-documents.json</span><span class="badge">data/pdfResponse.json</span><span class="badge">data/response.json</span><span class="badge">data/scm-staff-store.json</span><span class="badge">data/settingsResponse.json</span><span class="badge">data/staff-document-store.json</span><span class="badge">data/staff-store.json</span><span class="badge">data/system-policy-store.json</span><span class="badge">data/system-scm-info-pdf-store.json</span><span class="badge">data/system-scm-info-store.json</span><span class="badge">data/system-template-store.json</span></td>
+                    <td><span class="badge">/api/staff-app/policy-pdf</span><span class="badge">/api/system-settings/policy</span><span class="badge">/api/system-settings/scm-info</span><span class="badge">/api/system-settings/scm-info-pdfs</span><span class="badge">/api/system-settings/templates</span></td>
+                  </tr>
+                
+          </tbody>
+        </table>
+      </div>
+    </section>
+  
+      
+    <section class="report-section">
+      <h2>Staff-App Route Inventory</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Route</th>
+              <th>File</th>
+              <th>Direct UI</th>
+              <th>Direct Services / Actions</th>
+              <th>Transitive Stores</th>
+              <th>API Usage</th>
+            </tr>
+          </thead>
+          <tbody>
+            
+                  <tr>
+                    <td><code>/staff-app</code></td>
+                    <td><code>app/staff-app/page.tsx</code></td>
+                    <td><span class="muted">None</span></td>
+                    <td><span class="badge">lib/staff-app-session.ts</span></td>
+                    <td><span class="badge">data/staff-app-account-store.json</span><span class="badge">data/staff-app-sessions.json</span></td>
+                    <td><span class="muted">None</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>/staff-app/check-in</code></td>
+                    <td><code>app/staff-app/(protected)/check-in/page.tsx</code></td>
+                    <td><span class="muted">None</span></td>
+                    <td><span class="badge">lib/staff-app-attendance-store.ts</span><span class="badge">lib/staff-app-data.ts</span><span class="badge">lib/staff-app-session.ts</span><span class="badge">app/staff-app/actions.ts</span></td>
+                    <td><span class="badge">data/gig-store.json</span><span class="badge">data/old-staff-documents.json</span><span class="badge">data/shift-store.json</span><span class="badge">data/staff-app-account-store.json</span><span class="badge">data/staff-app-attendance-store.json</span><span class="badge">data/staff-app-gig-application-store.json</span><span class="badge">data/staff-app-sessions.json</span><span class="badge">data/staff-document-store.json</span><span class="badge">data/staff-store.json</span><span class="badge">data/system-template-store.json</span></td>
+                    <td><span class="badge">/api/staff/</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>/staff-app/colleagues</code></td>
+                    <td><code>app/staff-app/(protected)/colleagues/page.tsx</code></td>
+                    <td><span class="badge">components/staff-app/colleague-directory.tsx</span></td>
+                    <td><span class="badge">lib/staff-app-data.ts</span><span class="badge">lib/staff-app-session.ts</span></td>
+                    <td><span class="badge">data/gig-store.json</span><span class="badge">data/old-staff-documents.json</span><span class="badge">data/shift-store.json</span><span class="badge">data/staff-app-account-store.json</span><span class="badge">data/staff-app-sessions.json</span><span class="badge">data/staff-document-store.json</span><span class="badge">data/staff-store.json</span><span class="badge">data/system-template-store.json</span></td>
+                    <td><span class="badge">/api/staff/</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>/staff-app/colleagues/[colleagueId]</code></td>
+                    <td><code>app/staff-app/(protected)/colleagues/[colleagueId]/page.tsx</code></td>
+                    <td><span class="muted">None</span></td>
+                    <td><span class="badge">lib/staff-app-data.ts</span><span class="badge">lib/staff-app-session.ts</span></td>
+                    <td><span class="badge">data/gig-store.json</span><span class="badge">data/old-staff-documents.json</span><span class="badge">data/shift-store.json</span><span class="badge">data/staff-app-account-store.json</span><span class="badge">data/staff-app-sessions.json</span><span class="badge">data/staff-document-store.json</span><span class="badge">data/staff-store.json</span><span class="badge">data/system-template-store.json</span></td>
+                    <td><span class="badge">/api/staff/</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>/staff-app/documents</code></td>
+                    <td><code>app/staff-app/(protected)/documents/page.tsx</code></td>
+                    <td><span class="badge">components/staff-app/documents-browser.tsx</span></td>
+                    <td><span class="badge">lib/staff-app-data.ts</span><span class="badge">lib/staff-app-session.ts</span></td>
+                    <td><span class="badge">data/gig-store.json</span><span class="badge">data/old-staff-documents.json</span><span class="badge">data/shift-store.json</span><span class="badge">data/staff-app-account-store.json</span><span class="badge">data/staff-app-sessions.json</span><span class="badge">data/staff-document-store.json</span><span class="badge">data/staff-store.json</span><span class="badge">data/system-template-store.json</span></td>
+                    <td><span class="badge">/api/staff/</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>/staff-app/documents/payslips/[payslipId]</code></td>
+                    <td><code>app/staff-app/(protected)/documents/payslips/[payslipId]/page.tsx</code></td>
+                    <td><span class="muted">None</span></td>
+                    <td><span class="badge">lib/staff-app-data.ts</span><span class="badge">lib/staff-app-session.ts</span></td>
+                    <td><span class="badge">data/gig-store.json</span><span class="badge">data/old-staff-documents.json</span><span class="badge">data/shift-store.json</span><span class="badge">data/staff-app-account-store.json</span><span class="badge">data/staff-app-sessions.json</span><span class="badge">data/staff-document-store.json</span><span class="badge">data/staff-store.json</span><span class="badge">data/system-template-store.json</span></td>
+                    <td><span class="badge">/api/staff/</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>/staff-app/gigs</code></td>
+                    <td><code>app/staff-app/(protected)/gigs/page.tsx</code></td>
+                    <td><span class="badge">components/staff-app/gig-flow.tsx</span></td>
+                    <td><span class="badge">lib/staff-app-data.ts</span><span class="badge">lib/staff-app-session.ts</span></td>
+                    <td><span class="badge">data/gig-store.json</span><span class="badge">data/old-staff-documents.json</span><span class="badge">data/shift-store.json</span><span class="badge">data/staff-app-account-store.json</span><span class="badge">data/staff-app-sessions.json</span><span class="badge">data/staff-document-store.json</span><span class="badge">data/staff-store.json</span><span class="badge">data/system-template-store.json</span></td>
+                    <td><span class="badge">/api/staff/</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>/staff-app/gigs/[passId]</code></td>
+                    <td><code>app/staff-app/(protected)/gigs/[passId]/page.tsx</code></td>
+                    <td><span class="badge">components/staff-app/gig-flow.tsx</span></td>
+                    <td><span class="badge">lib/staff-app-data.ts</span><span class="badge">lib/staff-app-gig-application-store.ts</span><span class="badge">lib/staff-app-session.ts</span><span class="badge">app/staff-app/actions.ts</span></td>
+                    <td><span class="badge">data/gig-store.json</span><span class="badge">data/old-staff-documents.json</span><span class="badge">data/shift-store.json</span><span class="badge">data/staff-app-account-store.json</span><span class="badge">data/staff-app-attendance-store.json</span><span class="badge">data/staff-app-gig-application-store.json</span><span class="badge">data/staff-app-sessions.json</span><span class="badge">data/staff-document-store.json</span><span class="badge">data/staff-store.json</span><span class="badge">data/system-template-store.json</span></td>
+                    <td><span class="badge">/api/staff/</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>/staff-app/gigs/managed</code></td>
+                    <td><code>app/staff-app/(protected)/gigs/managed/page.tsx</code></td>
+                    <td><span class="badge">components/staff-app/gig-flow.tsx</span></td>
+                    <td><span class="badge">lib/staff-app-data.ts</span><span class="badge">lib/staff-app-session.ts</span></td>
+                    <td><span class="badge">data/gig-store.json</span><span class="badge">data/old-staff-documents.json</span><span class="badge">data/shift-store.json</span><span class="badge">data/staff-app-account-store.json</span><span class="badge">data/staff-app-sessions.json</span><span class="badge">data/staff-document-store.json</span><span class="badge">data/staff-store.json</span><span class="badge">data/system-template-store.json</span></td>
+                    <td><span class="badge">/api/staff/</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>/staff-app/gigs/open</code></td>
+                    <td><code>app/staff-app/(protected)/gigs/open/page.tsx</code></td>
+                    <td><span class="badge">components/staff-app/gig-flow.tsx</span></td>
+                    <td><span class="badge">lib/staff-app-data.ts</span><span class="badge">lib/staff-app-session.ts</span></td>
+                    <td><span class="badge">data/gig-store.json</span><span class="badge">data/old-staff-documents.json</span><span class="badge">data/shift-store.json</span><span class="badge">data/staff-app-account-store.json</span><span class="badge">data/staff-app-sessions.json</span><span class="badge">data/staff-document-store.json</span><span class="badge">data/staff-store.json</span><span class="badge">data/system-template-store.json</span></td>
+                    <td><span class="badge">/api/staff/</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>/staff-app/gigs/standby</code></td>
+                    <td><code>app/staff-app/(protected)/gigs/standby/page.tsx</code></td>
+                    <td><span class="badge">components/staff-app/gig-flow.tsx</span></td>
+                    <td><span class="badge">lib/staff-app-data.ts</span><span class="badge">lib/staff-app-session.ts</span></td>
+                    <td><span class="badge">data/gig-store.json</span><span class="badge">data/old-staff-documents.json</span><span class="badge">data/shift-store.json</span><span class="badge">data/staff-app-account-store.json</span><span class="badge">data/staff-app-sessions.json</span><span class="badge">data/staff-document-store.json</span><span class="badge">data/staff-store.json</span><span class="badge">data/system-template-store.json</span></td>
+                    <td><span class="badge">/api/staff/</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>/staff-app/gigs/unassigned</code></td>
+                    <td><code>app/staff-app/(protected)/gigs/unassigned/page.tsx</code></td>
+                    <td><span class="badge">components/staff-app/gig-flow.tsx</span></td>
+                    <td><span class="badge">lib/staff-app-data.ts</span><span class="badge">lib/staff-app-session.ts</span></td>
+                    <td><span class="badge">data/gig-store.json</span><span class="badge">data/old-staff-documents.json</span><span class="badge">data/shift-store.json</span><span class="badge">data/staff-app-account-store.json</span><span class="badge">data/staff-app-sessions.json</span><span class="badge">data/staff-document-store.json</span><span class="badge">data/staff-store.json</span><span class="badge">data/system-template-store.json</span></td>
+                    <td><span class="badge">/api/staff/</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>/staff-app/home</code></td>
+                    <td><code>app/staff-app/(protected)/home/page.tsx</code></td>
+                    <td><span class="muted">None</span></td>
+                    <td><span class="badge">lib/staff-app-attendance-store.ts</span><span class="badge">lib/staff-app-data.ts</span><span class="badge">lib/staff-app-scope.ts</span><span class="badge">lib/staff-app-session.ts</span></td>
+                    <td><span class="badge">data/gig-store.json</span><span class="badge">data/old-staff-documents.json</span><span class="badge">data/shift-store.json</span><span class="badge">data/staff-app-account-store.json</span><span class="badge">data/staff-app-attendance-store.json</span><span class="badge">data/staff-app-sessions.json</span><span class="badge">data/staff-document-store.json</span><span class="badge">data/staff-store.json</span><span class="badge">data/system-template-store.json</span></td>
+                    <td><span class="badge">/api/staff/</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>/staff-app/login</code></td>
+                    <td><code>app/staff-app/login/page.tsx</code></td>
+                    <td><span class="muted">None</span></td>
+                    <td><span class="badge">app/staff-app/actions.ts</span></td>
+                    <td><span class="badge">data/gig-store.json</span><span class="badge">data/old-staff-documents.json</span><span class="badge">data/shift-store.json</span><span class="badge">data/staff-app-account-store.json</span><span class="badge">data/staff-app-attendance-store.json</span><span class="badge">data/staff-app-gig-application-store.json</span><span class="badge">data/staff-app-sessions.json</span><span class="badge">data/staff-document-store.json</span><span class="badge">data/staff-store.json</span><span class="badge">data/system-template-store.json</span></td>
+                    <td><span class="badge">/api/staff/</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>/staff-app/messages</code></td>
+                    <td><code>app/staff-app/(protected)/messages/page.tsx</code></td>
+                    <td><span class="muted">None</span></td>
+                    <td><span class="badge">lib/staff-app-data.ts</span></td>
+                    <td><span class="badge">data/gig-store.json</span><span class="badge">data/old-staff-documents.json</span><span class="badge">data/shift-store.json</span><span class="badge">data/staff-document-store.json</span><span class="badge">data/staff-store.json</span><span class="badge">data/system-template-store.json</span></td>
+                    <td><span class="badge">/api/staff/</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>/staff-app/messages/[threadId]</code></td>
+                    <td><code>app/staff-app/(protected)/messages/[threadId]/page.tsx</code></td>
+                    <td><span class="muted">None</span></td>
+                    <td><span class="badge">lib/staff-app-data.ts</span></td>
+                    <td><span class="badge">data/gig-store.json</span><span class="badge">data/old-staff-documents.json</span><span class="badge">data/shift-store.json</span><span class="badge">data/staff-document-store.json</span><span class="badge">data/staff-store.json</span><span class="badge">data/system-template-store.json</span></td>
+                    <td><span class="badge">/api/staff/</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>/staff-app/passes</code></td>
+                    <td><code>app/staff-app/(protected)/passes/page.tsx</code></td>
+                    <td><span class="muted">None</span></td>
+                    <td><span class="muted">None</span></td>
+                    <td><span class="muted">None</span></td>
+                    <td><span class="muted">None</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>/staff-app/profile</code></td>
+                    <td><code>app/staff-app/(protected)/profile/page.tsx</code></td>
+                    <td><span class="muted">None</span></td>
+                    <td><span class="badge">lib/staff-app-scope.ts</span><span class="badge">lib/staff-app-session.ts</span><span class="badge">app/staff-app/actions.ts</span></td>
+                    <td><span class="badge">data/gig-store.json</span><span class="badge">data/old-staff-documents.json</span><span class="badge">data/shift-store.json</span><span class="badge">data/staff-app-account-store.json</span><span class="badge">data/staff-app-attendance-store.json</span><span class="badge">data/staff-app-gig-application-store.json</span><span class="badge">data/staff-app-sessions.json</span><span class="badge">data/staff-document-store.json</span><span class="badge">data/staff-store.json</span><span class="badge">data/system-template-store.json</span></td>
+                    <td><span class="badge">/api/staff/</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>/staff-app/profile/bank-info</code></td>
+                    <td><code>app/staff-app/(protected)/profile/bank-info/page.tsx</code></td>
+                    <td><span class="muted">None</span></td>
+                    <td><span class="badge">lib/staff-app-session.ts</span><span class="badge">lib/staff-store.ts</span><span class="badge">app/staff-app/actions.ts</span></td>
+                    <td><span class="badge">data/gig-store.json</span><span class="badge">data/old-staff-documents.json</span><span class="badge">data/shift-store.json</span><span class="badge">data/staff-app-account-store.json</span><span class="badge">data/staff-app-attendance-store.json</span><span class="badge">data/staff-app-gig-application-store.json</span><span class="badge">data/staff-app-sessions.json</span><span class="badge">data/staff-document-store.json</span><span class="badge">data/staff-store.json</span><span class="badge">data/system-template-store.json</span></td>
+                    <td><span class="badge">/api/staff/</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>/staff-app/profile/personal-details</code></td>
+                    <td><code>app/staff-app/(protected)/profile/personal-details/page.tsx</code></td>
+                    <td><span class="muted">None</span></td>
+                    <td><span class="badge">lib/staff-app-session.ts</span><span class="badge">lib/staff-store.ts</span><span class="badge">app/staff-app/actions.ts</span></td>
+                    <td><span class="badge">data/gig-store.json</span><span class="badge">data/old-staff-documents.json</span><span class="badge">data/shift-store.json</span><span class="badge">data/staff-app-account-store.json</span><span class="badge">data/staff-app-attendance-store.json</span><span class="badge">data/staff-app-gig-application-store.json</span><span class="badge">data/staff-app-sessions.json</span><span class="badge">data/staff-document-store.json</span><span class="badge">data/staff-store.json</span><span class="badge">data/system-template-store.json</span></td>
+                    <td><span class="badge">/api/staff/</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>/staff-app/schedule</code></td>
+                    <td><code>app/staff-app/(protected)/schedule/page.tsx</code></td>
+                    <td><span class="muted">None</span></td>
+                    <td><span class="badge">lib/staff-app-data.ts</span></td>
+                    <td><span class="badge">data/gig-store.json</span><span class="badge">data/old-staff-documents.json</span><span class="badge">data/shift-store.json</span><span class="badge">data/staff-document-store.json</span><span class="badge">data/staff-store.json</span><span class="badge">data/system-template-store.json</span></td>
+                    <td><span class="badge">/api/staff/</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>/staff-app/scm-info</code></td>
+                    <td><code>app/staff-app/(protected)/scm-info/page.tsx</code></td>
+                    <td><span class="muted">None</span></td>
+                    <td><span class="badge">lib/system-policy-store.ts</span><span class="badge">lib/system-scm-info-pdf-store.ts</span><span class="badge">lib/system-scm-info-store.ts</span></td>
+                    <td><span class="badge">data/system-policy-store.json</span><span class="badge">data/system-scm-info-pdf-store.json</span><span class="badge">data/system-scm-info-store.json</span></td>
+                    <td><span class="badge">/api/staff-app/policy-pdf</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>/staff-app/scm-info/arena-info</code></td>
+                    <td><code>app/staff-app/(protected)/scm-info/arena-info/page.tsx</code></td>
+                    <td><span class="badge">components/staff-app/arena-directory.tsx</span><span class="badge">components/staff-app/guide-pdf-link.tsx</span><span class="badge">components/staff-app/page-back-link.tsx</span></td>
+                    <td><span class="badge">lib/gig-store.ts</span><span class="badge">lib/staff-app-session.ts</span><span class="badge">lib/system-scm-info-pdf-shared.ts</span><span class="badge">lib/system-scm-info-pdf-store.ts</span><span class="badge">lib/system-scm-info-store.ts</span></td>
+                    <td><span class="badge">data/gig-store.json</span><span class="badge">data/staff-app-account-store.json</span><span class="badge">data/staff-app-sessions.json</span><span class="badge">data/system-scm-info-pdf-store.json</span><span class="badge">data/system-scm-info-store.json</span></td>
+                    <td><span class="muted">None</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>/staff-app/scm-info/cash-card</code></td>
+                    <td><code>app/staff-app/(protected)/scm-info/cash-card/page.tsx</code></td>
+                    <td><span class="badge">components/staff-app/guide-disclosure-list.tsx</span><span class="badge">components/staff-app/guide-pdf-link.tsx</span><span class="badge">components/staff-app/page-back-link.tsx</span></td>
+                    <td><span class="badge">lib/system-scm-info-pdf-shared.ts</span><span class="badge">lib/system-scm-info-pdf-store.ts</span><span class="badge">lib/system-scm-info-store.ts</span></td>
+                    <td><span class="badge">data/system-scm-info-pdf-store.json</span><span class="badge">data/system-scm-info-store.json</span></td>
+                    <td><span class="muted">None</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>/staff-app/scm-info/checklists</code></td>
+                    <td><code>app/staff-app/(protected)/scm-info/checklists/page.tsx</code></td>
+                    <td><span class="badge">components/staff-app/guide-disclosure-list.tsx</span><span class="badge">components/staff-app/guide-pdf-link.tsx</span><span class="badge">components/staff-app/page-back-link.tsx</span></td>
+                    <td><span class="badge">lib/system-scm-info-pdf-shared.ts</span><span class="badge">lib/system-scm-info-pdf-store.ts</span><span class="badge">lib/system-scm-info-store.ts</span></td>
+                    <td><span class="badge">data/system-scm-info-pdf-store.json</span><span class="badge">data/system-scm-info-store.json</span></td>
+                    <td><span class="muted">None</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>/staff-app/scm-info/platform-info</code></td>
+                    <td><code>app/staff-app/(protected)/scm-info/platform-info/page.tsx</code></td>
+                    <td><span class="badge">components/staff-app/guide-disclosure-list.tsx</span><span class="badge">components/staff-app/guide-pdf-link.tsx</span><span class="badge">components/staff-app/page-back-link.tsx</span></td>
+                    <td><span class="badge">lib/system-scm-info-pdf-shared.ts</span><span class="badge">lib/system-scm-info-pdf-store.ts</span><span class="badge">lib/system-scm-info-store.ts</span></td>
+                    <td><span class="badge">data/system-scm-info-pdf-store.json</span><span class="badge">data/system-scm-info-store.json</span></td>
+                    <td><span class="muted">None</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>/staff-app/scm-info/roles-training</code></td>
+                    <td><code>app/staff-app/(protected)/scm-info/roles-training/page.tsx</code></td>
+                    <td><span class="badge">components/staff-app/guide-disclosure-list.tsx</span><span class="badge">components/staff-app/guide-pdf-link.tsx</span><span class="badge">components/staff-app/page-back-link.tsx</span></td>
+                    <td><span class="badge">lib/staff-app-scope.ts</span><span class="badge">lib/staff-app-session.ts</span><span class="badge">lib/system-scm-info-pdf-shared.ts</span><span class="badge">lib/system-scm-info-pdf-store.ts</span><span class="badge">lib/system-scm-info-store.ts</span></td>
+                    <td><span class="badge">data/staff-app-account-store.json</span><span class="badge">data/staff-app-sessions.json</span><span class="badge">data/system-scm-info-pdf-store.json</span><span class="badge">data/system-scm-info-store.json</span></td>
+                    <td><span class="muted">None</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>/staff-app/shifts/[shiftId]</code></td>
+                    <td><code>app/staff-app/(protected)/shifts/[shiftId]/page.tsx</code></td>
+                    <td><span class="muted">None</span></td>
+                    <td><span class="badge">lib/staff-app-attendance-store.ts</span><span class="badge">lib/staff-app-data.ts</span></td>
+                    <td><span class="badge">data/gig-store.json</span><span class="badge">data/old-staff-documents.json</span><span class="badge">data/shift-store.json</span><span class="badge">data/staff-app-attendance-store.json</span><span class="badge">data/staff-document-store.json</span><span class="badge">data/staff-store.json</span><span class="badge">data/system-template-store.json</span></td>
+                    <td><span class="badge">/api/staff/</span></td>
+                  </tr>
+                
+          </tbody>
+        </table>
+      </div>
+    </section>
+  
+      
+    <section class="report-section">
+      <h2>API Route Inventory</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Endpoint</th><th>Handler File</th><th>Direct Lib Dependencies</th><th>Direct Types</th><th>Transitive Stores</th><th>Exported Handlers</th></tr>
+          </thead>
+          <tbody>
+            
+                  <tr>
+                    <td><code>/api/brand/logo</code></td><td><code>app/api/brand/logo/route.ts</code></td><td><span class="badge">lib/auth-session.ts</span><span class="badge">lib/brand-store.ts</span></td><td><span class="muted">None</span></td><td><span class="badge">data/auth-sessions.json</span><span class="badge">data/brand-store.json</span><span class="badge">data/gig-store.json</span><span class="badge">data/NextResponse.json</span><span class="badge">data/old-staff-documents.json</span><span class="badge">data/scm-staff-store.json</span><span class="badge">data/staff-document-store.json</span><span class="badge">data/staff-store.json</span><span class="badge">data/system-template-store.json</span></td><td><span class="badge">POST</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>/api/gigs/[gigId]</code></td><td><code>app/api/gigs/[gigId]/route.ts</code></td><td><span class="badge">lib/auth-session.ts</span><span class="badge">lib/gig-archive.ts</span><span class="badge">lib/gig-store.ts</span><span class="badge">lib/platform-access.ts</span><span class="badge">lib/scandinavian-countries.ts</span><span class="badge">lib/shift-communication-store.ts</span><span class="badge">lib/shift-store.ts</span></td><td><span class="muted">None</span></td><td><span class="badge">data/auth-sessions.json</span><span class="badge">data/gig-store.json</span><span class="badge">data/NextResponse.json</span><span class="badge">data/old-staff-documents.json</span><span class="badge">data/request.json</span><span class="badge">data/scm-staff-store.json</span><span class="badge">data/shift-communication-store.json</span><span class="badge">data/shift-store.json</span><span class="badge">data/staff-document-store.json</span><span class="badge">data/staff-store.json</span><span class="badge">data/system-template-store.json</span></td><td><span class="badge">DELETE</span><span class="badge">PATCH</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>/api/gigs/[gigId]/closeout</code></td><td><code>app/api/gigs/[gigId]/closeout/route.ts</code></td><td><span class="badge">lib/auth-session.ts</span><span class="badge">lib/gig-closeout.ts</span><span class="badge">lib/gig-store.ts</span><span class="badge">lib/platform-access.ts</span></td><td><span class="muted">None</span></td><td><span class="badge">data/auth-sessions.json</span><span class="badge">data/gig-store.json</span><span class="badge">data/NextResponse.json</span><span class="badge">data/old-staff-documents.json</span><span class="badge">data/request.json</span><span class="badge">data/scm-staff-store.json</span><span class="badge">data/staff-document-store.json</span><span class="badge">data/staff-store.json</span><span class="badge">data/system-template-store.json</span></td><td><span class="badge">DELETE</span><span class="badge">PATCH</span><span class="badge">POST</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>/api/gigs/[gigId]/equipment</code></td><td><code>app/api/gigs/[gigId]/equipment/route.ts</code></td><td><span class="badge">lib/auth-session.ts</span><span class="badge">lib/gig-store.ts</span><span class="badge">lib/platform-access.ts</span></td><td><span class="badge">types/scm.ts</span></td><td><span class="badge">data/auth-sessions.json</span><span class="badge">data/gig-store.json</span><span class="badge">data/NextResponse.json</span><span class="badge">data/old-staff-documents.json</span><span class="badge">data/request.json</span><span class="badge">data/scm-staff-store.json</span><span class="badge">data/staff-document-store.json</span><span class="badge">data/staff-store.json</span><span class="badge">data/system-template-store.json</span></td><td><span class="badge">POST</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>/api/gigs/[gigId]/files</code></td><td><code>app/api/gigs/[gigId]/files/route.ts</code></td><td><span class="badge">lib/auth-session.ts</span><span class="badge">lib/gig-document-boxes.ts</span><span class="badge">lib/gig-file-storage.ts</span><span class="badge">lib/gig-store.ts</span><span class="badge">lib/platform-access.ts</span></td><td><span class="badge">types/scm.ts</span></td><td><span class="badge">data/auth-sessions.json</span><span class="badge">data/gig-file-attachments</span><span class="badge">data/gig-store.json</span><span class="badge">data/NextResponse.json</span><span class="badge">data/old-staff-documents.json</span><span class="badge">data/request.json</span><span class="badge">data/scm-staff-store.json</span><span class="badge">data/staff-document-store.json</span><span class="badge">data/staff-store.json</span><span class="badge">data/system-template-store.json</span></td><td><span class="badge">DELETE</span><span class="badge">POST</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>/api/gigs/[gigId]/files/[fileId]/content</code></td><td><code>app/api/gigs/[gigId]/files/[fileId]/content/route.ts</code></td><td><span class="badge">lib/auth-session.ts</span><span class="badge">lib/gig-file-storage.ts</span><span class="badge">lib/gig-store.ts</span><span class="badge">lib/platform-access.ts</span></td><td><span class="muted">None</span></td><td><span class="badge">data/auth-sessions.json</span><span class="badge">data/gig-file-attachments</span><span class="badge">data/gig-store.json</span><span class="badge">data/NextResponse.json</span><span class="badge">data/old-staff-documents.json</span><span class="badge">data/scm-staff-store.json</span><span class="badge">data/staff-document-store.json</span><span class="badge">data/staff-store.json</span><span class="badge">data/system-template-store.json</span></td><td><span class="badge">GET</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>/api/gigs/[gigId]/folders</code></td><td><code>app/api/gigs/[gigId]/folders/route.ts</code></td><td><span class="badge">lib/auth-session.ts</span><span class="badge">lib/gig-document-boxes.ts</span><span class="badge">lib/gig-store.ts</span><span class="badge">lib/platform-access.ts</span></td><td><span class="muted">None</span></td><td><span class="badge">data/auth-sessions.json</span><span class="badge">data/gig-store.json</span><span class="badge">data/NextResponse.json</span><span class="badge">data/old-staff-documents.json</span><span class="badge">data/request.json</span><span class="badge">data/scm-staff-store.json</span><span class="badge">data/staff-document-store.json</span><span class="badge">data/staff-store.json</span><span class="badge">data/system-template-store.json</span></td><td><span class="badge">DELETE</span><span class="badge">POST</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>/api/gigs/[gigId]/image</code></td><td><code>app/api/gigs/[gigId]/image/route.ts</code></td><td><span class="badge">lib/auth-session.ts</span><span class="badge">lib/gig-store.ts</span><span class="badge">lib/platform-access.ts</span></td><td><span class="muted">None</span></td><td><span class="badge">data/auth-sessions.json</span><span class="badge">data/gig-store.json</span><span class="badge">data/NextResponse.json</span><span class="badge">data/old-staff-documents.json</span><span class="badge">data/scm-staff-store.json</span><span class="badge">data/staff-document-store.json</span><span class="badge">data/staff-store.json</span><span class="badge">data/system-template-store.json</span></td><td><span class="badge">POST</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>/api/gigs/[gigId]/shift-communications</code></td><td><code>app/api/gigs/[gigId]/shift-communications/route.ts</code></td><td><span class="badge">lib/auth-session.ts</span><span class="badge">lib/gig-store.ts</span><span class="badge">lib/platform-access.ts</span><span class="badge">lib/shift-communication-store.ts</span></td><td><span class="badge">types/scm.ts</span></td><td><span class="badge">data/auth-sessions.json</span><span class="badge">data/gig-store.json</span><span class="badge">data/NextResponse.json</span><span class="badge">data/old-staff-documents.json</span><span class="badge">data/request.json</span><span class="badge">data/scm-staff-store.json</span><span class="badge">data/shift-communication-store.json</span><span class="badge">data/staff-document-store.json</span><span class="badge">data/staff-store.json</span><span class="badge">data/system-template-store.json</span></td><td><span class="badge">GET</span><span class="badge">POST</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>/api/gigs/[gigId]/shifts</code></td><td><code>app/api/gigs/[gigId]/shifts/route.ts</code></td><td><span class="badge">lib/auth-session.ts</span><span class="badge">lib/gig-store.ts</span><span class="badge">lib/platform-access.ts</span><span class="badge">lib/shift-store.ts</span></td><td><span class="muted">None</span></td><td><span class="badge">data/auth-sessions.json</span><span class="badge">data/gig-store.json</span><span class="badge">data/NextResponse.json</span><span class="badge">data/old-staff-documents.json</span><span class="badge">data/request.json</span><span class="badge">data/scm-staff-store.json</span><span class="badge">data/shift-store.json</span><span class="badge">data/staff-document-store.json</span><span class="badge">data/staff-store.json</span><span class="badge">data/system-template-store.json</span></td><td><span class="badge">POST</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>/api/gigs/[gigId]/shifts/[shiftId]</code></td><td><code>app/api/gigs/[gigId]/shifts/[shiftId]/route.ts</code></td><td><span class="badge">lib/auth-session.ts</span><span class="badge">lib/gig-store.ts</span><span class="badge">lib/gig-time-report-store.ts</span><span class="badge">lib/platform-access.ts</span><span class="badge">lib/shift-store.ts</span><span class="badge">lib/staff-store.ts</span></td><td><span class="badge">types/scm.ts</span></td><td><span class="badge">data/auth-sessions.json</span><span class="badge">data/gig-store.json</span><span class="badge">data/NextResponse.json</span><span class="badge">data/old-staff-documents.json</span><span class="badge">data/request.json</span><span class="badge">data/scm-staff-store.json</span><span class="badge">data/shift-store.json</span><span class="badge">data/staff-app-account-store.json</span><span class="badge">data/staff-app-attendance-store.json</span><span class="badge">data/staff-document-store.json</span><span class="badge">data/staff-store.json</span><span class="badge">data/system-template-store.json</span></td><td><span class="badge">DELETE</span><span class="badge">PATCH</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>/api/gigs/[gigId]/temporary-managers</code></td><td><code>app/api/gigs/[gigId]/temporary-managers/route.ts</code></td><td><span class="badge">lib/auth-session.ts</span><span class="badge">lib/gig-store.ts</span><span class="badge">lib/platform-access.ts</span><span class="badge">lib/staff-app-store.ts</span><span class="badge">lib/staff-store.ts</span></td><td><span class="badge">types/scm.ts</span></td><td><span class="badge">data/auth-sessions.json</span><span class="badge">data/gig-store.json</span><span class="badge">data/NextResponse.json</span><span class="badge">data/old-staff-documents.json</span><span class="badge">data/request.json</span><span class="badge">data/scm-staff-store.json</span><span class="badge">data/staff-app-account-store.json</span><span class="badge">data/staff-document-store.json</span><span class="badge">data/staff-store.json</span><span class="badge">data/system-template-store.json</span></td><td><span class="badge">DELETE</span><span class="badge">POST</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>/api/gigs/[gigId]/time-report</code></td><td><code>app/api/gigs/[gigId]/time-report/route.ts</code></td><td><span class="badge">lib/auth-session.ts</span><span class="badge">lib/gig-store.ts</span><span class="badge">lib/gig-time-report-store.ts</span><span class="badge">lib/platform-access.ts</span><span class="badge">lib/staff-document-store.ts</span></td><td><span class="badge">types/scm.ts</span></td><td><span class="badge">data/auth-sessions.json</span><span class="badge">data/gig-store.json</span><span class="badge">data/NextResponse.json</span><span class="badge">data/old-staff-documents.json</span><span class="badge">data/scm-staff-store.json</span><span class="badge">data/shift-store.json</span><span class="badge">data/staff-app-account-store.json</span><span class="badge">data/staff-app-attendance-store.json</span><span class="badge">data/staff-document-store.json</span><span class="badge">data/staff-store.json</span><span class="badge">data/system-template-store.json</span></td><td><span class="badge">POST</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>/api/scm-staff/[personId]</code></td><td><code>app/api/scm-staff/[personId]/route.ts</code></td><td><span class="badge">lib/auth-session.ts</span><span class="badge">lib/password-utils.ts</span><span class="badge">lib/scm-staff-store.ts</span></td><td><span class="badge">types/scm-rbac.ts</span></td><td><span class="badge">data/auth-sessions.json</span><span class="badge">data/gig-store.json</span><span class="badge">data/NextResponse.json</span><span class="badge">data/old-staff-documents.json</span><span class="badge">data/request.json</span><span class="badge">data/scm-staff-store.json</span><span class="badge">data/staff-document-store.json</span><span class="badge">data/staff-store.json</span><span class="badge">data/system-template-store.json</span></td><td><span class="badge">DELETE</span><span class="badge">PATCH</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>/api/scm-staff/[personId]/image</code></td><td><code>app/api/scm-staff/[personId]/image/route.ts</code></td><td><span class="badge">lib/scm-staff-store.ts</span></td><td><span class="muted">None</span></td><td><span class="badge">data/NextResponse.json</span><span class="badge">data/scm-staff-store.json</span></td><td><span class="badge">POST</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>/api/search</code></td><td><code>app/api/search/route.ts</code></td><td><span class="badge">lib/auth-session.ts</span><span class="badge">lib/global-search.ts</span><span class="badge">lib/platform-access.ts</span></td><td><span class="muted">None</span></td><td><span class="badge">data/auth-sessions.json</span><span class="badge">data/gig-store.json</span><span class="badge">data/NextResponse.json</span><span class="badge">data/old-staff-documents.json</span><span class="badge">data/scm-staff-store.json</span><span class="badge">data/staff-document-store.json</span><span class="badge">data/staff-store.json</span><span class="badge">data/system-template-store.json</span></td><td><span class="badge">GET</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>/api/staff-app/policy-pdf</code></td><td><code>app/api/staff-app/policy-pdf/route.ts</code></td><td><span class="badge">lib/staff-app-policy-pdf.ts</span><span class="badge">lib/system-policy-store.ts</span></td><td><span class="muted">None</span></td><td><span class="badge">data/system-policy-store.json</span></td><td><span class="badge">GET</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>/api/staff/[personId]</code></td><td><code>app/api/staff/[personId]/route.ts</code></td><td><span class="badge">lib/staff-app-store.ts</span><span class="badge">lib/staff-store.ts</span></td><td><span class="badge">types/backend.ts</span><span class="badge">types/scm.ts</span><span class="badge">types/staff-role.ts</span></td><td><span class="badge">data/NextResponse.json</span><span class="badge">data/old-staff-documents.json</span><span class="badge">data/request.json</span><span class="badge">data/staff-app-account-store.json</span><span class="badge">data/staff-document-store.json</span><span class="badge">data/staff-store.json</span><span class="badge">data/system-template-store.json</span></td><td><span class="badge">DELETE</span><span class="badge">PATCH</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>/api/staff/[personId]/documents/[documentId]</code></td><td><code>app/api/staff/[personId]/documents/[documentId]/route.ts</code></td><td><span class="badge">lib/staff-document-pdf.ts</span><span class="badge">lib/staff-document-store.ts</span></td><td><span class="muted">None</span></td><td><span class="badge">data/NextResponse.json</span><span class="badge">data/staff-document-store.json</span><span class="badge">data/system-template-store.json</span></td><td><span class="badge">GET</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>/api/staff/[personId]/image</code></td><td><code>app/api/staff/[personId]/image/route.ts</code></td><td><span class="badge">lib/staff-store.ts</span></td><td><span class="muted">None</span></td><td><span class="badge">data/NextResponse.json</span><span class="badge">data/old-staff-documents.json</span><span class="badge">data/staff-document-store.json</span><span class="badge">data/staff-store.json</span><span class="badge">data/system-template-store.json</span></td><td><span class="badge">POST</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>/api/system-settings/policy</code></td><td><code>app/api/system-settings/policy/route.ts</code></td><td><span class="badge">lib/auth-session.ts</span><span class="badge">lib/system-policy-store.ts</span></td><td><span class="muted">None</span></td><td><span class="badge">data/auth-sessions.json</span><span class="badge">data/gig-store.json</span><span class="badge">data/NextResponse.json</span><span class="badge">data/old-staff-documents.json</span><span class="badge">data/scm-staff-store.json</span><span class="badge">data/staff-document-store.json</span><span class="badge">data/staff-store.json</span><span class="badge">data/system-policy-store.json</span><span class="badge">data/system-template-store.json</span></td><td><span class="badge">GET</span><span class="badge">POST</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>/api/system-settings/scm-info</code></td><td><code>app/api/system-settings/scm-info/route.ts</code></td><td><span class="badge">lib/auth-session.ts</span><span class="badge">lib/system-scm-info-store.ts</span></td><td><span class="muted">None</span></td><td><span class="badge">data/auth-sessions.json</span><span class="badge">data/gig-store.json</span><span class="badge">data/NextResponse.json</span><span class="badge">data/old-staff-documents.json</span><span class="badge">data/request.json</span><span class="badge">data/scm-staff-store.json</span><span class="badge">data/staff-document-store.json</span><span class="badge">data/staff-store.json</span><span class="badge">data/system-scm-info-store.json</span><span class="badge">data/system-template-store.json</span></td><td><span class="badge">GET</span><span class="badge">PATCH</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>/api/system-settings/scm-info-pdfs</code></td><td><code>app/api/system-settings/scm-info-pdfs/route.ts</code></td><td><span class="badge">lib/auth-session.ts</span><span class="badge">lib/system-scm-info-pdf-shared.ts</span><span class="badge">lib/system-scm-info-pdf-store.ts</span><span class="badge">lib/system-scm-info-store.ts</span></td><td><span class="muted">None</span></td><td><span class="badge">data/auth-sessions.json</span><span class="badge">data/gig-store.json</span><span class="badge">data/NextResponse.json</span><span class="badge">data/old-staff-documents.json</span><span class="badge">data/request.json</span><span class="badge">data/scm-staff-store.json</span><span class="badge">data/staff-document-store.json</span><span class="badge">data/staff-store.json</span><span class="badge">data/system-scm-info-pdf-store.json</span><span class="badge">data/system-scm-info-store.json</span><span class="badge">data/system-template-store.json</span></td><td><span class="badge">DELETE</span><span class="badge">GET</span><span class="badge">PATCH</span><span class="badge">POST</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>/api/system-settings/templates</code></td><td><code>app/api/system-settings/templates/route.ts</code></td><td><span class="badge">lib/auth-session.ts</span><span class="badge">lib/system-template-store.ts</span></td><td><span class="badge">types/system-settings.ts</span></td><td><span class="badge">data/auth-sessions.json</span><span class="badge">data/gig-store.json</span><span class="badge">data/NextResponse.json</span><span class="badge">data/old-staff-documents.json</span><span class="badge">data/request.json</span><span class="badge">data/scm-staff-store.json</span><span class="badge">data/staff-document-store.json</span><span class="badge">data/staff-store.json</span><span class="badge">data/system-template-store.json</span></td><td><span class="badge">GET</span><span class="badge">PATCH</span></td>
+                  </tr>
+                
+          </tbody>
+        </table>
+      </div>
+    </section>
+  
+      
+    <section class="report-section">
+      <h2>Server Actions</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Action File</th><th>Exported Functions</th><th>Direct Lib Dependencies</th><th>Transitive Stores</th></tr>
+          </thead>
+          <tbody>
+            
+                  <tr>
+                    <td><code>app/(platform)/gigs/new/actions.ts</code></td><td><span class="badge">saveProjectManagerStep</span><span class="badge">submitNewGig</span></td><td><span class="badge">lib/gig-store.ts</span><span class="badge">lib/scandinavian-countries.ts</span></td><td><span class="badge">data/gig-store.json</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>app/(platform)/people/new/actions.ts</code></td><td><span class="badge">submitNewStaff</span></td><td><span class="badge">lib/staff-app-store.ts</span><span class="badge">lib/staff-store.ts</span></td><td><span class="badge">data/old-staff-documents.json</span><span class="badge">data/staff-app-account-store.json</span><span class="badge">data/staff-document-store.json</span><span class="badge">data/staff-store.json</span><span class="badge">data/system-template-store.json</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>app/(platform)/scm-staff/new/actions.ts</code></td><td><span class="badge">submitNewScmStaff</span></td><td><span class="badge">lib/password-utils.ts</span><span class="badge">lib/scm-staff-store.ts</span></td><td><span class="badge">data/scm-staff-store.json</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>app/auth-actions.ts</code></td><td><span class="badge">loginWithScmStaff</span><span class="badge">logoutCurrentUser</span><span class="badge">switchScmStaffSession</span></td><td><span class="badge">lib/auth-session.ts</span><span class="badge">lib/gig-store.ts</span><span class="badge">lib/password-utils.ts</span><span class="badge">lib/scm-staff-store.ts</span><span class="badge">lib/staff-app-store.ts</span><span class="badge">lib/staff-store.ts</span></td><td><span class="badge">data/auth-sessions.json</span><span class="badge">data/gig-store.json</span><span class="badge">data/old-staff-documents.json</span><span class="badge">data/scm-staff-store.json</span><span class="badge">data/staff-app-account-store.json</span><span class="badge">data/staff-document-store.json</span><span class="badge">data/staff-store.json</span><span class="badge">data/system-template-store.json</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>app/staff-app/actions.ts</code></td><td><span class="badge">applyToStaffAppGigPass</span><span class="badge">changeStaffAppPassword</span><span class="badge">checkInToStaffAppTodayShift</span><span class="badge">checkOutFromStaffAppTodayShift</span><span class="badge">loginToStaffApp</span><span class="badge">logoutOfStaffApp</span><span class="badge">updateStaffAppBankInfo</span><span class="badge">updateStaffAppPersonalDetails</span></td><td><span class="badge">lib/staff-app-attendance-store.ts</span><span class="badge">lib/staff-app-data.ts</span><span class="badge">lib/staff-app-gig-application-store.ts</span><span class="badge">lib/staff-app-session.ts</span><span class="badge">lib/staff-app-store.ts</span><span class="badge">lib/staff-store.ts</span></td><td><span class="badge">data/gig-store.json</span><span class="badge">data/old-staff-documents.json</span><span class="badge">data/shift-store.json</span><span class="badge">data/staff-app-account-store.json</span><span class="badge">data/staff-app-attendance-store.json</span><span class="badge">data/staff-app-gig-application-store.json</span><span class="badge">data/staff-app-sessions.json</span><span class="badge">data/staff-document-store.json</span><span class="badge">data/staff-store.json</span><span class="badge">data/system-template-store.json</span></td>
+                  </tr>
+                
+          </tbody>
+        </table>
+      </div>
+    </section>
+  
+      
+    <section class="report-section">
+      <h2>JSON Store Inventory</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Store</th><th>Owning Libs</th><th>Consumer Count</th><th>Representative Consumers</th></tr>
+          </thead>
+          <tbody>
+            
+                  <tr>
+                    <td><code>data/auth-sessions.json</code></td><td><span class="badge">lib/auth-session.ts</span></td><td><strong>38</strong></td><td><span class="badge">app/(platform)/dashboard/page.tsx</span><span class="badge">app/(platform)/gigs/[gigId]/page.tsx</span><span class="badge">app/(platform)/gigs/[gigId]/shifts/[shiftId]/page.tsx</span><span class="badge">app/(platform)/gigs/new/page.tsx</span><span class="badge">app/(platform)/gigs/page.tsx</span><span class="badge">app/(platform)/layout.tsx</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>data/brand-store.json</code></td><td><span class="badge">lib/brand-store.ts</span></td><td><strong>5</strong></td><td><span class="badge">app/(platform)/layout.tsx</span><span class="badge">app/api/brand/logo/route.ts</span><span class="badge">app/login/page.tsx</span><span class="badge">components/platform-shell.tsx</span><span class="badge">lib/brand-store.ts</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>data/gig-file-attachments</code></td><td><span class="badge">lib/gig-file-storage.ts</span></td><td><strong>8</strong></td><td><span class="badge">app/(platform)/gigs/[gigId]/page.tsx</span><span class="badge">app/(platform)/gigs/new/page.tsx</span><span class="badge">app/api/gigs/[gigId]/files/[fileId]/content/route.ts</span><span class="badge">app/api/gigs/[gigId]/files/route.ts</span><span class="badge">components/gig-document-boxes.tsx</span><span class="badge">components/gig-files-manager.tsx</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>data/gig-store.json</code></td><td><span class="badge">lib/gig-store.ts</span></td><td><strong>70</strong></td><td><span class="badge">app/(platform)/dashboard/page.tsx</span><span class="badge">app/(platform)/gigs/[gigId]/page.tsx</span><span class="badge">app/(platform)/gigs/[gigId]/shifts/[shiftId]/page.tsx</span><span class="badge">app/(platform)/gigs/new/actions.ts</span><span class="badge">app/(platform)/gigs/new/page.tsx</span><span class="badge">app/(platform)/gigs/page.tsx</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>data/old-staff-documents.json</code></td><td><span class="badge">lib/staff-store.ts</span></td><td><strong>72</strong></td><td><span class="badge">app/(platform)/dashboard/page.tsx</span><span class="badge">app/(platform)/gigs/[gigId]/page.tsx</span><span class="badge">app/(platform)/gigs/[gigId]/shifts/[shiftId]/page.tsx</span><span class="badge">app/(platform)/gigs/new/page.tsx</span><span class="badge">app/(platform)/gigs/page.tsx</span><span class="badge">app/(platform)/layout.tsx</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>data/scm-staff-store.json</code></td><td><span class="badge">lib/scm-staff-store.ts</span></td><td><strong>41</strong></td><td><span class="badge">app/(platform)/dashboard/page.tsx</span><span class="badge">app/(platform)/gigs/[gigId]/page.tsx</span><span class="badge">app/(platform)/gigs/[gigId]/shifts/[shiftId]/page.tsx</span><span class="badge">app/(platform)/gigs/new/page.tsx</span><span class="badge">app/(platform)/gigs/page.tsx</span><span class="badge">app/(platform)/layout.tsx</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>data/shift-communication-store.json</code></td><td><span class="badge">lib/shift-communication-store.ts</span></td><td><strong>4</strong></td><td><span class="badge">app/(platform)/gigs/[gigId]/page.tsx</span><span class="badge">app/api/gigs/[gigId]/route.ts</span><span class="badge">app/api/gigs/[gigId]/shift-communications/route.ts</span><span class="badge">lib/shift-communication-store.ts</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>data/shift-store.json</code></td><td><span class="badge">lib/shift-store.ts</span></td><td><strong>34</strong></td><td><span class="badge">app/(platform)/gigs/[gigId]/page.tsx</span><span class="badge">app/(platform)/gigs/[gigId]/shifts/[shiftId]/page.tsx</span><span class="badge">app/api/gigs/[gigId]/route.ts</span><span class="badge">app/api/gigs/[gigId]/shifts/[shiftId]/route.ts</span><span class="badge">app/api/gigs/[gigId]/shifts/route.ts</span><span class="badge">app/api/gigs/[gigId]/time-report/route.ts</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>data/staff-app-account-store.json</code></td><td><span class="badge">lib/staff-app-store.ts</span></td><td><strong>36</strong></td><td><span class="badge">app/(platform)/gigs/[gigId]/page.tsx</span><span class="badge">app/(platform)/layout.tsx</span><span class="badge">app/(platform)/people/[personId]/page.tsx</span><span class="badge">app/(platform)/people/new/actions.ts</span><span class="badge">app/(platform)/people/new/page.tsx</span><span class="badge">app/api/gigs/[gigId]/shifts/[shiftId]/route.ts</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>data/staff-app-attendance-store.json</code></td><td><span class="badge">lib/staff-app-attendance-store.ts</span></td><td><strong>14</strong></td><td><span class="badge">app/(platform)/gigs/[gigId]/page.tsx</span><span class="badge">app/api/gigs/[gigId]/shifts/[shiftId]/route.ts</span><span class="badge">app/api/gigs/[gigId]/time-report/route.ts</span><span class="badge">app/staff-app/(protected)/check-in/page.tsx</span><span class="badge">app/staff-app/(protected)/gigs/[passId]/page.tsx</span><span class="badge">app/staff-app/(protected)/home/page.tsx</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>data/staff-app-gig-application-store.json</code></td><td><span class="badge">lib/staff-app-gig-application-store.ts</span></td><td><strong>8</strong></td><td><span class="badge">app/staff-app/(protected)/check-in/page.tsx</span><span class="badge">app/staff-app/(protected)/gigs/[passId]/page.tsx</span><span class="badge">app/staff-app/(protected)/profile/bank-info/page.tsx</span><span class="badge">app/staff-app/(protected)/profile/page.tsx</span><span class="badge">app/staff-app/(protected)/profile/personal-details/page.tsx</span><span class="badge">app/staff-app/actions.ts</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>data/staff-app-sessions.json</code></td><td><span class="badge">lib/staff-app-session.ts</span></td><td><strong>22</strong></td><td><span class="badge">app/staff-app/(protected)/check-in/page.tsx</span><span class="badge">app/staff-app/(protected)/colleagues/[colleagueId]/page.tsx</span><span class="badge">app/staff-app/(protected)/colleagues/page.tsx</span><span class="badge">app/staff-app/(protected)/documents/page.tsx</span><span class="badge">app/staff-app/(protected)/documents/payslips/[payslipId]/page.tsx</span><span class="badge">app/staff-app/(protected)/gigs/[passId]/page.tsx</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>data/staff-document-store.json</code></td><td><span class="badge">lib/staff-document-store.ts</span></td><td><strong>74</strong></td><td><span class="badge">app/(platform)/dashboard/page.tsx</span><span class="badge">app/(platform)/gigs/[gigId]/page.tsx</span><span class="badge">app/(platform)/gigs/[gigId]/shifts/[shiftId]/page.tsx</span><span class="badge">app/(platform)/gigs/new/page.tsx</span><span class="badge">app/(platform)/gigs/page.tsx</span><span class="badge">app/(platform)/layout.tsx</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>data/staff-store.json</code></td><td><span class="badge">lib/staff-store.ts</span></td><td><strong>72</strong></td><td><span class="badge">app/(platform)/dashboard/page.tsx</span><span class="badge">app/(platform)/gigs/[gigId]/page.tsx</span><span class="badge">app/(platform)/gigs/[gigId]/shifts/[shiftId]/page.tsx</span><span class="badge">app/(platform)/gigs/new/page.tsx</span><span class="badge">app/(platform)/gigs/page.tsx</span><span class="badge">app/(platform)/layout.tsx</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>data/system-policy-store.json</code></td><td><span class="badge">lib/system-policy-store.ts</span></td><td><strong>5</strong></td><td><span class="badge">app/(platform)/system-settings/page.tsx</span><span class="badge">app/api/staff-app/policy-pdf/route.ts</span><span class="badge">app/api/system-settings/policy/route.ts</span><span class="badge">app/staff-app/(protected)/scm-info/page.tsx</span><span class="badge">lib/system-policy-store.ts</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>data/system-scm-info-pdf-store.json</code></td><td><span class="badge">lib/system-scm-info-pdf-store.ts</span></td><td><strong>9</strong></td><td><span class="badge">app/(platform)/system-settings/page.tsx</span><span class="badge">app/api/system-settings/scm-info-pdfs/route.ts</span><span class="badge">app/staff-app/(protected)/scm-info/arena-info/page.tsx</span><span class="badge">app/staff-app/(protected)/scm-info/cash-card/page.tsx</span><span class="badge">app/staff-app/(protected)/scm-info/checklists/page.tsx</span><span class="badge">app/staff-app/(protected)/scm-info/page.tsx</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>data/system-scm-info-store.json</code></td><td><span class="badge">lib/system-scm-info-store.ts</span></td><td><strong>14</strong></td><td><span class="badge">app/(platform)/system-settings/page.tsx</span><span class="badge">app/api/system-settings/scm-info-pdfs/route.ts</span><span class="badge">app/api/system-settings/scm-info/route.ts</span><span class="badge">app/staff-app/(protected)/scm-info/arena-info/page.tsx</span><span class="badge">app/staff-app/(protected)/scm-info/cash-card/page.tsx</span><span class="badge">app/staff-app/(protected)/scm-info/checklists/page.tsx</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>data/system-template-store.json</code></td><td><span class="badge">lib/system-template-store.ts</span></td><td><strong>76</strong></td><td><span class="badge">app/(platform)/dashboard/page.tsx</span><span class="badge">app/(platform)/gigs/[gigId]/page.tsx</span><span class="badge">app/(platform)/gigs/[gigId]/shifts/[shiftId]/page.tsx</span><span class="badge">app/(platform)/gigs/new/page.tsx</span><span class="badge">app/(platform)/gigs/page.tsx</span><span class="badge">app/(platform)/layout.tsx</span></td>
+                  </tr>
+                
+          </tbody>
+        </table>
+      </div>
+    </section>
+  
+      
+    <section class="report-section">
+      <h2>Most Connected Internal Modules</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Module</th><th>Category</th><th>Imported By</th><th>Direct Imports</th></tr>
+          </thead>
+          <tbody>
+            
+                  <tr>
+                    <td><code>types/scm.ts</code></td><td>type</td><td><strong>40</strong></td><td>0</td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>lib/auth-session.ts</code></td><td>lib</td><td><strong>37</strong></td><td>5</td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>lib/gig-store.ts</code></td><td>lib</td><td><strong>26</strong></td><td>3</td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>lib/platform-access.ts</code></td><td>lib</td><td><strong>24</strong></td><td>2</td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>lib/staff-app-data.ts</code></td><td>lib</td><td><strong>21</strong></td><td>7</td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>lib/staff-app-session.ts</code></td><td>lib</td><td><strong>20</strong></td><td>1</td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>lib/staff-store.ts</code></td><td>lib</td><td><strong>19</strong></td><td>5</td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>data/scm-data.ts</code></td><td>dataModule</td><td><strong>14</strong></td><td>2</td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>lib/system-scm-info-store.ts</code></td><td>lib</td><td><strong>12</strong></td><td>2</td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>components/page-header.tsx</code></td><td>component</td><td><strong>11</strong></td><td>0</td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>types/scm-rbac.ts</code></td><td>type</td><td><strong>10</strong></td><td>0</td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>types/staff-app.ts</code></td><td>type</td><td><strong>10</strong></td><td>0</td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>components/status-badge.tsx</code></td><td>component</td><td><strong>9</strong></td><td>1</td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>lib/system-scm-info-pdf-shared.ts</code></td><td>lib</td><td><strong>9</strong></td><td>1</td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>lib/staff-app-store.ts</code></td><td>lib</td><td><strong>8</strong></td><td>4</td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>lib/system-scm-info-pdf-store.ts</code></td><td>lib</td><td><strong>8</strong></td><td>2</td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>lib/shift-store.ts</code></td><td>lib</td><td><strong>7</strong></td><td>6</td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>lib/scm-staff-store.ts</code></td><td>lib</td><td><strong>7</strong></td><td>3</td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>app/staff-app/actions.ts</code></td><td>action</td><td><strong>6</strong></td><td>6</td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>components/staff-app/gig-flow.tsx</code></td><td>component</td><td><strong>6</strong></td><td>2</td>
+                  </tr>
+                
+          </tbody>
+        </table>
+      </div>
+    </section>
+  
+      
+    <section class="report-section">
+      <h2>Internal API Call Sites</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Source File</th><th>Referenced /api Paths</th></tr>
+          </thead>
+          <tbody>
+            
+                  <tr>
+                    <td><code>app/staff-app/(protected)/scm-info/page.tsx</code></td><td><span class="badge">/api/staff-app/policy-pdf</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>components/brand-logo-uploader.tsx</code></td><td><span class="badge">/api/brand/logo</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>components/gig-delete-action.tsx</code></td><td><span class="badge">/api/gigs/</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>components/gig-document-boxes.tsx</code></td><td><span class="badge">/api/gigs/</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>components/gig-equipment-editor.tsx</code></td><td><span class="badge">/api/gigs/</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>components/gig-image-uploader.tsx</code></td><td><span class="badge">/api/gigs/</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>components/gig-overview-editor.tsx</code></td><td><span class="badge">/api/gigs/</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>components/gig-register-client.tsx</code></td><td><span class="badge">/api/gigs/</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>components/gig-report-closeout-panel.tsx</code></td><td><span class="badge">/api/gigs/</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>components/gig-shifts-panel.tsx</code></td><td><span class="badge">/api/gigs/</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>components/gig-time-report-panel.tsx</code></td><td><span class="badge">/api/gigs/</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>components/global-search.tsx</code></td><td><span class="badge">/api/search</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>components/scm-staff-profile-editor.tsx</code></td><td><span class="badge">/api/scm-staff/</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>components/shift-booking-manager.tsx</code></td><td><span class="badge">/api/gigs/</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>components/shift-overview-editor.tsx</code></td><td><span class="badge">/api/gigs/</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>components/staff-documents-panel.tsx</code></td><td><span class="badge">/api/staff/</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>components/staff-profile-editor.tsx</code></td><td><span class="badge">/api/staff/</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>components/system-settings-policy-uploader.tsx</code></td><td><span class="badge">/api/staff-app/policy-pdf</span><span class="badge">/api/system-settings/policy</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>components/system-settings-scm-info-editor.tsx</code></td><td><span class="badge">/api/staff-app/policy-pdf</span><span class="badge">/api/system-settings/scm-info</span><span class="badge">/api/system-settings/scm-info-pdfs</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>components/system-settings-template-editor.tsx</code></td><td><span class="badge">/api/system-settings/templates</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>lib/gig-file-storage.ts</code></td><td><span class="badge">/api/gigs/</span></td>
+                  </tr>
+                
+                  <tr>
+                    <td><code>lib/staff-app-data.ts</code></td><td><span class="badge">/api/staff/</span></td>
+                  </tr>
+                
+          </tbody>
+        </table>
+      </div>
+    </section>
+  
+      <section class="report-section">
+        <h2>Observations</h2>
+        <div class="callout">
+          <ul class="findings">
+            <li>The current app structure is considerably broader than the original README route list: the workspace now includes admin operations, staff self-service, document generation, and configurable system settings.</li>
+            <li>Most critical state flows through <code>lib/</code> first, which makes that folder the clearest integration boundary if the app is later migrated from JSON stores to a backend service.</li>
+            <li>The same gig data appears in several downstream systems: search results, shift staffing, time-report generation, closeout, temporary-manager visibility, and staff-app managed gig cards.</li>
+            <li>Several routes are protected by role-aware wrappers in <code>lib/auth-session.ts</code> and <code>lib/platform-access.ts</code>, so authorization is not only page-based but also domain-object based.</li>
+          </ul>
+        </div>
+        <p class="footer-note">This report is generated from the current workspace by scanning routes, modules, direct imports, transitive store usage, and internal <code>/api</code> references.</p>
+      </section>
+    </main>
+  </body>
+</html>

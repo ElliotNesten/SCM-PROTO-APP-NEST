@@ -1,0 +1,413 @@
+[
+  {
+    "id": "gig-3-stand-leader",
+    "gigId": "gig-3",
+    "role": "Stand Leader",
+    "priorityLevel": 1,
+    "startTime": "13:00",
+    "endTime": "22:30",
+    "requiredStaff": 1,
+    "notes": "Lead main floor stands.",
+    "skillRequirement": "Experienced arena lead",
+    "priorityTag": "High",
+    "assignments": []
+  },
+  {
+    "id": "shift-4",
+    "gigId": "gig-2",
+    "role": "Stand Leader",
+    "startTime": "14:30",
+    "endTime": "23:00",
+    "requiredStaff": 1,
+    "notes": "West entrance zone.",
+    "priorityTag": "High",
+    "assignments": [],
+    "priorityLevel": 1
+  },
+  {
+    "id": "gig-0917ec01-stand-leader",
+    "gigId": "gig-0917ec01",
+    "role": "Stand Leader",
+    "startTime": "15:00",
+    "endTime": "23:00",
+    "requiredStaff": 1,
+    "notes": "Lead main floor stands.",
+    "skillRequirement": "Experienced arena lead",
+    "priorityTag": "High",
+    "assignments": [
+      {
+        "staffId": "staff-2",
+        "bookingStatus": "Confirmed"
+      }
+    ],
+    "priorityLevel": 1
+  },
+  {
+    "id": "gig-2c102292-stand-leader",
+    "gigId": "gig-2c102292",
+    "role": "Stand Leader",
+    "startTime": "15:00",
+    "endTime": "23:00",
+    "requiredStaff": 1,
+    "notes": "Lead main floor stands.",
+    "skillRequirement": "Experienced arena lead",
+    "priorityTag": "High",
+    "assignments": [],
+    "priorityLevel": 1
+  },
+  {
+    "id": "gig-80b483b4-stand-leader",
+    "gigId": "gig-80b483b4",
+    "role": "Stand Leader",
+    "startTime": "15:00",
+    "endTime": "23:00",
+    "requiredStaff": 1,
+    "notes": "Lead main floor stands.",
+    "skillRequirement": "Experienced arena lead",
+    "priorityTag": "High",
+    "assignments": [
+      {
+        "staffId": "staff-9",
+        "bookingStatus": "Confirmed",
+        "hourlyRate": 130,
+        "hourlyRateCurrency": "NOK",
+        "hourlyRateCountry": "Norway",
+        "hourlyRateSource": "standard",
+        "timeReportApproved": false,
+        "checkedIn": "2026-03-31T09:48:00.000Z",
+        "checkedOut": "2026-03-31T09:48:00.000Z"
+      }
+    ],
+    "priorityLevel": 1
+  },
+  {
+    "id": "gig-96044f60-stand-leader",
+    "gigId": "gig-96044f60",
+    "role": "Stand Leader",
+    "startTime": "15:00",
+    "endTime": "23:00",
+    "requiredStaff": 1,
+    "notes": "Lead main floor stands.",
+    "skillRequirement": "Experienced arena lead",
+    "priorityTag": "High",
+    "assignments": [],
+    "priorityLevel": 1
+  },
+  {
+    "id": "gig-b6b550c5-stand-leader",
+    "gigId": "gig-b6b550c5",
+    "role": "Stand Leader",
+    "priorityLevel": 1,
+    "startTime": "15:00",
+    "endTime": "23:00",
+    "requiredStaff": 1,
+    "notes": "Lead main floor stands.",
+    "skillRequirement": "Experienced arena lead",
+    "priorityTag": "High",
+    "assignments": [
+      {
+        "staffId": "staff-7",
+        "bookingStatus": "Confirmed",
+        "dinnerProvided": true,
+        "checkedIn": "2026-03-26T14:02:00.000Z",
+        "checkedOut": "2026-03-26T21:59:00.000Z",
+        "timeReportApproved": true,
+        "timeReportApprovedAt": "2026-03-30T09:23:15.914Z"
+      }
+    ]
+  },
+  {
+    "id": "gig-d924a610-stand-leader",
+    "gigId": "gig-d924a610",
+    "role": "Stand Leader",
+    "startTime": "15:00",
+    "endTime": "23:00",
+    "requiredStaff": 2,
+    "notes": "Lead main floor stands.",
+    "skillRequirement": "Experienced arena lead",
+    "priorityTag": "High",
+    "assignments": [
+      {
+        "staffId": "staff-4",
+        "bookingStatus": "Confirmed"
+      }
+    ],
+    "priorityLevel": 1
+  },
+  {
+    "id": "gig-d924a610-stand-leader-1",
+    "gigId": "gig-d924a610",
+    "role": "Stand Leader",
+    "priorityLevel": 2,
+    "startTime": "15:00",
+    "endTime": "23:00",
+    "requiredStaff": 2,
+    "notes": "Lead main floor stands.",
+    "priorityTag": "High",
+    "assignments": [
+      {
+        "staffId": "staff-2",
+        "bookingStatus": "Confirmed"
+      },
+      {
+        "staffId": "staff-7",
+        "bookingStatus": "Confirmed"
+      }
+    ]
+  },
+  {
+    "id": "shift-10",
+    "gigId": "gig-4",
+    "role": "Stand Leader",
+    "startTime": "15:00",
+    "endTime": "23:00",
+    "requiredStaff": 1,
+    "notes": "Awaiting confirmation.",
+    "priorityTag": "High",
+    "assignments": [],
+    "priorityLevel": 1
+  },
+  {
+    "id": "shift-13",
+    "gigId": "gig-5",
+    "role": "Stand Leader",
+    "startTime": "15:30",
+    "endTime": "23:45",
+    "requiredStaff": 1,
+    "notes": "Not yet published.",
+    "priorityTag": "High",
+    "assignments": [],
+    "priorityLevel": 1
+  },
+  {
+    "id": "gig-f436523f-stand-leader-1",
+    "gigId": "gig-f436523f",
+    "role": "Stand Leader",
+    "priorityLevel": 1,
+    "startTime": "16:00",
+    "endTime": "23:00",
+    "requiredStaff": 1,
+    "notes": "Lead main floor stands.",
+    "priorityTag": "High",
+    "assignments": []
+  },
+  {
+    "id": "gig-3-seller",
+    "gigId": "gig-3",
+    "role": "Seller",
+    "priorityLevel": 2,
+    "startTime": "14:00",
+    "endTime": "21:45",
+    "requiredStaff": 6,
+    "notes": "Main sales team.",
+    "skillRequirement": "POS knowledge",
+    "priorityTag": "High",
+    "assignments": []
+  },
+  {
+    "id": "gig-0917ec01-seller",
+    "gigId": "gig-0917ec01",
+    "role": "Seller",
+    "startTime": "16:00",
+    "endTime": "22:15",
+    "requiredStaff": 3,
+    "notes": "Main sales team.",
+    "skillRequirement": "POS knowledge",
+    "priorityTag": "High",
+    "assignments": [
+      {
+        "staffId": "staff-4",
+        "bookingStatus": "Confirmed"
+      },
+      {
+        "staffId": "staff-3",
+        "bookingStatus": "Confirmed"
+      },
+      {
+        "staffId": "staff-5",
+        "bookingStatus": "Confirmed"
+      }
+    ],
+    "priorityLevel": 2
+  },
+  {
+    "id": "gig-2c102292-seller",
+    "gigId": "gig-2c102292",
+    "role": "Seller",
+    "startTime": "16:00",
+    "endTime": "22:15",
+    "requiredStaff": 3,
+    "notes": "Main sales team.",
+    "skillRequirement": "POS knowledge",
+    "priorityTag": "High",
+    "assignments": [],
+    "priorityLevel": 2
+  },
+  {
+    "id": "gig-96044f60-seller",
+    "gigId": "gig-96044f60",
+    "role": "Seller",
+    "startTime": "16:00",
+    "endTime": "22:15",
+    "requiredStaff": 3,
+    "notes": "Main sales team.",
+    "skillRequirement": "POS knowledge",
+    "priorityTag": "High",
+    "assignments": [],
+    "priorityLevel": 2
+  },
+  {
+    "id": "shift-11",
+    "gigId": "gig-4",
+    "role": "Seller",
+    "startTime": "16:00",
+    "endTime": "22:30",
+    "requiredStaff": 7,
+    "notes": "Draft staffing.",
+    "priorityTag": "High",
+    "assignments": [],
+    "priorityLevel": 2
+  },
+  {
+    "id": "shift-5",
+    "gigId": "gig-2",
+    "role": "Seller",
+    "startTime": "16:00",
+    "endTime": "22:30",
+    "requiredStaff": 6,
+    "notes": "Mobile sellers included.",
+    "priorityTag": "Medium",
+    "assignments": [],
+    "priorityLevel": 2
+  },
+  {
+    "id": "shift-14",
+    "gigId": "gig-5",
+    "role": "Seller",
+    "startTime": "16:30",
+    "endTime": "23:00",
+    "requiredStaff": 5,
+    "notes": "Not yet published.",
+    "priorityTag": "Medium",
+    "assignments": [],
+    "priorityLevel": 2
+  },
+  {
+    "id": "gig-3-runner",
+    "gigId": "gig-3",
+    "role": "Runner",
+    "priorityLevel": 3,
+    "startTime": "12:00",
+    "endTime": "22:30",
+    "requiredStaff": 2,
+    "notes": "Stock refills and support.",
+    "priorityTag": "Medium",
+    "assignments": []
+  },
+  {
+    "id": "gig-0917ec01-runner",
+    "gigId": "gig-0917ec01",
+    "role": "Runner",
+    "startTime": "14:00",
+    "endTime": "23:00",
+    "requiredStaff": 1,
+    "notes": "Stock refills and support.",
+    "priorityTag": "Medium",
+    "assignments": [
+      {
+        "staffId": "staff-8",
+        "bookingStatus": "Confirmed"
+      }
+    ],
+    "priorityLevel": 3
+  },
+  {
+    "id": "gig-2c102292-runner",
+    "gigId": "gig-2c102292",
+    "role": "Runner",
+    "startTime": "14:00",
+    "endTime": "23:00",
+    "requiredStaff": 1,
+    "notes": "Stock refills and support.",
+    "priorityTag": "Medium",
+    "assignments": [],
+    "priorityLevel": 3
+  },
+  {
+    "id": "gig-80b483b4-runner",
+    "gigId": "gig-80b483b4",
+    "role": "Runner",
+    "startTime": "14:00",
+    "endTime": "23:00",
+    "requiredStaff": 1,
+    "notes": "Stock refills and support.",
+    "priorityTag": "Medium",
+    "assignments": [
+      {
+        "staffId": "staff-4",
+        "bookingStatus": "Confirmed"
+      }
+    ],
+    "priorityLevel": 3
+  },
+  {
+    "id": "gig-96044f60-runner",
+    "gigId": "gig-96044f60",
+    "role": "Runner",
+    "startTime": "14:00",
+    "endTime": "23:00",
+    "requiredStaff": 1,
+    "notes": "Stock refills and support.",
+    "priorityTag": "Medium",
+    "assignments": [],
+    "priorityLevel": 3
+  },
+  {
+    "id": "gig-d924a610-runner-1",
+    "gigId": "gig-d924a610",
+    "role": "Runner",
+    "priorityLevel": 3,
+    "startTime": "15:00",
+    "endTime": "23:00",
+    "requiredStaff": 1,
+    "notes": "Stock refills and support.",
+    "priorityTag": "Medium",
+    "assignments": []
+  },
+  {
+    "id": "shift-12",
+    "gigId": "gig-4",
+    "role": "Runner",
+    "startTime": "15:00",
+    "endTime": "23:00",
+    "requiredStaff": 3,
+    "notes": "Draft staffing.",
+    "priorityTag": "Low",
+    "assignments": [],
+    "priorityLevel": 3
+  },
+  {
+    "id": "shift-6",
+    "gigId": "gig-2",
+    "role": "Runner",
+    "startTime": "15:00",
+    "endTime": "23:15",
+    "requiredStaff": 2,
+    "notes": "Back of house replenishment.",
+    "priorityTag": "Medium",
+    "assignments": [],
+    "priorityLevel": 3
+  },
+  {
+    "id": "shift-15",
+    "gigId": "gig-5",
+    "role": "Runner",
+    "startTime": "15:30",
+    "endTime": "23:45",
+    "requiredStaff": 2,
+    "notes": "Not yet published.",
+    "priorityTag": "Low",
+    "assignments": [],
+    "priorityLevel": 3
+  }
+]

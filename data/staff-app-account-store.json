@@ -1,0 +1,136 @@
+[
+  {
+    "id": "staff-app-user-1",
+    "linkedStaffProfileId": "staff-2",
+    "displayName": "Anton Scholdberg",
+    "email": "anton@scm.se",
+    "phone": "+46 70 222 2222",
+    "country": "Sweden",
+    "region": "Stockholm",
+    "roleScopes": [
+      {
+        "role": "Seller",
+        "level": 1
+      },
+      {
+        "role": "Stand Leader",
+        "level": 1
+      }
+    ],
+    "profileImageUrl": "/staff-images/staff-2/20251003-171602932-ios-849647f3.jpg",
+    "passwordHash": "scrypt:95b16ae5-3a98-40ef-a5f4-5c15966b4799:8274ca667136672f7fb4a40426ade65f1b5a0e6ba03a3e3bedda7b15004e899ff56d3fb197f8f162bb5ba4c19f03401612551820525b14e51cd0612c07c1a1d8"
+  },
+  {
+    "id": "staff-app-staff-3",
+    "linkedStaffProfileId": "staff-3",
+    "displayName": "Emilio Ribba",
+    "email": "Emil@scm.se",
+    "phone": "+46 70 333 3333",
+    "country": "Sweden",
+    "region": "Stockholm",
+    "roleScopes": [
+      {
+        "role": "Seller",
+        "level": 1
+      },
+      {
+        "role": "Stand Leader",
+        "level": 3
+      },
+      {
+        "role": "Other",
+        "level": 2
+      }
+    ],
+    "passwordHash": "scrypt:3bd90b4e-8114-4313-b161-3baf4b5531c1:64afad671706c66ce4000fc9e21746ba1dfab17a9a8f9222a119886ba028a01fd93e75aafcf32687a7244f2e902b27978b19fcce51a3342fcf6ad6a68ba6b3e6"
+  },
+  {
+    "id": "staff-app-staff-4",
+    "linkedStaffProfileId": "staff-4",
+    "displayName": "Daniel Boss",
+    "email": "daniel@scm.se",
+    "phone": "+46 70 444 4444",
+    "country": "Sweden",
+    "region": "Gothenburg",
+    "roleScopes": [
+      {
+        "role": "Seller",
+        "level": 2
+      },
+      {
+        "role": "Runner",
+        "level": 2
+      }
+    ],
+    "passwordHash": "scrypt:1803422a-cc7d-4acd-b49c-75c20d257c40:e0fa14a861a2223b1529a495ed25dce48488937ada4a80e0a5991cfbddee7a2e91a9b6fe54bd2226f3c57eaef2951c7640641c3fabea0f57340bbceb64fbd6fd"
+  },
+  {
+    "id": "staff-app-staff-6",
+    "linkedStaffProfileId": "staff-6",
+    "displayName": "Noah Berg",
+    "email": "noah@scm.se",
+    "phone": "+46 70 666 6666",
+    "country": "Sweden",
+    "region": "Gothenburg",
+    "roleScopes": [
+      {
+        "role": "Seller",
+        "level": 2
+      }
+    ],
+    "passwordHash": "scrypt:33bfaf63-d503-474a-ba2c-33448aa27c6c:f6bbb2bacb0c2c0bf671634866de42e41330a363852ff3e230a365cc6e2e81af94798b159aafbafdedaa58a01885fa00f43a6c502774bc5d7a7129b19e22a6ff"
+  },
+  {
+    "id": "staff-app-staff-1",
+    "linkedStaffProfileId": "staff-1",
+    "displayName": "Lucas Zettergren",
+    "email": "lucas@scm.se",
+    "phone": "+46 70 111 1111",
+    "country": "Sweden",
+    "region": "Stockholm",
+    "roleScopes": [
+      {
+        "role": "Seller",
+        "level": 2
+      }
+    ],
+    "profileImageUrl": "/staff-images/staff-1/sk-rmbild-2025-07-01-101459-bdfd7e1a.png",
+    "passwordHash": "scrypt:1324dec2-6ab8-4baf-9228-ee7b0b4a2ffb:537a631ce89aed33460d7b1d735f0ea76c61e8eda6bd9b58f417690bc74d2f2f523fcf238f6aa7a43b6dcc72e80aa496c4ac5b25425af0e541442b4fef144c90"
+  },
+  {
+    "id": "staff-app-staff-7",
+    "linkedStaffProfileId": "staff-7",
+    "displayName": "Sara Holm",
+    "email": "sara@scm.se",
+    "phone": "+46 70 777 7777",
+    "country": "Sweden",
+    "region": "Stockholm",
+    "roleScopes": [
+      {
+        "role": "Seller",
+        "level": 1
+      }
+    ],
+    "passwordHash": "scrypt:4312a4f4-4629-4b24-aeac-6179854d0ff1:af65e7d011117640089f2126a0f637f59ab9fd1fd3b28aa77b3b52e7c95f5d77ed823854f15a6ee708ab99ef1ee7847d1c057db05a2365b979d56b4384e165d7"
+  },
+  {
+    "id": "staff-app-staff-9",
+    "linkedStaffProfileId": "staff-9",
+    "displayName": "Maja Ek",
+    "email": "maja@scm.se",
+    "phone": "+46 70 999 9999",
+    "country": "Norway",
+    "region": "Oslo",
+    "roleScopes": [
+      {
+        "role": "Stand Leader",
+        "level": 1
+      },
+      {
+        "role": "Runner",
+        "level": 3
+      }
+    ],
+    "passwordHash": "scrypt:b9b44e91-d8fe-4102-81f7-9044246a3207:757418cfc0426c513a2ecde6f003682029dd412c3d4fb80fd42525784e2edc109d577244960a64d373a43c5102a444959db80c1e69f0f0006eb94847bb1d2395"
+  }
+]

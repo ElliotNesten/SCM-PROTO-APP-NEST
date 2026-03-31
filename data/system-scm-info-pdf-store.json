@@ -1,0 +1,167 @@
+{
+  "sectionPdfs": {
+    "rolesTraining": [
+      {
+        "pdfUrl": "",
+        "fileName": "",
+        "uploadedAt": "",
+        "uploadedBy": "",
+        "buttonLabel": ""
+      },
+      {
+        "pdfUrl": "",
+        "fileName": "",
+        "uploadedAt": "",
+        "uploadedBy": "",
+        "buttonLabel": ""
+      },
+      {
+        "pdfUrl": "",
+        "fileName": "",
+        "uploadedAt": "",
+        "uploadedBy": "",
+        "buttonLabel": ""
+      }
+    ],
+    "checklists": [
+      {
+        "pdfUrl": "",
+        "fileName": "",
+        "uploadedAt": "",
+        "uploadedBy": "",
+        "buttonLabel": ""
+      },
+      {
+        "pdfUrl": "",
+        "fileName": "",
+        "uploadedAt": "",
+        "uploadedBy": "",
+        "buttonLabel": ""
+      },
+      {
+        "pdfUrl": "",
+        "fileName": "",
+        "uploadedAt": "",
+        "uploadedBy": "",
+        "buttonLabel": ""
+      }
+    ],
+    "platformInfo": [
+      {
+        "pdfUrl": "",
+        "fileName": "",
+        "uploadedAt": "",
+        "uploadedBy": "",
+        "buttonLabel": ""
+      },
+      {
+        "pdfUrl": "",
+        "fileName": "",
+        "uploadedAt": "",
+        "uploadedBy": "",
+        "buttonLabel": ""
+      },
+      {
+        "pdfUrl": "",
+        "fileName": "",
+        "uploadedAt": "",
+        "uploadedBy": "",
+        "buttonLabel": ""
+      }
+    ],
+    "policy": [
+      {
+        "pdfUrl": "",
+        "fileName": "",
+        "uploadedAt": "",
+        "uploadedBy": "",
+        "buttonLabel": ""
+      },
+      {
+        "pdfUrl": "",
+        "fileName": "",
+        "uploadedAt": "",
+        "uploadedBy": "",
+        "buttonLabel": ""
+      },
+      {
+        "pdfUrl": "",
+        "fileName": "",
+        "uploadedAt": "",
+        "uploadedBy": "",
+        "buttonLabel": ""
+      }
+    ],
+    "cashCard": [
+      {
+        "pdfUrl": "",
+        "fileName": "",
+        "uploadedAt": "",
+        "uploadedBy": "",
+        "buttonLabel": ""
+      },
+      {
+        "pdfUrl": "",
+        "fileName": "",
+        "uploadedAt": "",
+        "uploadedBy": "",
+        "buttonLabel": ""
+      },
+      {
+        "pdfUrl": "",
+        "fileName": "",
+        "uploadedAt": "",
+        "uploadedBy": "",
+        "buttonLabel": ""
+      }
+    ],
+    "arenaInfo": [
+      {
+        "pdfUrl": "",
+        "fileName": "",
+        "uploadedAt": "",
+        "uploadedBy": "",
+        "buttonLabel": ""
+      },
+      {
+        "pdfUrl": "",
+        "fileName": "",
+        "uploadedAt": "",
+        "uploadedBy": "",
+        "buttonLabel": ""
+      },
+      {
+        "pdfUrl": "",
+        "fileName": "",
+        "uploadedAt": "",
+        "uploadedBy": "",
+        "buttonLabel": ""
+      }
+    ]
+  },
+  "itemPdfs": {
+    "rolesTraining:0": [
+      {
+        "pdfUrl": "",
+        "fileName": "",
+        "uploadedAt": "",
+        "uploadedBy": "",
+        "buttonLabel": ""
+      },
+      {
+        "pdfUrl": "",
+        "fileName": "",
+        "uploadedAt": "",
+        "uploadedBy": "",
+        "buttonLabel": ""
+      },
+      {
+        "pdfUrl": "",
+        "fileName": "",
+        "uploadedAt": "",
+        "uploadedBy": "",
+        "buttonLabel": ""
+      }
+    ]
+  }
+}

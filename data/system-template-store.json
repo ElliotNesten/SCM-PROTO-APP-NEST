@@ -1,0 +1,34 @@
+{
+  "templates": {
+    "employmentContract": {
+      "id": "employmentContract",
+      "label": "Employment Contract",
+      "description": "Template used when a shift creates an employment contract PDF.",
+      "title": "Employment Contract",
+      "intro": "This agreement confirms the staff assignment for the selected SCM gig.",
+      "footer": "Generated from the current approved system template.",
+      "enabledPlaceholders": [
+        "gigName",
+        "gigDate",
+        "shiftRole",
+        "generatedDate",
+        "referenceId"
+      ]
+    },
+    "timeReport": {
+      "id": "timeReport",
+      "label": "Time Report",
+      "description": "Template used when an approved time report PDF is generated.",
+      "title": "Time Report",
+      "intro": "This report summarizes the completed shift and the approved work entry.",
+      "footer": "Generated from the current approved system template.",
+      "enabledPlaceholders": [
+        "gigName",
+        "gigDate",
+        "shiftRole",
+        "generatedDate",
+        "referenceId"
+      ]
+    }
+  }
+}

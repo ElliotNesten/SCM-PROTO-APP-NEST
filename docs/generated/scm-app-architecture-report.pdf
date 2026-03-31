@@ -1,0 +1,2869 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [7 0 R 9 0 R 11 0 R 13 0 R 15 0 R 17 0 R 19 0 R 21 0 R 23 0 R 25 0 R 27 0 R] /Count 11 >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Courier >>
+endobj
+6 0 obj
+<< /Length 3716 >>
+stream
+BT
+/F2 21.00 Tf
+1 0 0 1 48.00 756.00 Tm
+(SCM App Architecture Report) Tj
+ET
+BT
+/F1 10.40 Tf
+1 0 0 1 48.00 717.18 Tm
+(Generated: 30 Mar 2026, 20:04) Tj
+ET
+BT
+/F1 10.40 Tf
+1 0 0 1 48.00 697.41 Tm
+(Workspace: `C:\\Users\\Anton\\OneDrive\\Desktop\\SCM PLATFORM PROTOTYP`) Tj
+ET
+BT
+/F2 14.50 Tf
+1 0 0 1 48.00 669.64 Tm
+(Executive Summary) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 642.05 Tm
+(- This workspace is a single Next.js App Router application that contains two product) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 627.57 Tm
+(surfaces: an SCM admin platform and a standalone mobile staff app.) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 613.09 Tm
+(- Persistence is file-backed. Business data, sessions, templates, and settings are stored) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 598.60 Tm
+(under `data/` and wrapped by service-style modules in `lib/`.) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 584.12 Tm
+(- The most connected layer is `lib/`, which acts as the boundary between routes/components) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 569.63 Tm
+(and JSON stores, PDFs, attachment folders, and access-control logic.) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 555.15 Tm
+(- The gig domain is the central integration point. Gigs connect to shifts, time reports,) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 540.67 Tm
+(closeout, files, temporary managers, search indexing, and staff-app visibility windows.) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 526.18 Tm
+(- System settings drive downstream behavior. Updated policy/template/SCM-info stores are) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 511.70 Tm
+(read again by API routes, PDF builders, and staff-app guide surfaces.) Tj
+ET
+BT
+/F2 14.50 Tf
+1 0 0 1 48.00 484.21 Tm
+(At A Glance) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 456.62 Tm
+(| Metric | Value |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 444.98 Tm
+(| --- | --- |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 433.34 Tm
+(| Source files analysed | 179 |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 421.69 Tm
+(| Platform pages | 15 |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 410.05 Tm
+(| Staff-app pages | 28 |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 398.40 Tm
+(| API routes | 24 |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 386.76 Tm
+(| Server action files | 5 |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 375.12 Tm
+(| Reusable components | 42 |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 363.47 Tm
+(| Service/store libs | 31 |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 351.83 Tm
+(| JSON-backed data stores | 17 |) Tj
+ET
+BT
+/F2 14.50 Tf
+1 0 0 1 48.00 327.18 Tm
+(Layer Model) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 295.59 Tm
+(App Router pages/layouts/actions) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 283.95 Tm
+() Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 272.31 Tm
+(Shared UI components) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 260.66 Tm
+() Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 249.02 Tm
+(lib/ service + policy + store wrappers) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 237.37 Tm
+() Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 225.73 Tm
+(data/*.json, public assets, generated PDF buffers, attachment folders) Tj
+ET
+BT
+/F2 14.50 Tf
+1 0 0 1 48.00 197.09 Tm
+(Domain Connections) Tj
+ET
+BT
+/F2 12.00 Tf
+1 0 0 1 48.00 163.50 Tm
+(Authentication And Session Control) Tj
+ET
+BT
+/F1 10.40 Tf
+1 0 0 1 48.00 140.46 Tm
+(The platform and the staff app both use file-backed session stores. Platform auth can also) Tj
+ET
+BT
+/F1 10.40 Tf
+1 0 0 1 48.00 125.69 Tm
+(elevate approved staff accounts into temporary gig-manager sessions when linked gig access) Tj
+ET
+BT
+/F1 10.40 Tf
+1 0 0 1 48.00 110.92 Tm
+(exists.) Tj
+ET
+BT
+/F1 10.40 Tf
+1 0 0 1 48.00 91.15 Tm
+(Connected files and stores:) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 71.38 Tm
+(- `app/auth-actions.ts`) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 56.90 Tm
+(- `app/login/page.tsx`) Tj
+ET
+BT
+/F1 8.50 Tf
+1 0 0 1 500.00 24.00 Tm
+(Page 1 / 11) Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 6 0 R >>
+endobj
+8 0 obj
+<< /Length 4029 >>
+stream
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 760.00 Tm
+(- `app/staff-app/actions.ts`) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 745.52 Tm
+(- `app/staff-app/login/page.tsx`) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 731.03 Tm
+(- `lib/auth-session.ts`) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 716.55 Tm
+(- `lib/staff-app-session.ts`) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 702.06 Tm
+(- `lib/scm-staff-store.ts`) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 687.58 Tm
+(- `lib/staff-app-store.ts`) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 673.10 Tm
+(- `lib/password-utils.ts`) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 658.61 Tm
+(- `data/auth-sessions.json`) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 644.13 Tm
+(- `data/staff-app-sessions.json`) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 629.64 Tm
+(- `data/scm-staff-store.json`) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 615.16 Tm
+(- `data/staff-app-account-store.json`) Tj
+ET
+BT
+/F2 12.00 Tf
+1 0 0 1 48.00 589.68 Tm
+(Gig And Shift Operations) Tj
+ET
+BT
+/F1 10.40 Tf
+1 0 0 1 48.00 566.64 Tm
+(Gigs are the central operational entity. Gig routes fan out into overview editing, file) Tj
+ET
+BT
+/F1 10.40 Tf
+1 0 0 1 48.00 551.87 Tm
+(management, shift planning, report documents, closeout, and temporary manager sharing. Shift) Tj
+ET
+BT
+/F1 10.40 Tf
+1 0 0 1 48.00 537.10 Tm
+(state automatically syncs against gig creation and teardown.) Tj
+ET
+BT
+/F1 10.40 Tf
+1 0 0 1 48.00 517.33 Tm
+(Connected files and stores:) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 497.56 Tm
+(- `app/\(platform\)/gigs/page.tsx`) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 483.08 Tm
+(- `app/\(platform\)/gigs/new/page.tsx`) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 468.60 Tm
+(- `app/\(platform\)/gigs/new/actions.ts`) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 454.11 Tm
+(- `app/\(platform\)/gigs/[gigId]/page.tsx`) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 439.63 Tm
+(- `app/\(platform\)/gigs/[gigId]/shifts/[shiftId]/page.tsx`) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 425.14 Tm
+(- `components/gig-overview-editor.tsx`) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 410.66 Tm
+(- `components/gig-files-manager.tsx`) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 396.18 Tm
+(- `components/gig-shifts-panel.tsx`) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 381.69 Tm
+(- `components/gig-report-documents.tsx`) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 367.21 Tm
+(- `components/gig-report-closeout-panel.tsx`) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 352.72 Tm
+(- `lib/gig-store.ts`) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 338.24 Tm
+(- `lib/shift-store.ts`) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 323.76 Tm
+(- `lib/gig-time-report-store.ts`) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 309.27 Tm
+(- `lib/gig-closeout.ts`) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 294.79 Tm
+(- `lib/gig-file-storage.ts`) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 280.30 Tm
+(- `lib/shift-communication-store.ts`) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 265.82 Tm
+(- `data/gig-store.json`) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 251.34 Tm
+(- `data/shift-store.json`) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 236.85 Tm
+(- `data/shift-communication-store.json`) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 222.37 Tm
+(- `data/gig-file-attachments`) Tj
+ET
+BT
+/F2 12.00 Tf
+1 0 0 1 48.00 196.88 Tm
+(People, Profiles, And SCM Staff Administration) Tj
+ET
+BT
+/F1 10.40 Tf
+1 0 0 1 48.00 173.84 Tm
+(The admin platform keeps two distinct people models: operational staff profiles in the People) Tj
+ET
+BT
+/F1 10.40 Tf
+1 0 0 1 48.00 159.08 Tm
+(directory and internal SCM platform users in the SCM Staff area. Access control, search) Tj
+ET
+BT
+/F1 10.40 Tf
+1 0 0 1 48.00 144.31 Tm
+(visibility, and scope rules are layered on top of those two stores.) Tj
+ET
+BT
+/F1 10.40 Tf
+1 0 0 1 48.00 124.54 Tm
+(Connected files and stores:) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 104.77 Tm
+(- `app/\(platform\)/people/page.tsx`) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 90.29 Tm
+(- `app/\(platform\)/people/new/page.tsx`) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 75.80 Tm
+(- `app/\(platform\)/people/new/actions.ts`) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 61.32 Tm
+(- `app/\(platform\)/people/[personId]/page.tsx`) Tj
+ET
+BT
+/F1 8.50 Tf
+1 0 0 1 500.00 24.00 Tm
+(Page 2 / 11) Tj
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 8 0 R >>
+endobj
+10 0 obj
+<< /Length 4099 >>
+stream
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 760.00 Tm
+(- `app/\(platform\)/profile/page.tsx`) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 745.52 Tm
+(- `app/\(platform\)/scm-staff/page.tsx`) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 731.03 Tm
+(- `app/\(platform\)/scm-staff/new/page.tsx`) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 716.55 Tm
+(- `app/\(platform\)/scm-staff/new/actions.ts`) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 702.06 Tm
+(- `app/\(platform\)/scm-staff/[personId]/page.tsx`) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 687.58 Tm
+(- `components/staff-profile-editor.tsx`) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 673.10 Tm
+(- `components/scm-staff-profile-editor.tsx`) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 658.61 Tm
+(- `components/staff-documents-panel.tsx`) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 644.13 Tm
+(- `components/scm-role-permission-guide.tsx`) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 629.64 Tm
+(- `lib/staff-store.ts`) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 615.16 Tm
+(- `lib/staff-document-store.ts`) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 600.68 Tm
+(- `lib/scm-staff-store.ts`) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 586.19 Tm
+(- `lib/platform-access.ts`) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 571.71 Tm
+(- `types/scm-rbac.ts`) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 557.22 Tm
+(- `types/staff-role.ts`) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 542.74 Tm
+(- `data/staff-store.json`) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 528.26 Tm
+(- `data/staff-document-store.json`) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 513.77 Tm
+(- `data/scm-staff-store.json`) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 499.29 Tm
+(- `data/old-staff-documents.json`) Tj
+ET
+BT
+/F2 12.00 Tf
+1 0 0 1 48.00 473.80 Tm
+(Staff App Experience) Tj
+ET
+BT
+/F1 10.40 Tf
+1 0 0 1 48.00 450.76 Tm
+(The standalone mobile staff app is a second product surface inside the same Next.js project.) Tj
+ET
+BT
+/F1 10.40 Tf
+1 0 0 1 48.00 436.00 Tm
+(It pulls from shared gig and staff data, then layers its own account, attendance, application,) Tj
+ET
+BT
+/F1 10.40 Tf
+1 0 0 1 48.00 421.23 Tm
+(and guide stores on top.) Tj
+ET
+BT
+/F1 10.40 Tf
+1 0 0 1 48.00 401.46 Tm
+(Connected files and stores:) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 381.69 Tm
+(- `app/staff-app/\(protected\)/layout.tsx`) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 367.21 Tm
+(- `app/staff-app/\(protected\)/home/page.tsx`) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 352.72 Tm
+(- `app/staff-app/\(protected\)/gigs/page.tsx`) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 338.24 Tm
+(- `app/staff-app/\(protected\)/schedule/page.tsx`) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 323.76 Tm
+(- `app/staff-app/\(protected\)/documents/page.tsx`) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 309.27 Tm
+(- `app/staff-app/\(protected\)/messages/page.tsx`) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 294.79 Tm
+(- `app/staff-app/\(protected\)/profile/page.tsx`) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 280.30 Tm
+(- `components/staff-app/mobile-shell.tsx`) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 265.82 Tm
+(- `components/staff-app/gig-flow.tsx`) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 251.34 Tm
+(- `components/staff-app/documents-browser.tsx`) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 236.85 Tm
+(- `components/staff-app/colleague-directory.tsx`) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 222.37 Tm
+(- `lib/staff-app-data.ts`) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 207.88 Tm
+(- `lib/staff-app-store.ts`) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 193.40 Tm
+(- `lib/staff-app-session.ts`) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 178.92 Tm
+(- `lib/staff-app-attendance-store.ts`) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 164.43 Tm
+(- `lib/staff-app-gig-application-store.ts`) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 149.95 Tm
+(- `lib/staff-app-guides.ts`) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 135.46 Tm
+(- `data/staff-app-account-store.json`) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 120.98 Tm
+(- `data/staff-app-sessions.json`) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 106.50 Tm
+(- `data/staff-app-attendance-store.json`) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 92.01 Tm
+(- `data/staff-app-gig-application-store.json`) Tj
+ET
+BT
+/F2 12.00 Tf
+1 0 0 1 48.00 66.53 Tm
+(System Settings, Search, And PDF Generation) Tj
+ET
+BT
+/F1 8.50 Tf
+1 0 0 1 500.00 24.00 Tm
+(Page 3 / 11) Tj
+ET
+endstream
+endobj
+11 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 10 0 R >>
+endobj
+12 0 obj
+<< /Length 5614 >>
+stream
+BT
+/F1 10.40 Tf
+1 0 0 1 48.00 760.00 Tm
+(Search, policy content, SCM info, and generated PDFs are all configurable from within the app.) Tj
+ET
+BT
+/F1 10.40 Tf
+1 0 0 1 48.00 745.23 Tm
+(The system-settings area updates JSON-backed templates that are then consumed by API routes) Tj
+ET
+BT
+/F1 10.40 Tf
+1 0 0 1 48.00 730.46 Tm
+(and PDF builders.) Tj
+ET
+BT
+/F1 10.40 Tf
+1 0 0 1 48.00 710.70 Tm
+(Connected files and stores:) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 690.93 Tm
+(- `app/\(platform\)/system-settings/page.tsx`) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 676.44 Tm
+(- `components/global-search.tsx`) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 661.96 Tm
+(- `components/system-settings-policy-uploader.tsx`) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 647.48 Tm
+(- `components/system-settings-scm-info-editor.tsx`) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 632.99 Tm
+(- `components/system-settings-template-editor.tsx`) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 618.51 Tm
+(- `app/api/search/route.ts`) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 604.02 Tm
+(- `app/api/staff-app/policy-pdf/route.ts`) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 589.54 Tm
+(- `app/api/system-settings/policy/route.ts`) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 575.06 Tm
+(- `app/api/system-settings/scm-info/route.ts`) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 560.57 Tm
+(- `app/api/system-settings/scm-info-pdfs/route.ts`) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 546.09 Tm
+(- `app/api/system-settings/templates/route.ts`) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 531.60 Tm
+(- `lib/global-search.ts`) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 517.12 Tm
+(- `lib/system-policy-store.ts`) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 502.64 Tm
+(- `lib/system-scm-info-store.ts`) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 488.15 Tm
+(- `lib/system-scm-info-pdf-store.ts`) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 473.67 Tm
+(- `lib/system-template-store.ts`) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 459.18 Tm
+(- `lib/staff-document-pdf.ts`) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 444.70 Tm
+(- `lib/staff-app-policy-pdf.ts`) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 430.22 Tm
+(- `data/system-policy-store.json`) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 415.73 Tm
+(- `data/system-scm-info-store.json`) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 401.25 Tm
+(- `data/system-scm-info-pdf-store.json`) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 386.76 Tm
+(- `data/system-template-store.json`) Tj
+ET
+BT
+/F2 14.50 Tf
+1 0 0 1 48.00 359.28 Tm
+(Platform Route Inventory) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 331.69 Tm
+(| Route | Page File | Direct UI | Direct Services / Actions | Transitive Stores | API Usage |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 320.05 Tm
+(| --- | --- | --- | --- | --- | --- |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 308.40 Tm
+(| `/` | `app/page.tsx` | None | `lib/auth-session.ts` | `data/auth-sessions.json`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 296.76 Tm
+(`data/gig-store.json`, `data/old-staff-documents.json`, `data/... | None |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 285.11 Tm
+(| `/dashboard` | `app/\(platform\)/dashboard/page.tsx` | None | `lib/auth-session.ts`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 273.47 Tm
+(`lib/gig-store.ts`, `lib/platform-access.ts` | `data/auth-sessions.json`, `data/gig-store.json`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 261.83 Tm
+(`data/old-staff-documents.json`, `data/... | None |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 250.18 Tm
+(| `/gigs` | `app/\(platform\)/gigs/page.tsx` | `components/gig-register-client.tsx` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 238.54 Tm
+(`lib/auth-session.ts`, `lib/gig-store.ts`, `lib/platform-access.ts` | `data/auth-sessions.json`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 226.89 Tm
+(`data/gig-store.json`, `data/old-staff-documents.json`, `data/... | `/api/gigs/` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 215.25 Tm
+(| `/gigs/[gigId]` | `app/\(platform\)/gigs/[gigId]/page.tsx` | `components/detail-tabs.tsx`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 203.61 Tm
+(`components/gig-delete-action.tsx`, `components/gig-files-m... | `lib/auth-session.ts`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 191.96 Tm
+(`lib/gig-archive.ts`, `lib/gig-closeout.ts`, `lib/gig-store.ts`, `... | `data/auth-sessions.json`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 180.32 Tm
+(`data/gig-file-attachments`, `data/gig-store.json`, `data/old-... | `/api/gigs/`, `/api/staff/` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 168.67 Tm
+(| `/gigs/[gigId]/shifts/[shiftId]` | `app/\(platform\)/gigs/[gigId]/shifts/[shiftId]/page.tsx` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 157.03 Tm
+(`components/detail-tabs.tsx`, `components/page-header.tsx`, `components/shift-overview-ed... |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 145.39 Tm
+(`lib/auth-session.ts`, `lib/gig-store.ts`, `lib/platform-access.ts`, `lib/shift-store.ts`... |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 133.74 Tm
+(`data/auth-sessions.json`, `data/gig-store.json`, `data/old-staff-documents.json`, `data/... |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 122.10 Tm
+(`/api/gigs/` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 110.45 Tm
+(| `/gigs/new` | `app/\(platform\)/gigs/new/page.tsx` | `components/equipment-section.tsx`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 98.81 Tm
+(`components/gig-document-boxes.tsx`, `components/note... | `lib/auth-session.ts`, `lib/gig-store.ts`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 87.17 Tm
+(`lib/platform-access.ts`, `lib/scandinavian-co... | `data/auth-sessions.json`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 75.52 Tm
+(`data/gig-file-attachments`, `data/gig-store.json`, `data/old-... | `/api/gigs/` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 63.88 Tm
+(| `/login` | `app/login/page.tsx` | `components/login-password-field.tsx` | `lib/auth-session.ts`,) Tj
+ET
+BT
+/F1 8.50 Tf
+1 0 0 1 500.00 24.00 Tm
+(Page 4 / 11) Tj
+ET
+endstream
+endobj
+13 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 12 0 R >>
+endobj
+14 0 obj
+<< /Length 7408 >>
+stream
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 760.00 Tm
+(`lib/brand-store.ts`, `app/auth-actions.ts` | `data/auth-sessions.json`, `data/brand-store.json`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 748.36 Tm
+(`data/gig-store.json`, `data/old-staf... | None |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 736.71 Tm
+(| `/people` | `app/\(platform\)/people/page.tsx` | `components/page-header.tsx`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 725.07 Tm
+(`components/staff-region-edit-filter.tsx`, `components/stat... | `lib/auth-session.ts`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 713.42 Tm
+(`lib/platform-access.ts`, `lib/staff-store.ts` | `data/auth-sessions.json`, `data/gig-store.json`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 701.78 Tm
+(`data/old-staff-documents.json`, `data/... | None |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 690.14 Tm
+(| `/people/[personId]` | `app/\(platform\)/people/[personId]/page.tsx` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 678.49 Tm
+(`components/staff-profile-editor.tsx` | `lib/auth-session.ts`, `lib/platform-access.ts`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 666.85 Tm
+(`lib/staff-app-store.ts`, `lib/staff-doc... | `data/auth-sessions.json`, `data/gig-store.json`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 655.20 Tm
+(`data/old-staff-documents.json`, `data/... | `/api/staff/` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 643.56 Tm
+(| `/people/new` | `app/\(platform\)/people/new/page.tsx` | `components/page-header.tsx` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 631.92 Tm
+(`lib/auth-session.ts`, `lib/platform-access.ts`, `app/\(platform\)/people/new/actions.ts` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 620.27 Tm
+(`data/auth-sessions.json`, `data/gig-store.json`, `data/old-staff-documents.json`, `data/... | None |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 608.63 Tm
+(| `/profile` | `app/\(platform\)/profile/page.tsx` | `components/page-header.tsx`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 596.98 Tm
+(`components/scm-staff-profile-editor.tsx` | `lib/auth-session.ts`, `lib/gig-store.ts`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 585.34 Tm
+(`lib/platform-access.ts` | `data/auth-sessions.json`, `data/gig-store.json`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 573.70 Tm
+(`data/old-staff-documents.json`, `data/... | `/api/scm-staff/` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 562.05 Tm
+(| `/scm-staff` | `app/\(platform\)/scm-staff/page.tsx` | `components/page-header.tsx`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 550.41 Tm
+(`components/scm-role-permission-guide.tsx`, `components/sta... | `lib/auth-session.ts`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 538.76 Tm
+(`lib/gig-store.ts`, `lib/platform-access.ts`, `lib/scm-staff-store... | `data/auth-sessions.json`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 527.12 Tm
+(`data/gig-store.json`, `data/old-staff-documents.json`, `data/... | None |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 515.48 Tm
+(| `/scm-staff/[personId]` | `app/\(platform\)/scm-staff/[personId]/page.tsx` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 503.83 Tm
+(`components/scm-staff-profile-editor.tsx` | `lib/auth-session.ts`, `lib/scm-staff-store.ts` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 492.19 Tm
+(`data/auth-sessions.json`, `data/gig-store.json`, `data/old-staff-documents.json`, `data/... |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 480.54 Tm
+(`/api/scm-staff/` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 468.90 Tm
+(| `/scm-staff/new` | `app/\(platform\)/scm-staff/new/page.tsx` | `components/page-header.tsx` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 457.26 Tm
+(`lib/auth-session.ts`, `app/\(platform\)/scm-staff/new/actions.ts` | `data/auth-sessions.json`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 445.61 Tm
+(`data/gig-store.json`, `data/old-staff-documents.json`, `data/... | None |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 433.97 Tm
+(| `/system-settings` | `app/\(platform\)/system-settings/page.tsx` | `components/page-header.tsx`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 422.32 Tm
+(`components/system-settings-policy-uploader.tsx`, `componen... | `lib/auth-session.ts`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 410.68 Tm
+(`lib/system-policy-store.ts`, `lib/system-scm-info-pdf-store.ts`, ... | `data/auth-sessions.json`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 399.04 Tm
+(`data/gig-store.json`, `data/old-staff-documents.json`, `data/... | `/api/staff-app/policy-pdf`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 387.39 Tm
+(`/api/system-settings/policy`, `/api/sys... |) Tj
+ET
+BT
+/F2 14.50 Tf
+1 0 0 1 48.00 362.75 Tm
+(Staff-App Route Inventory) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 335.16 Tm
+(| Route | Page File | Direct UI | Direct Services / Actions | Transitive Stores | API Usage |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 323.51 Tm
+(| --- | --- | --- | --- | --- | --- |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 311.87 Tm
+(| `/staff-app` | `app/staff-app/page.tsx` | None | `lib/staff-app-session.ts` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 300.23 Tm
+(`data/staff-app-account-store.json`, `data/staff-app-sessions.json` | None |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 288.58 Tm
+(| `/staff-app/check-in` | `app/staff-app/\(protected\)/check-in/page.tsx` | None |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 276.94 Tm
+(`lib/staff-app-attendance-store.ts`, `lib/staff-app-data.ts`, `lib/staff-app-session.ts`,... |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 265.29 Tm
+(`data/gig-store.json`, `data/old-staff-documents.json`, `data/shift-store.json`, `data/st... |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 253.65 Tm
+(`/api/staff/` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 242.01 Tm
+(| `/staff-app/colleagues` | `app/staff-app/\(protected\)/colleagues/page.tsx` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 230.36 Tm
+(`components/staff-app/colleague-directory.tsx` | `lib/staff-app-data.ts`, `lib/staff-app-session.ts`) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 218.72 Tm
+(| `data/gig-store.json`, `data/old-staff-documents.json`, `data/shift-store.json`, `data/st... |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 207.07 Tm
+(`/api/staff/` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 195.43 Tm
+(| `/staff-app/colleagues/[colleagueId]` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 183.79 Tm
+(`app/staff-app/\(protected\)/colleagues/[colleagueId]/page.tsx` | None | `lib/staff-app-data.ts`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 172.14 Tm
+(`lib/staff-app-session.ts` | `data/gig-store.json`, `data/old-staff-documents.json`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 160.50 Tm
+(`data/shift-store.json`, `data/st... | `/api/staff/` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 148.85 Tm
+(| `/staff-app/documents` | `app/staff-app/\(protected\)/documents/page.tsx` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 137.21 Tm
+(`components/staff-app/documents-browser.tsx` | `lib/staff-app-data.ts`, `lib/staff-app-session.ts` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 125.57 Tm
+(`data/gig-store.json`, `data/old-staff-documents.json`, `data/shift-store.json`, `data/st... |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 113.92 Tm
+(`/api/staff/` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 102.28 Tm
+(| `/staff-app/documents/payslips/[payslipId]` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 90.63 Tm
+(`app/staff-app/\(protected\)/documents/payslips/[payslipId]/page.tsx` | None | `lib/staff-app-data.ts`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 78.99 Tm
+(`lib/staff-app-session.ts` | `data/gig-store.json`, `data/old-staff-documents.json`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 67.35 Tm
+(`data/shift-store.json`, `data/st... | `/api/staff/` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 55.70 Tm
+(| `/staff-app/gigs` | `app/staff-app/\(protected\)/gigs/page.tsx` | `components/staff-app/gig-flow.tsx`) Tj
+ET
+BT
+/F1 8.50 Tf
+1 0 0 1 500.00 24.00 Tm
+(Page 5 / 11) Tj
+ET
+endstream
+endobj
+15 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 14 0 R >>
+endobj
+16 0 obj
+<< /Length 7682 >>
+stream
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 760.00 Tm
+(| `lib/staff-app-data.ts`, `lib/staff-app-session.ts` | `data/gig-store.json`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 748.36 Tm
+(`data/old-staff-documents.json`, `data/shift-store.json`, `data/st... | `/api/staff/` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 736.71 Tm
+(| `/staff-app/gigs/[passId]` | `app/staff-app/\(protected\)/gigs/[passId]/page.tsx` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 725.07 Tm
+(`components/staff-app/gig-flow.tsx` | `lib/staff-app-data.ts`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 713.42 Tm
+(`lib/staff-app-gig-application-store.ts`, `lib/staff-app-session... | `data/gig-store.json`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 701.78 Tm
+(`data/old-staff-documents.json`, `data/shift-store.json`, `data/st... | `/api/staff/` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 690.14 Tm
+(| `/staff-app/gigs/managed` | `app/staff-app/\(protected\)/gigs/managed/page.tsx` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 678.49 Tm
+(`components/staff-app/gig-flow.tsx` | `lib/staff-app-data.ts`, `lib/staff-app-session.ts` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 666.85 Tm
+(`data/gig-store.json`, `data/old-staff-documents.json`, `data/shift-store.json`, `data/st... |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 655.20 Tm
+(`/api/staff/` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 643.56 Tm
+(| `/staff-app/gigs/open` | `app/staff-app/\(protected\)/gigs/open/page.tsx` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 631.92 Tm
+(`components/staff-app/gig-flow.tsx` | `lib/staff-app-data.ts`, `lib/staff-app-session.ts` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 620.27 Tm
+(`data/gig-store.json`, `data/old-staff-documents.json`, `data/shift-store.json`, `data/st... |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 608.63 Tm
+(`/api/staff/` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 596.98 Tm
+(| `/staff-app/gigs/standby` | `app/staff-app/\(protected\)/gigs/standby/page.tsx` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 585.34 Tm
+(`components/staff-app/gig-flow.tsx` | `lib/staff-app-data.ts`, `lib/staff-app-session.ts` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 573.70 Tm
+(`data/gig-store.json`, `data/old-staff-documents.json`, `data/shift-store.json`, `data/st... |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 562.05 Tm
+(`/api/staff/` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 550.41 Tm
+(| `/staff-app/gigs/unassigned` | `app/staff-app/\(protected\)/gigs/unassigned/page.tsx` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 538.76 Tm
+(`components/staff-app/gig-flow.tsx` | `lib/staff-app-data.ts`, `lib/staff-app-session.ts` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 527.12 Tm
+(`data/gig-store.json`, `data/old-staff-documents.json`, `data/shift-store.json`, `data/st... |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 515.48 Tm
+(`/api/staff/` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 503.83 Tm
+(| `/staff-app/home` | `app/staff-app/\(protected\)/home/page.tsx` | None |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 492.19 Tm
+(`lib/staff-app-attendance-store.ts`, `lib/staff-app-data.ts`, `lib/staff-app-scope.ts`, `... |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 480.54 Tm
+(`data/gig-store.json`, `data/old-staff-documents.json`, `data/shift-store.json`, `data/st... |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 468.90 Tm
+(`/api/staff/` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 457.26 Tm
+(| `/staff-app/login` | `app/staff-app/login/page.tsx` | None | `app/staff-app/actions.ts` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 445.61 Tm
+(`data/gig-store.json`, `data/old-staff-documents.json`, `data/shift-store.json`, `data/st... |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 433.97 Tm
+(`/api/staff/` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 422.32 Tm
+(| `/staff-app/messages` | `app/staff-app/\(protected\)/messages/page.tsx` | None |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 410.68 Tm
+(`lib/staff-app-data.ts` | `data/gig-store.json`, `data/old-staff-documents.json`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 399.04 Tm
+(`data/shift-store.json`, `data/st... | `/api/staff/` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 387.39 Tm
+(| `/staff-app/messages/[threadId]` | `app/staff-app/\(protected\)/messages/[threadId]/page.tsx` | None) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 375.75 Tm
+(| `lib/staff-app-data.ts` | `data/gig-store.json`, `data/old-staff-documents.json`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 364.10 Tm
+(`data/shift-store.json`, `data/st... | `/api/staff/` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 352.46 Tm
+(| `/staff-app/passes` | `app/staff-app/\(protected\)/passes/page.tsx` | None | None | None | None |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 340.82 Tm
+(| `/staff-app/profile` | `app/staff-app/\(protected\)/profile/page.tsx` | None |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 329.17 Tm
+(`lib/staff-app-scope.ts`, `lib/staff-app-session.ts`, `app/staff-app/actions.ts` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 317.53 Tm
+(`data/gig-store.json`, `data/old-staff-documents.json`, `data/shift-store.json`, `data/st... |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 305.88 Tm
+(`/api/staff/` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 294.24 Tm
+(| `/staff-app/profile/bank-info` | `app/staff-app/\(protected\)/profile/bank-info/page.tsx` | None |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 282.60 Tm
+(`lib/staff-app-session.ts`, `lib/staff-store.ts`, `app/staff-app/actions.ts` | `data/gig-store.json`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 270.95 Tm
+(`data/old-staff-documents.json`, `data/shift-store.json`, `data/st... | `/api/staff/` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 259.31 Tm
+(| `/staff-app/profile/personal-details` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 247.66 Tm
+(`app/staff-app/\(protected\)/profile/personal-details/page.tsx` | None | `lib/staff-app-session.ts`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 236.02 Tm
+(`lib/staff-store.ts`, `app/staff-app/actions.ts` | `data/gig-store.json`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 224.38 Tm
+(`data/old-staff-documents.json`, `data/shift-store.json`, `data/st... | `/api/staff/` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 212.73 Tm
+(| `/staff-app/schedule` | `app/staff-app/\(protected\)/schedule/page.tsx` | None |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 201.09 Tm
+(`lib/staff-app-data.ts` | `data/gig-store.json`, `data/old-staff-documents.json`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 189.44 Tm
+(`data/shift-store.json`, `data/st... | `/api/staff/` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 177.80 Tm
+(| `/staff-app/scm-info` | `app/staff-app/\(protected\)/scm-info/page.tsx` | None |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 166.16 Tm
+(`lib/system-policy-store.ts`, `lib/system-scm-info-pdf-store.ts`, `lib/system-scm-info-st... |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 154.51 Tm
+(`data/system-policy-store.json`, `data/system-scm-info-pdf-store.json`, `data/system-scm-... |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 142.87 Tm
+(`/api/staff-app/policy-pdf` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 131.22 Tm
+(| `/staff-app/scm-info/arena-info` | `app/staff-app/\(protected\)/scm-info/arena-info/page.tsx` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 119.58 Tm
+(`components/staff-app/arena-directory.tsx`, `components/staff-app/guide-pdf-link.tsx`, `c... |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 107.94 Tm
+(`lib/gig-store.ts`, `lib/staff-app-session.ts`, `lib/system-scm-info-pdf-shared.ts`, `lib... |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 96.29 Tm
+(`data/gig-store.json`, `data/staff-app-account-store.json`, `data/staff-app-sessions.json... | None |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 84.65 Tm
+(| `/staff-app/scm-info/cash-card` | `app/staff-app/\(protected\)/scm-info/cash-card/page.tsx` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 73.00 Tm
+(`components/staff-app/guide-disclosure-list.tsx`, `components/staff-app/guide-pdf-link.ts... |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 61.36 Tm
+(`lib/system-scm-info-pdf-shared.ts`, `lib/system-scm-info-pdf-store.ts`, `lib/system-scm-... |) Tj
+ET
+BT
+/F1 8.50 Tf
+1 0 0 1 500.00 24.00 Tm
+(Page 6 / 11) Tj
+ET
+endstream
+endobj
+17 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 16 0 R >>
+endobj
+18 0 obj
+<< /Length 7595 >>
+stream
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 760.00 Tm
+(`data/system-scm-info-pdf-store.json`, `data/system-scm-info-store.json` | None |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 748.36 Tm
+(| `/staff-app/scm-info/checklists` | `app/staff-app/\(protected\)/scm-info/checklists/page.tsx` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 736.71 Tm
+(`components/staff-app/guide-disclosure-list.tsx`, `components/staff-app/guide-pdf-link.ts... |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 725.07 Tm
+(`lib/system-scm-info-pdf-shared.ts`, `lib/system-scm-info-pdf-store.ts`, `lib/system-scm-... |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 713.42 Tm
+(`data/system-scm-info-pdf-store.json`, `data/system-scm-info-store.json` | None |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 701.78 Tm
+(| `/staff-app/scm-info/platform-info` | `app/staff-app/\(protected\)/scm-info/platform-info/page.tsx` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 690.14 Tm
+(`components/staff-app/guide-disclosure-list.tsx`, `components/staff-app/guide-pdf-link.ts... |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 678.49 Tm
+(`lib/system-scm-info-pdf-shared.ts`, `lib/system-scm-info-pdf-store.ts`, `lib/system-scm-... |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 666.85 Tm
+(`data/system-scm-info-pdf-store.json`, `data/system-scm-info-store.json` | None |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 655.20 Tm
+(| `/staff-app/scm-info/roles-training` | `app/staff-app/\(protected\)/scm-info/roles-training/page.tsx`) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 643.56 Tm
+(| `components/staff-app/guide-disclosure-list.tsx`, `components/staff-app/guide-pdf-link.ts... |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 631.92 Tm
+(`lib/staff-app-scope.ts`, `lib/staff-app-session.ts`, `lib/system-scm-info-pdf-shared.ts`... |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 620.27 Tm
+(`data/staff-app-account-store.json`, `data/staff-app-sessions.json`, `data/system-scm-inf... | None |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 608.63 Tm
+(| `/staff-app/shifts/[shiftId]` | `app/staff-app/\(protected\)/shifts/[shiftId]/page.tsx` | None |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 596.98 Tm
+(`lib/staff-app-attendance-store.ts`, `lib/staff-app-data.ts` | `data/gig-store.json`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 585.34 Tm
+(`data/old-staff-documents.json`, `data/shift-store.json`, `data/st... | `/api/staff/` |) Tj
+ET
+BT
+/F2 14.50 Tf
+1 0 0 1 48.00 560.70 Tm
+(API Route Inventory) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 533.11 Tm
+(| Endpoint | Handler File | Direct Lib Dependencies | Direct Types | Transitive Stores | Exported) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 521.46 Tm
+(Handlers |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 509.82 Tm
+(| --- | --- | --- | --- | --- | --- |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 498.17 Tm
+(| `/api/brand/logo` | `app/api/brand/logo/route.ts` | `lib/auth-session.ts`, `lib/brand-store.ts` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 486.53 Tm
+(None | `data/auth-sessions.json`, `data/brand-store.json`, `data/gig-store.json`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 474.89 Tm
+(`data/NextResponse.json`... | `POST` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 463.24 Tm
+(| `/api/gigs/[gigId]` | `app/api/gigs/[gigId]/route.ts` | `lib/auth-session.ts`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 451.60 Tm
+(`lib/gig-archive.ts`, `lib/gig-store.ts`, `lib/platform-access.ts`, `lib/sca... | None |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 439.95 Tm
+(`data/auth-sessions.json`, `data/gig-store.json`, `data/NextResponse.json`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 428.31 Tm
+(`data/old-staff-documen... | `DELETE`, `PATCH` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 416.67 Tm
+(| `/api/gigs/[gigId]/closeout` | `app/api/gigs/[gigId]/closeout/route.ts` | `lib/auth-session.ts`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 405.02 Tm
+(`lib/gig-closeout.ts`, `lib/gig-store.ts`, `lib/platform-access.ts` | None |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 393.38 Tm
+(`data/auth-sessions.json`, `data/gig-store.json`, `data/NextResponse.json`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 381.73 Tm
+(`data/old-staff-documen... | `DELETE`, `PATCH`, `POST` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 370.09 Tm
+(| `/api/gigs/[gigId]/equipment` | `app/api/gigs/[gigId]/equipment/route.ts` | `lib/auth-session.ts`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 358.45 Tm
+(`lib/gig-store.ts`, `lib/platform-access.ts` | `types/scm.ts` | `data/auth-sessions.json`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 346.80 Tm
+(`data/gig-store.json`, `data/NextResponse.json`, `data/old-staff-documen... | `POST` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 335.16 Tm
+(| `/api/gigs/[gigId]/files` | `app/api/gigs/[gigId]/files/route.ts` | `lib/auth-session.ts`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 323.51 Tm
+(`lib/gig-document-boxes.ts`, `lib/gig-file-storage.ts`, `lib/gig-store.ts`, ... | `types/scm.ts` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 311.87 Tm
+(`data/auth-sessions.json`, `data/gig-file-attachments`, `data/gig-store.json`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 300.23 Tm
+(`data/NextResponse.j... | `DELETE`, `POST` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 288.58 Tm
+(| `/api/gigs/[gigId]/files/[fileId]/content` | `app/api/gigs/[gigId]/files/[fileId]/content/route.ts`) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 276.94 Tm
+(| `lib/auth-session.ts`, `lib/gig-file-storage.ts`, `lib/gig-store.ts`, `lib/platform-access.ts` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 265.29 Tm
+(None | `data/auth-sessions.json`, `data/gig-file-attachments`, `data/gig-store.json`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 253.65 Tm
+(`data/NextResponse.j... | `GET` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 242.01 Tm
+(| `/api/gigs/[gigId]/folders` | `app/api/gigs/[gigId]/folders/route.ts` | `lib/auth-session.ts`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 230.36 Tm
+(`lib/gig-document-boxes.ts`, `lib/gig-store.ts`, `lib/platform-access.ts` | None |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 218.72 Tm
+(`data/auth-sessions.json`, `data/gig-store.json`, `data/NextResponse.json`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 207.07 Tm
+(`data/old-staff-documen... | `DELETE`, `POST` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 195.43 Tm
+(| `/api/gigs/[gigId]/image` | `app/api/gigs/[gigId]/image/route.ts` | `lib/auth-session.ts`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 183.79 Tm
+(`lib/gig-store.ts`, `lib/platform-access.ts` | None | `data/auth-sessions.json`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 172.14 Tm
+(`data/gig-store.json`, `data/NextResponse.json`, `data/old-staff-documen... | `POST` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 160.50 Tm
+(| `/api/gigs/[gigId]/shift-communications` | `app/api/gigs/[gigId]/shift-communications/route.ts` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 148.85 Tm
+(`lib/auth-session.ts`, `lib/gig-store.ts`, `lib/platform-access.ts`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 137.21 Tm
+(`lib/shift-communication-store... | `types/scm.ts` | `data/auth-sessions.json`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 125.57 Tm
+(`data/gig-store.json`, `data/NextResponse.json`, `data/old-staff-documen... | `GET`, `POST` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 113.92 Tm
+(| `/api/gigs/[gigId]/shifts` | `app/api/gigs/[gigId]/shifts/route.ts` | `lib/auth-session.ts`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 102.28 Tm
+(`lib/gig-store.ts`, `lib/platform-access.ts`, `lib/shift-store.ts` | None |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 90.63 Tm
+(`data/auth-sessions.json`, `data/gig-store.json`, `data/NextResponse.json`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 78.99 Tm
+(`data/old-staff-documen... | `POST` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 67.35 Tm
+(| `/api/gigs/[gigId]/shifts/[shiftId]` | `app/api/gigs/[gigId]/shifts/[shiftId]/route.ts` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 55.70 Tm
+(`lib/auth-session.ts`, `lib/gig-store.ts`, `lib/gig-time-report-store.ts`,) Tj
+ET
+BT
+/F1 8.50 Tf
+1 0 0 1 500.00 24.00 Tm
+(Page 7 / 11) Tj
+ET
+endstream
+endobj
+19 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 18 0 R >>
+endobj
+20 0 obj
+<< /Length 7474 >>
+stream
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 760.00 Tm
+(`lib/platform-access.ts`... | `types/scm.ts` | `data/auth-sessions.json`, `data/gig-store.json`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 748.36 Tm
+(`data/NextResponse.json`, `data/old-staff-documen... | `DELETE`, `PATCH` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 736.71 Tm
+(| `/api/gigs/[gigId]/temporary-managers` | `app/api/gigs/[gigId]/temporary-managers/route.ts` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 725.07 Tm
+(`lib/auth-session.ts`, `lib/gig-store.ts`, `lib/platform-access.ts`, `lib/staff-app-store.ts`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 713.42 Tm
+(`lib... | `types/scm.ts` | `data/auth-sessions.json`, `data/gig-store.json`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 701.78 Tm
+(`data/NextResponse.json`, `data/old-staff-documen... | `DELETE`, `POST` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 690.14 Tm
+(| `/api/gigs/[gigId]/time-report` | `app/api/gigs/[gigId]/time-report/route.ts` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 678.49 Tm
+(`lib/auth-session.ts`, `lib/gig-store.ts`, `lib/gig-time-report-store.ts`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 666.85 Tm
+(`lib/platform-access.ts`... | `types/scm.ts` | `data/auth-sessions.json`, `data/gig-store.json`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 655.20 Tm
+(`data/NextResponse.json`, `data/old-staff-documen... | `POST` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 643.56 Tm
+(| `/api/scm-staff/[personId]` | `app/api/scm-staff/[personId]/route.ts` | `lib/auth-session.ts`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 631.92 Tm
+(`lib/password-utils.ts`, `lib/scm-staff-store.ts` | `types/scm-rbac.ts` | `data/auth-sessions.json`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 620.27 Tm
+(`data/gig-store.json`, `data/NextResponse.json`, `data/old-staff-documen... | `DELETE`, `PATCH` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 608.63 Tm
+(| `/api/scm-staff/[personId]/image` | `app/api/scm-staff/[personId]/image/route.ts` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 596.98 Tm
+(`lib/scm-staff-store.ts` | None | `data/NextResponse.json`, `data/scm-staff-store.json` | `POST` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 585.34 Tm
+(| `/api/search` | `app/api/search/route.ts` | `lib/auth-session.ts`, `lib/global-search.ts`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 573.70 Tm
+(`lib/platform-access.ts` | None | `data/auth-sessions.json`, `data/gig-store.json`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 562.05 Tm
+(`data/NextResponse.json`, `data/old-staff-documen... | `GET` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 550.41 Tm
+(| `/api/staff-app/policy-pdf` | `app/api/staff-app/policy-pdf/route.ts` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 538.76 Tm
+(`lib/staff-app-policy-pdf.ts`, `lib/system-policy-store.ts` | None | `data/system-policy-store.json`) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 527.12 Tm
+(| `GET` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 515.48 Tm
+(| `/api/staff/[personId]` | `app/api/staff/[personId]/route.ts` | `lib/staff-app-store.ts`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 503.83 Tm
+(`lib/staff-store.ts` | `types/backend.ts`, `types/scm.ts`, `types/staff-role.ts` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 492.19 Tm
+(`data/NextResponse.json`, `data/old-staff-documents.json`, `data/request.json`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 480.54 Tm
+(`data/staff-app-acc... | `DELETE`, `PATCH` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 468.90 Tm
+(| `/api/staff/[personId]/documents/[documentId]` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 457.26 Tm
+(`app/api/staff/[personId]/documents/[documentId]/route.ts` | `lib/staff-document-pdf.ts`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 445.61 Tm
+(`lib/staff-document-store.ts` | None | `data/NextResponse.json`, `data/staff-document-store.json`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 433.97 Tm
+(`data/system-template-store.json` | `GET` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 422.32 Tm
+(| `/api/staff/[personId]/image` | `app/api/staff/[personId]/image/route.ts` | `lib/staff-store.ts` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 410.68 Tm
+(None | `data/NextResponse.json`, `data/old-staff-documents.json`, `data/staff-document-store.json`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 399.04 Tm
+(`data/... | `POST` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 387.39 Tm
+(| `/api/system-settings/policy` | `app/api/system-settings/policy/route.ts` | `lib/auth-session.ts`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 375.75 Tm
+(`lib/system-policy-store.ts` | None | `data/auth-sessions.json`, `data/gig-store.json`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 364.10 Tm
+(`data/NextResponse.json`, `data/old-staff-documen... | `GET`, `POST` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 352.46 Tm
+(| `/api/system-settings/scm-info` | `app/api/system-settings/scm-info/route.ts` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 340.82 Tm
+(`lib/auth-session.ts`, `lib/system-scm-info-store.ts` | None | `data/auth-sessions.json`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 329.17 Tm
+(`data/gig-store.json`, `data/NextResponse.json`, `data/old-staff-documen... | `GET`, `PATCH` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 317.53 Tm
+(| `/api/system-settings/scm-info-pdfs` | `app/api/system-settings/scm-info-pdfs/route.ts` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 305.88 Tm
+(`lib/auth-session.ts`, `lib/system-scm-info-pdf-shared.ts`, `lib/system-scm-info-pdf-store.ts`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 294.24 Tm
+(`li... | None | `data/auth-sessions.json`, `data/gig-store.json`, `data/NextResponse.json`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 282.60 Tm
+(`data/old-staff-documen... | `DELETE`, `GET`, `PATCH`, `POST` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 270.95 Tm
+(| `/api/system-settings/templates` | `app/api/system-settings/templates/route.ts` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 259.31 Tm
+(`lib/auth-session.ts`, `lib/system-template-store.ts` | `types/system-settings.ts` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 247.66 Tm
+(`data/auth-sessions.json`, `data/gig-store.json`, `data/NextResponse.json`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 236.02 Tm
+(`data/old-staff-documen... | `GET`, `PATCH` |) Tj
+ET
+BT
+/F2 14.50 Tf
+1 0 0 1 48.00 211.38 Tm
+(Server Actions) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 183.79 Tm
+(| Action File | Exported Functions | Direct Lib Dependencies | Transitive Stores |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 172.14 Tm
+(| --- | --- | --- | --- |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 160.50 Tm
+(| `app/\(platform\)/gigs/new/actions.ts` | `saveProjectManagerStep`, `submitNewGig` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 148.85 Tm
+(`lib/gig-store.ts`, `lib/scandinavian-countries.ts` | `data/gig-store.json` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 137.21 Tm
+(| `app/\(platform\)/people/new/actions.ts` | `submitNewStaff` | `lib/staff-app-store.ts`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 125.57 Tm
+(`lib/staff-store.ts` | `data/old-staff-documents.json`, `data/staff-app-account-store.json`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 113.92 Tm
+(`data/staff-document-store.js... |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 102.28 Tm
+(| `app/\(platform\)/scm-staff/new/actions.ts` | `submitNewScmStaff` | `lib/password-utils.ts`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 90.63 Tm
+(`lib/scm-staff-store.ts` | `data/scm-staff-store.json` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 78.99 Tm
+(| `app/auth-actions.ts` | `loginWithScmStaff`, `logoutCurrentUser`, `switchScmStaffSession` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 67.35 Tm
+(`lib/auth-session.ts`, `lib/gig-store.ts`, `lib/password-utils.ts`, `lib/scm-staff-store.ts`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 55.70 Tm
+(`lib/... | `data/auth-sessions.json`, `data/gig-store.json`, `data/old-staff-documents.json`,) Tj
+ET
+BT
+/F1 8.50 Tf
+1 0 0 1 500.00 24.00 Tm
+(Page 8 / 11) Tj
+ET
+endstream
+endobj
+21 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 20 0 R >>
+endobj
+22 0 obj
+<< /Length 6397 >>
+stream
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 760.00 Tm
+(`data/scm-staff-... |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 748.36 Tm
+(| `app/staff-app/actions.ts` | `applyToStaffAppGigPass`, `changeStaffAppPassword`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 736.71 Tm
+(`checkInToStaffAp... | `lib/staff-app-attendance-store.ts`, `lib/staff-app-data.ts`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 725.07 Tm
+(`lib/staff-app-gig-application-store.... | `data/gig-store.json`, `data/old-staff-documents.json`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 713.42 Tm
+(`data/shift-store.json`, `data/staff-app-ac... |) Tj
+ET
+BT
+/F2 14.50 Tf
+1 0 0 1 48.00 688.78 Tm
+(JSON Store Inventory) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 661.19 Tm
+(| Store | Owning Libs | Consumer Count | Representative Consumers |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 649.55 Tm
+(| --- | --- | --- | --- |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 637.90 Tm
+(| `data/auth-sessions.json` | `lib/auth-session.ts` | 38 | `app/\(platform\)/dashboard/page.tsx`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 626.26 Tm
+(`app/\(platform\)/gigs/[gigId]/page.tsx`, `app/\(platform\)/gigs/[... |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 614.61 Tm
+(| `data/brand-store.json` | `lib/brand-store.ts` | 5 | `app/\(platform\)/layout.tsx`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 602.97 Tm
+(`app/api/brand/logo/route.ts`, `app/login/page.tsx`, `components/platf... |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 591.33 Tm
+(| `data/gig-file-attachments` | `lib/gig-file-storage.ts` | 8 |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 579.68 Tm
+(`app/\(platform\)/gigs/[gigId]/page.tsx`, `app/\(platform\)/gigs/new/page.tsx`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 568.04 Tm
+(`app/api/gigs/[gigId]/f... |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 556.39 Tm
+(| `data/gig-store.json` | `lib/gig-store.ts` | 70 | `app/\(platform\)/dashboard/page.tsx`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 544.75 Tm
+(`app/\(platform\)/gigs/[gigId]/page.tsx`, `app/\(platform\)/gigs/[... |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 533.11 Tm
+(| `data/old-staff-documents.json` | `lib/staff-store.ts` | 72 | `app/\(platform\)/dashboard/page.tsx`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 521.46 Tm
+(`app/\(platform\)/gigs/[gigId]/page.tsx`, `app/\(platform\)/gigs/[... |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 509.82 Tm
+(| `data/scm-staff-store.json` | `lib/scm-staff-store.ts` | 41 | `app/\(platform\)/dashboard/page.tsx`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 498.17 Tm
+(`app/\(platform\)/gigs/[gigId]/page.tsx`, `app/\(platform\)/gigs/[... |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 486.53 Tm
+(| `data/shift-communication-store.json` | `lib/shift-communication-store.ts` | 4 |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 474.89 Tm
+(`app/\(platform\)/gigs/[gigId]/page.tsx`, `app/api/gigs/[gigId]/route.ts`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 463.24 Tm
+(`app/api/gigs/[gigId]/shif... |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 451.60 Tm
+(| `data/shift-store.json` | `lib/shift-store.ts` | 34 | `app/\(platform\)/gigs/[gigId]/page.tsx`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 439.95 Tm
+(`app/\(platform\)/gigs/[gigId]/shifts/[shiftId]/page.tsx`, `a... |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 428.31 Tm
+(| `data/staff-app-account-store.json` | `lib/staff-app-store.ts` | 36 |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 416.67 Tm
+(`app/\(platform\)/gigs/[gigId]/page.tsx`, `app/\(platform\)/layout.tsx`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 405.02 Tm
+(`app/\(platform\)/people/[person... |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 393.38 Tm
+(| `data/staff-app-attendance-store.json` | `lib/staff-app-attendance-store.ts` | 14 |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 381.73 Tm
+(`app/\(platform\)/gigs/[gigId]/page.tsx`, `app/api/gigs/[gigId]/shifts/[shiftId]/route.ts`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 370.09 Tm
+(`app/api/... |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 358.45 Tm
+(| `data/staff-app-gig-application-store.json` | `lib/staff-app-gig-application-store.ts` | 8 |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 346.80 Tm
+(`app/staff-app/\(protected\)/check-in/page.tsx`, `app/staff-app/\(protected\)/gigs/[passId]/page.tsx`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 335.16 Tm
+(... |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 323.51 Tm
+(| `data/staff-app-sessions.json` | `lib/staff-app-session.ts` | 22 |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 311.87 Tm
+(`app/staff-app/\(protected\)/check-in/page.tsx`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 300.23 Tm
+(`app/staff-app/\(protected\)/colleagues/[colleagueId]/... |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 288.58 Tm
+(| `data/staff-document-store.json` | `lib/staff-document-store.ts` | 74 |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 276.94 Tm
+(`app/\(platform\)/dashboard/page.tsx`, `app/\(platform\)/gigs/[gigId]/page.tsx`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 265.29 Tm
+(`app/\(platform\)/gigs/[... |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 253.65 Tm
+(| `data/staff-store.json` | `lib/staff-store.ts` | 72 | `app/\(platform\)/dashboard/page.tsx`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 242.01 Tm
+(`app/\(platform\)/gigs/[gigId]/page.tsx`, `app/\(platform\)/gigs/[... |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 230.36 Tm
+(| `data/system-policy-store.json` | `lib/system-policy-store.ts` | 5 |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 218.72 Tm
+(`app/\(platform\)/system-settings/page.tsx`, `app/api/staff-app/policy-pdf/route.ts`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 207.07 Tm
+(`app/api/system... |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 195.43 Tm
+(| `data/system-scm-info-pdf-store.json` | `lib/system-scm-info-pdf-store.ts` | 9 |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 183.79 Tm
+(`app/\(platform\)/system-settings/page.tsx`, `app/api/system-settings/scm-info-pdfs/route.ts`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 172.14 Tm
+(`app/s... |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 160.50 Tm
+(| `data/system-scm-info-store.json` | `lib/system-scm-info-store.ts` | 14 |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 148.85 Tm
+(`app/\(platform\)/system-settings/page.tsx`, `app/api/system-settings/scm-info-pdfs/route.ts`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 137.21 Tm
+(`app/a... |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 125.57 Tm
+(| `data/system-template-store.json` | `lib/system-template-store.ts` | 76 |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 113.92 Tm
+(`app/\(platform\)/dashboard/page.tsx`, `app/\(platform\)/gigs/[gigId]/page.tsx`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 102.28 Tm
+(`app/\(platform\)/gigs/[... |) Tj
+ET
+BT
+/F2 14.50 Tf
+1 0 0 1 48.00 77.63 Tm
+(Most Connected Internal Modules) Tj
+ET
+BT
+/F1 8.50 Tf
+1 0 0 1 500.00 24.00 Tm
+(Page 9 / 11) Tj
+ET
+endstream
+endobj
+23 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 22 0 R >>
+endobj
+24 0 obj
+<< /Length 5584 >>
+stream
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 760.00 Tm
+(| Module | Category | Imported By | Direct Imports |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 748.36 Tm
+(| --- | --- | --- | --- |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 736.71 Tm
+(| `types/scm.ts` | type | 40 | 0 |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 725.07 Tm
+(| `lib/auth-session.ts` | lib | 37 | 5 |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 713.42 Tm
+(| `lib/gig-store.ts` | lib | 26 | 3 |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 701.78 Tm
+(| `lib/platform-access.ts` | lib | 24 | 2 |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 690.14 Tm
+(| `lib/staff-app-data.ts` | lib | 21 | 7 |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 678.49 Tm
+(| `lib/staff-app-session.ts` | lib | 20 | 1 |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 666.85 Tm
+(| `lib/staff-store.ts` | lib | 19 | 5 |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 655.20 Tm
+(| `data/scm-data.ts` | dataModule | 14 | 2 |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 643.56 Tm
+(| `lib/system-scm-info-store.ts` | lib | 12 | 2 |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 631.92 Tm
+(| `components/page-header.tsx` | component | 11 | 0 |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 620.27 Tm
+(| `types/scm-rbac.ts` | type | 10 | 0 |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 608.63 Tm
+(| `types/staff-app.ts` | type | 10 | 0 |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 596.98 Tm
+(| `components/status-badge.tsx` | component | 9 | 1 |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 585.34 Tm
+(| `lib/system-scm-info-pdf-shared.ts` | lib | 9 | 1 |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 573.70 Tm
+(| `lib/staff-app-store.ts` | lib | 8 | 4 |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 562.05 Tm
+(| `lib/system-scm-info-pdf-store.ts` | lib | 8 | 2 |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 550.41 Tm
+(| `lib/shift-store.ts` | lib | 7 | 6 |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 538.76 Tm
+(| `lib/scm-staff-store.ts` | lib | 7 | 3 |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 527.12 Tm
+(| `app/staff-app/actions.ts` | action | 6 | 6 |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 515.48 Tm
+(| `components/staff-app/gig-flow.tsx` | component | 6 | 2 |) Tj
+ET
+BT
+/F2 14.50 Tf
+1 0 0 1 48.00 490.83 Tm
+(Internal API Call Sites) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 463.24 Tm
+(| Source File | Referenced /api Paths |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 451.60 Tm
+(| --- | --- |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 439.95 Tm
+(| `app/staff-app/\(protected\)/scm-info/page.tsx` | `/api/staff-app/policy-pdf` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 428.31 Tm
+(| `components/brand-logo-uploader.tsx` | `/api/brand/logo` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 416.67 Tm
+(| `components/gig-delete-action.tsx` | `/api/gigs/` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 405.02 Tm
+(| `components/gig-document-boxes.tsx` | `/api/gigs/` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 393.38 Tm
+(| `components/gig-equipment-editor.tsx` | `/api/gigs/` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 381.73 Tm
+(| `components/gig-image-uploader.tsx` | `/api/gigs/` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 370.09 Tm
+(| `components/gig-overview-editor.tsx` | `/api/gigs/` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 358.45 Tm
+(| `components/gig-register-client.tsx` | `/api/gigs/` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 346.80 Tm
+(| `components/gig-report-closeout-panel.tsx` | `/api/gigs/` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 335.16 Tm
+(| `components/gig-shifts-panel.tsx` | `/api/gigs/` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 323.51 Tm
+(| `components/gig-time-report-panel.tsx` | `/api/gigs/` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 311.87 Tm
+(| `components/global-search.tsx` | `/api/search` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 300.23 Tm
+(| `components/scm-staff-profile-editor.tsx` | `/api/scm-staff/` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 288.58 Tm
+(| `components/shift-booking-manager.tsx` | `/api/gigs/` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 276.94 Tm
+(| `components/shift-overview-editor.tsx` | `/api/gigs/` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 265.29 Tm
+(| `components/staff-documents-panel.tsx` | `/api/staff/` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 253.65 Tm
+(| `components/staff-profile-editor.tsx` | `/api/staff/` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 242.01 Tm
+(| `components/system-settings-policy-uploader.tsx` | `/api/staff-app/policy-pdf`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 230.36 Tm
+(`/api/system-settings/policy` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 218.72 Tm
+(| `components/system-settings-scm-info-editor.tsx` | `/api/staff-app/policy-pdf`,) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 207.07 Tm
+(`/api/system-settings/scm-info`, `/api/system-settings/scm-info-pdfs` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 195.43 Tm
+(| `components/system-settings-template-editor.tsx` | `/api/system-settings/templates` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 183.79 Tm
+(| `lib/gig-file-storage.ts` | `/api/gigs/` |) Tj
+ET
+BT
+/F3 8.20 Tf
+1 0 0 1 54.00 172.14 Tm
+(| `lib/staff-app-data.ts` | `/api/staff/` |) Tj
+ET
+BT
+/F2 14.50 Tf
+1 0 0 1 48.00 147.50 Tm
+(Observations) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 119.91 Tm
+(- The route tree has grown beyond the original README summary; the current app includes a) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 105.42 Tm
+(richer admin platform, a staff app, and many API endpoints.) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 90.94 Tm
+(- Several domains are intentionally prototype-first. The frontend is operationally) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 76.46 Tm
+(detailed, but persistence is still local JSON rather than a database or external backend.) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 61.97 Tm
+(- The same staff profile data is reused in multiple contexts: People, shift assignment,) Tj
+ET
+BT
+/F1 8.50 Tf
+1 0 0 1 500.00 24.00 Tm
+(Page 10 / 11) Tj
+ET
+endstream
+endobj
+25 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 24 0 R >>
+endobj
+26 0 obj
+<< /Length 454 >>
+stream
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 760.00 Tm
+(temporary gig-manager sharing, staff-app accounts, attendance, and document generation.) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 745.52 Tm
+(- PDF generation is local and template-driven. System settings update template JSON, then) Tj
+ET
+BT
+/F1 10.20 Tf
+1 0 0 1 58.00 731.03 Tm
+(route handlers and PDF utilities regenerate document payloads on demand.) Tj
+ET
+BT
+/F1 8.50 Tf
+1 0 0 1 500.00 24.00 Tm
+(Page 11 / 11) Tj
+ET
+endstream
+endobj
+27 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 26 0 R >>
+endobj
+xref
+0 28
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000185 00000 n 
+0000000255 00000 n 
+0000000330 00000 n 
+0000000398 00000 n 
+0000004166 00000 n 
+0000004312 00000 n 
+0000008393 00000 n 
+0000008539 00000 n 
+0000012691 00000 n 
+0000012839 00000 n 
+0000018506 00000 n 
+0000018654 00000 n 
+0000026115 00000 n 
+0000026263 00000 n 
+0000033998 00000 n 
+0000034146 00000 n 
+0000041794 00000 n 
+0000041942 00000 n 
+0000049469 00000 n 
+0000049617 00000 n 
+0000056067 00000 n 
+0000056215 00000 n 
+0000061852 00000 n 
+0000062000 00000 n 
+0000062506 00000 n 
+trailer
+<< /Size 28 /Root 1 0 R >>
+startxref
+62654
+%%EOF

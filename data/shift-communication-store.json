@@ -1,0 +1,115 @@
+{
+  "gig-d924a610": {
+    "gigId": "gig-d924a610",
+    "customGroups": [
+      {
+        "id": "shift-group-283378e2",
+        "gigId": "gig-d924a610",
+        "name": "Office",
+        "memberIds": [
+          "staff-2",
+          "staff-4"
+        ],
+        "createdAt": "2026-03-27T08:31:32.994Z"
+      },
+      {
+        "id": "shift-group-6343da65",
+        "gigId": "gig-d924a610",
+        "name": "Stock",
+        "memberIds": [
+          "staff-7",
+          "staff-2"
+        ],
+        "createdAt": "2026-03-27T08:31:24.013Z"
+      }
+    ],
+    "messages": []
+  },
+  "gig-80b483b4": {
+    "gigId": "gig-80b483b4",
+    "customGroups": [],
+    "messages": [
+      {
+        "id": "shift-message-d5ac007e",
+        "gigId": "gig-80b483b4",
+        "audience": "bookedOnShift",
+        "audienceLabel": "To ALL BOOKED staff",
+        "recipientIds": [
+          "staff-4",
+          "staff-9"
+        ],
+        "threadId": "thread__audience__gig-80b483b4__allBookedStaff",
+        "body": "hmmm hur ser de ut",
+        "createdAt": "2026-03-31T09:09:46.535Z",
+        "authorName": "Anton Schöldberg",
+        "authorProfileId": "office-1",
+        "authorType": "scm",
+        "allowReplies": false,
+        "attachments": []
+      },
+      {
+        "id": "shift-message-dde41a9c",
+        "gigId": "gig-80b483b4",
+        "audience": "standLeaders",
+        "audienceLabel": "All stand leaders",
+        "recipientIds": [
+          "staff-9"
+        ],
+        "threadId": "thread__audience__gig-80b483b4__standLeaders",
+        "body": "här är bilden",
+        "createdAt": "2026-03-31T08:29:47.884Z",
+        "authorName": "Anton Schöldberg",
+        "authorProfileId": "office-1",
+        "authorType": "scm",
+        "allowReplies": true,
+        "attachments": [
+          {
+            "id": "shift-attachment-64a1129f",
+            "fileName": "20250910_094621536_iOS.jpg",
+            "fileSize": 3673742,
+            "uploadedAt": "2026-03-31T08:29:47.883Z",
+            "mimeType": "image/jpeg",
+            "extension": "jpg",
+            "url": "/api/gigs/gig-80b483b4/shift-communications/attachments/shift-attachment-64a1129f/content",
+            "storagePath": "gig-80b483b4\\20250910-094621536-ios-64a1129f.jpg"
+          }
+        ]
+      },
+      {
+        "id": "shift-message-4c7c4210",
+        "gigId": "gig-80b483b4",
+        "audience": "standLeaders",
+        "audienceLabel": "All stand leaders",
+        "recipientIds": [
+          "staff-9"
+        ],
+        "threadId": "thread__audience__gig-80b483b4__standLeaders",
+        "body": "hej nu ska ni få info",
+        "createdAt": "2026-03-31T08:29:37.072Z",
+        "authorName": "Anton Schöldberg",
+        "authorProfileId": "office-1",
+        "authorType": "scm",
+        "allowReplies": true,
+        "attachments": []
+      },
+      {
+        "id": "shift-message-ef0a63e6",
+        "gigId": "gig-80b483b4",
+        "audience": "bookedOnShift",
+        "audienceLabel": "To ALL BOOKED staff",
+        "recipientIds": [
+          "staff-4",
+          "staff-9"
+        ],
+        "threadId": "thread__audience__gig-80b483b4__allBookedStaff",
+        "body": "testar",
+        "createdAt": "2026-03-31T08:29:19.199Z",
+        "authorName": "Anton Schöldberg",
+        "authorProfileId": "office-1",
+        "authorType": "scm",
+        "allowReplies": false,
+        "attachments": []
+      }
+    ]
+  }
+}

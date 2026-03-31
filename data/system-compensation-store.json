@@ -1,0 +1,29 @@
+{
+  "defaultHourlyRates": {
+    "Sweden": {
+      "Seller": 130,
+      "Stand Leader": 130,
+      "Runner": 130,
+      "Other": 130
+    },
+    "Norway": {
+      "Seller": 130,
+      "Stand Leader": 130,
+      "Runner": 130,
+      "Other": 130
+    },
+    "Denmark": {
+      "Seller": 130,
+      "Stand Leader": 130,
+      "Runner": 130,
+      "Other": 130
+    },
+    "Finland": {
+      "Seller": 13,
+      "Stand Leader": 13,
+      "Runner": 13,
+      "Other": 13
+    }
+  },
+  "updatedAt": "2026-03-31T12:40:28.178Z"
+}

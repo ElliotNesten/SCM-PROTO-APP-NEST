@@ -1,4 +1,4 @@
-import { promises as fs } from "fs";
+import { promises as fs, type Dirent } from "fs";
 import path from "path";
 import ts from "typescript";
 
@@ -127,7 +127,7 @@ function shouldIncludeStringLiteral(node: ts.StringLiteralLike) {
 }
 
 async function collectSourceFiles(directoryPath: string): Promise<string[]> {
-  let directoryEntries: Awaited<ReturnType<typeof fs.readdir>>;
+  let directoryEntries: Dirent[];
 
   try {
     directoryEntries = await fs.readdir(directoryPath, { withFileTypes: true });

@@ -1,10 +1,10 @@
-import { randomUUID } from "node:crypto";
-import fs from "node:fs/promises";
-import path from "node:path";
-
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
+import {
+  decodeSignedSessionCookie,
+  encodeSignedSessionCookie,
+} from "@/lib/session-cookie";
 import { getStoredScmStaffProfileById } from "@/lib/scm-staff-store";
 import { getStoredStaffProfileById } from "@/lib/staff-store";
 import {
@@ -15,13 +15,10 @@ import type { StaffAppAccount } from "@/types/staff-app";
 import type { StoredScmStaffProfile } from "@/types/scm-rbac";
 
 const sessionCookieName = "scm_staff_mobile_session";
-const sessionStoreDirectory = path.join(process.cwd(), "data");
-const sessionStorePath = path.join(sessionStoreDirectory, "staff-app-sessions.json");
 
 type StaffAppSessionSubjectType = "staff" | "scmStaff";
 
 type StoredStaffAppSession = {
-  token: string;
   subjectType?: StaffAppSessionSubjectType;
   accountId?: string;
   scmStaffProfileId?: string;
@@ -64,29 +61,8 @@ function normalizeStoredStaffAppSession(
   };
 }
 
-async function ensureStaffAppSessionStore() {
-  try {
-    await fs.access(sessionStorePath);
-  } catch {
-    await fs.mkdir(sessionStoreDirectory, { recursive: true });
-    await fs.writeFile(sessionStorePath, "[]", "utf8");
-  }
-}
-
-async function readStaffAppSessionStore() {
-  await ensureStaffAppSessionStore();
-  const raw = await fs.readFile(sessionStorePath, "utf8");
-  return (JSON.parse(raw) as StoredStaffAppSession[]).map(normalizeStoredStaffAppSession);
-}
-
-async function writeStaffAppSessionStore(sessions: StoredStaffAppSession[]) {
-  await fs.writeFile(sessionStorePath, JSON.stringify(sessions, null, 2), "utf8");
-}
-
 export async function createStaffAppSession(target: string | StaffAppSessionTarget) {
-  const sessions = await readStaffAppSessionStore();
   const cookieStore = await cookies();
-  const existingToken = cookieStore.get(sessionCookieName)?.value;
   const sessionTarget: StaffAppSessionTarget =
     typeof target === "string"
       ? {
@@ -97,29 +73,20 @@ export async function createStaffAppSession(target: string | StaffAppSessionTarg
   const session: StoredStaffAppSession =
     sessionTarget.subjectType === "scmStaff"
       ? {
-          token: randomUUID(),
           subjectType: "scmStaff",
           scmStaffProfileId: sessionTarget.scmStaffProfileId,
           createdAt: new Date().toISOString(),
         }
       : {
-          token: randomUUID(),
           subjectType: "staff",
           accountId: sessionTarget.accountId,
           createdAt: new Date().toISOString(),
         };
 
-  const nextSessions = existingToken
-    ? sessions.filter((storedSession) => storedSession.token !== existingToken)
-    : sessions;
-
-  nextSessions.push(session);
-  await writeStaffAppSessionStore(nextSessions);
-
-  cookieStore.set(sessionCookieName, session.token, {
+  cookieStore.set(sessionCookieName, encodeSignedSessionCookie(session), {
     httpOnly: true,
     sameSite: "lax",
-    secure: false,
+    secure: process.env.NODE_ENV === "production",
     path: "/",
     maxAge: 60 * 60 * 24 * 14,
   });
@@ -127,15 +94,6 @@ export async function createStaffAppSession(target: string | StaffAppSessionTarg
 
 export async function destroyCurrentStaffAppSession() {
   const cookieStore = await cookies();
-  const sessionToken = cookieStore.get(sessionCookieName)?.value;
-
-  if (sessionToken) {
-    const sessions = await readStaffAppSessionStore();
-    await writeStaffAppSessionStore(
-      sessions.filter((session) => session.token !== sessionToken),
-    );
-  }
-
   cookieStore.delete(sessionCookieName);
 }
 
@@ -147,8 +105,8 @@ export async function getCurrentStaffAppSession() {
     return null;
   }
 
-  const sessions = await readStaffAppSessionStore();
-  return sessions.find((session) => session.token === sessionToken) ?? null;
+  const session = decodeSignedSessionCookie<StoredStaffAppSession>(sessionToken);
+  return session ? normalizeStoredStaffAppSession(session) : null;
 }
 
 export async function getCurrentStaffAppAccount() {

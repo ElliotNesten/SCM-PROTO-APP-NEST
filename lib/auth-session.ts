@@ -1,7 +1,3 @@
-import { randomUUID } from "node:crypto";
-import fs from "node:fs/promises";
-import path from "node:path";
-
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
@@ -9,16 +5,17 @@ import type { CurrentUserSummary } from "@/data/backend-user-data";
 import {
   getPlatformAccessibleGigIdsForTemporaryManagerStaffProfile,
 } from "@/lib/gig-store";
+import {
+  decodeSignedSessionCookie,
+  encodeSignedSessionCookie,
+} from "@/lib/session-cookie";
 import { getStoredScmStaffProfileById } from "@/lib/scm-staff-store";
 import { getStoredStaffProfileById } from "@/lib/staff-store";
 import { getScmRoleDefinition, type ScmStaffRoleKey, type StoredScmStaffProfile } from "@/types/scm-rbac";
 
 const sessionCookieName = "scm_auth_session";
-const sessionStoreDirectory = path.join(process.cwd(), "data");
-const sessionStorePath = path.join(sessionStoreDirectory, "auth-sessions.json");
 
 type StoredAuthSession = {
-  token: string;
   subjectType?: "scmStaff" | "temporaryGigManager";
   profileId?: string;
   linkedStaffProfileId?: string;
@@ -55,25 +52,6 @@ function getDisplayInitials(displayName: string) {
     .toUpperCase();
 }
 
-async function ensureSessionStore() {
-  try {
-    await fs.access(sessionStorePath);
-  } catch {
-    await fs.mkdir(sessionStoreDirectory, { recursive: true });
-    await fs.writeFile(sessionStorePath, "[]", "utf8");
-  }
-}
-
-async function readSessionStore() {
-  await ensureSessionStore();
-  const raw = await fs.readFile(sessionStorePath, "utf8");
-  return (JSON.parse(raw) as StoredAuthSession[]).map(normalizeStoredAuthSession);
-}
-
-async function writeSessionStore(sessions: StoredAuthSession[]) {
-  await fs.writeFile(sessionStorePath, JSON.stringify(sessions, null, 2), "utf8");
-}
-
 async function resolvePlatformTemporaryGigManagerProfile(linkedStaffProfileId: string) {
   const [staffProfile, activeGigIds] = await Promise.all([
     getStoredStaffProfileById(linkedStaffProfileId),
@@ -103,9 +81,7 @@ async function resolvePlatformTemporaryGigManagerProfile(linkedStaffProfileId: s
 }
 
 export async function createAuthSession(target: string | AuthSessionTarget) {
-  const sessions = await readSessionStore();
   const cookieStore = await cookies();
-  const existingSessionToken = cookieStore.get(sessionCookieName)?.value;
   const sessionTarget: AuthSessionTarget =
     typeof target === "string"
       ? {
@@ -116,29 +92,20 @@ export async function createAuthSession(target: string | AuthSessionTarget) {
   const session: StoredAuthSession =
     sessionTarget.subjectType === "temporaryGigManager"
       ? {
-          token: randomUUID(),
           subjectType: sessionTarget.subjectType,
           linkedStaffProfileId: sessionTarget.linkedStaffProfileId,
           createdAt: new Date().toISOString(),
         }
       : {
-          token: randomUUID(),
           subjectType: sessionTarget.subjectType,
           profileId: sessionTarget.profileId,
           createdAt: new Date().toISOString(),
         };
 
-  const nextSessions = existingSessionToken
-    ? sessions.filter((storedSession) => storedSession.token !== existingSessionToken)
-    : sessions;
-
-  nextSessions.push(session);
-  await writeSessionStore(nextSessions);
-
-  cookieStore.set(sessionCookieName, session.token, {
+  cookieStore.set(sessionCookieName, encodeSignedSessionCookie(session), {
     httpOnly: true,
     sameSite: "lax",
-    secure: false,
+    secure: process.env.NODE_ENV === "production",
     path: "/",
     maxAge: 60 * 60 * 24 * 14,
   });
@@ -148,14 +115,6 @@ export async function createAuthSession(target: string | AuthSessionTarget) {
 
 export async function destroyCurrentAuthSession() {
   const cookieStore = await cookies();
-  const sessionToken = cookieStore.get(sessionCookieName)?.value;
-
-  if (sessionToken) {
-    const sessions = await readSessionStore();
-    const nextSessions = sessions.filter((session) => session.token !== sessionToken);
-    await writeSessionStore(nextSessions);
-  }
-
   cookieStore.delete(sessionCookieName);
 }
 
@@ -167,8 +126,8 @@ export async function getCurrentAuthSession() {
     return null;
   }
 
-  const sessions = await readSessionStore();
-  return sessions.find((session) => session.token === sessionToken) ?? null;
+  const session = decodeSignedSessionCookie<StoredAuthSession>(sessionToken);
+  return session ? normalizeStoredAuthSession(session) : null;
 }
 
 export async function getCurrentAuthenticatedScmStaffProfile() {

@@ -32,7 +32,7 @@ export default async function StaffAppLoginPage({
 }: StaffAppLoginPageProps) {
   const resolvedSearchParams = searchParams ? await searchParams : undefined;
   const brandSettings = await getBrandSettings();
-  const savedEmail = pickQueryValue(resolvedSearchParams?.email) ?? "anton@scm.se";
+  const savedEmail = pickQueryValue(resolvedSearchParams?.email) ?? "";
   const errorMessage = getLoginErrorMessage(
     pickQueryValue(resolvedSearchParams?.error),
   );
@@ -90,7 +90,7 @@ export default async function StaffAppLoginPage({
             <LoginPasswordField
               name="password"
               label="Password"
-              defaultValue="anton123"
+              defaultValue=""
               placeholder="Enter password"
               autoComplete="current-password"
               required

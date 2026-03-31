@@ -75,9 +75,9 @@ const backendUsers: BackendUserResponse[] = [
   },
   {
     id: "staff-2",
-    email: "anton@scm.se",
-    firstName: "Anton",
-    lastName: "Scholdberg",
+    email: "albin.nyberg@scm.se",
+    firstName: "Albin",
+    lastName: "Nyberg",
     phoneNumber: "+46702222222",
     status: "APPROVED",
     createdAt: "2026-01-12T10:20:00Z",
@@ -310,11 +310,11 @@ const documents: BackendDocumentSummary[] = [
   },
   {
     id: "doc-profile-anton",
-    fileName: "anton-scholdberg-profile.jpg",
+    fileName: "albin-nyberg-profile.jpg",
     fileType: "image/jpeg",
     fileSize: 158900,
     storageBucket: "profile-documents",
-    storageKey: "profiles/anton-scholdberg/profile.jpg",
+    storageKey: "profiles/albin-nyberg/profile.jpg",
     uploadedByUserId: "staff-2",
   },
   {

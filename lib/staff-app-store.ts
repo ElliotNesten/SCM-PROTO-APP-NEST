@@ -40,23 +40,7 @@ async function tryWriteStaffAppAccountStore(accounts: StaffAppAccount[]) {
 }
 
 function createSeedStaffAppAccounts(): StaffAppAccount[] {
-  return [
-    {
-      id: "staff-app-user-1",
-      linkedStaffProfileId: "staff-2",
-      displayName: "Anton Scholdberg",
-      email: "anton@scm.se",
-      phone: "+46 70 222 2222",
-      country: "Sweden",
-      region: "Stockholm",
-      roleScopes: [
-        { role: "Seller", level: 1 },
-        { role: "Stand Leader", level: 1 },
-      ],
-      profileImageUrl: "/staff-images/staff-2/20251003-171602932-ios-849647f3.jpg",
-      passwordHash: createPasswordHash("anton123"),
-    },
-  ];
+  return [];
 }
 
 type LegacyStaffAppAccount = StaffAppAccount & {

@@ -5,6 +5,10 @@ export type PredefinedSuggestion = {
   reason: PredefinedSuggestionReason;
 };
 
+type ScoredPredefinedSuggestion = PredefinedSuggestion & {
+  score: number;
+};
+
 function normalizeSuggestionText(value: string) {
   return value
     .normalize("NFD")
@@ -90,7 +94,11 @@ function getSubsequenceGap(query: string, candidate: string) {
   return null;
 }
 
-function getSuggestionScore(query: string, item: string, index: number) {
+function getSuggestionScore(
+  query: string,
+  item: string,
+  index: number,
+): ScoredPredefinedSuggestion | null {
   const normalizedItem = normalizeSuggestionText(item);
   const collapsedItem = collapseWhitespace(normalizedItem);
   const collapsedQuery = collapseWhitespace(query);
@@ -165,9 +173,11 @@ function getSuggestionScore(query: string, item: string, index: number) {
     return null;
   }
 
+  const reason = bestReason;
+
   return {
     name: item,
-    reason: bestReason,
+    reason,
     score: bestScore - index * 0.001,
   };
 }
@@ -181,7 +191,7 @@ export function getPredefinedSuggestions(items: readonly string[], query: string
 
   return items
     .map((item, index) => getSuggestionScore(normalizedQuery, item, index))
-    .filter((item): item is PredefinedSuggestion & { score: number } => item !== null)
+    .filter((item): item is ScoredPredefinedSuggestion => item !== null)
     .sort((left, right) => right.score - left.score)
     .slice(0, maxResults)
     .map(({ name, reason }) => ({

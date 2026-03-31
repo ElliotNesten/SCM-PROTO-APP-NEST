@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { StaffProfileEditor } from "@/components/staff-profile-editor";
 import { requireCurrentAuthenticatedScmStaffProfile } from "@/lib/auth-session";
 import { canAccessPlatformStaffDirectory } from "@/lib/platform-access";
-import { ensureStaffAppAccountForLinkedStaffProfile } from "@/lib/staff-app-store";
+import { getStaffAppAccountByLinkedStaffProfileId } from "@/lib/staff-app-store";
 import { getStoredStaffDocuments } from "@/lib/staff-document-store";
 import { getStoredStaffProfileById } from "@/lib/staff-store";
 import { getSystemCompensationSettings } from "@/lib/system-compensation-store";
@@ -33,18 +33,7 @@ export default async function PersonProfilePage({ params }: PersonProfilePagePro
     notFound();
   }
 
-  const linkedStaffAppAccount = await ensureStaffAppAccountForLinkedStaffProfile({
-    id: profile.id,
-    displayName: profile.displayName,
-    email: profile.email,
-    phone: profile.phone,
-    country: profile.country,
-    region: profile.region,
-    roleProfiles: profile.roleProfiles,
-    roles: profile.roles,
-    priority: profile.priority,
-    profileImageUrl: profile.profileImageUrl,
-  });
+  const linkedStaffAppAccount = await getStaffAppAccountByLinkedStaffProfileId(profile.id);
 
   return (
     <StaffProfileEditor
@@ -52,7 +41,7 @@ export default async function PersonProfilePage({ params }: PersonProfilePagePro
       initialDocuments={documents}
       compensationSettings={compensationSettings}
       linkedStaffAppAccount={{
-        roleScopes: linkedStaffAppAccount.roleScopes,
+        roleScopes: linkedStaffAppAccount?.roleScopes ?? [],
       }}
     />
   );

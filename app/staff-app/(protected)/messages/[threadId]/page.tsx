@@ -19,13 +19,14 @@ export default async function StaffAppMessageThreadPage({
   const { threadId } = await params;
   const account = await requireCurrentStaffAppAccount();
   const thread = await getStaffAppMessageThreadById(threadId, account);
-  const latestMessage = thread?.messages.at(-1);
-  const repliesEnabled =
-    thread?.messages.length > 0 && latestMessage?.allowReplies !== false;
 
   if (!thread) {
     notFound();
   }
+
+  const latestMessage = thread.messages.at(-1);
+  const repliesEnabled =
+    thread.messages.length > 0 && latestMessage?.allowReplies !== false;
 
   return (
     <section className="staff-app-screen">

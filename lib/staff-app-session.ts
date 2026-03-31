@@ -209,7 +209,13 @@ export async function getCurrentStaffAppHomePath() {
     return "/staff-app/login";
   }
 
-  return userContext.appRole === "SCM STAFF" ? "/staff-app/scm" : "/staff-app/home";
+  if (userContext.appRole === "SCM STAFF") {
+    return "/staff-app/scm";
+  }
+
+  return userContext.account.mustCompleteOnboarding
+    ? "/staff-app/onboarding"
+    : "/staff-app/home";
 }
 
 export async function requireCurrentStaffAppAccount() {

@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
 
-import { StaffAppMobileShell } from "@/components/staff-app/mobile-shell";
 import { requireCurrentStaffAppAccount } from "@/lib/staff-app-session";
 
 export default async function StaffAppProtectedLayout({
@@ -8,7 +7,6 @@ export default async function StaffAppProtectedLayout({
 }: {
   children: ReactNode;
 }) {
-  const account = await requireCurrentStaffAppAccount();
-
-  return <StaffAppMobileShell account={account}>{children}</StaffAppMobileShell>;
+  await requireCurrentStaffAppAccount();
+  return children;
 }

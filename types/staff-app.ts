@@ -10,6 +10,7 @@ export interface StaffAppRoleScope {
 export interface StaffAppAccount {
   id: string;
   linkedStaffProfileId?: string;
+  createdFromApplicationId?: string | null;
   displayName: string;
   email: string;
   phone: string;
@@ -18,6 +19,11 @@ export interface StaffAppAccount {
   roleScopes: StaffAppRoleScope[];
   profileImageUrl?: string;
   passwordHash: string;
+  isActive: boolean;
+  mustCompleteOnboarding: boolean;
+  passwordSetAt?: string | null;
+  activatedAt?: string | null;
+  lastLoginAt?: string | null;
 }
 
 export interface StaffAppOpenPass {

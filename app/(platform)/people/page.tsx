@@ -4,10 +4,12 @@ import { unstable_noStore as noStore } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { PageHeader } from "@/components/page-header";
+import { StaffApplicationReviewPanel } from "@/components/staff-application-review-panel";
 import { StaffRegionEditFilter } from "@/components/staff-region-edit-filter";
 import { StatusBadge } from "@/components/status-badge";
 import { requireCurrentAuthenticatedScmStaffProfile } from "@/lib/auth-session";
 import { canAccessPlatformStaffDirectory } from "@/lib/platform-access";
+import { getAllStoredStaffApplications } from "@/lib/staff-application-store";
 import {
   getAllStoredStaffProfiles,
   getArchivedStaffDocuments,
@@ -20,6 +22,7 @@ type PeoplePageProps = {
     region?: string | string[];
     archiveView?: string | string[];
     countryMenu?: string | string[];
+    review?: string | string[];
   }>;
 };
 
@@ -148,10 +151,11 @@ export default async function PeoplePage({ searchParams }: PeoplePageProps) {
     redirect("/dashboard");
   }
 
-  const { status, country, region, archiveView, countryMenu } = await searchParams;
-  const [peopleDirectory, archivedDocuments] = await Promise.all([
+  const { status, country, region, archiveView, countryMenu, review } = await searchParams;
+  const [peopleDirectory, archivedDocuments, applications] = await Promise.all([
     getAllStoredStaffProfiles(),
     getArchivedStaffDocuments(),
+    getAllStoredStaffApplications(),
   ]);
   const activeFilter = resolveFilter(status);
   const activeCountry = resolveCountryFilter(country);
@@ -346,6 +350,11 @@ export default async function PeoplePage({ searchParams }: PeoplePageProps) {
           </div>
         </section>
       </div>
+
+      <StaffApplicationReviewPanel
+        applications={applications}
+        reviewCode={Array.isArray(review) ? review[0] : review}
+      />
 
       <section className="card">
         <div className="section-head">

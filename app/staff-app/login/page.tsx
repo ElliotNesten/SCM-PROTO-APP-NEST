@@ -2,12 +2,14 @@ import Image from "next/image";
 
 import { loginToStaffApp } from "@/app/staff-app/actions";
 import { LoginPasswordField } from "@/components/login-password-field";
+import { WorkAtScmModal } from "@/components/staff-app/work-at-scm-modal";
 import { getBrandSettings } from "@/lib/brand-store";
 
 type StaffAppLoginPageProps = {
   searchParams?: Promise<{
     error?: string | string[];
     email?: string | string[];
+    activated?: string | string[];
   }>;
 };
 
@@ -36,6 +38,10 @@ export default async function StaffAppLoginPage({
   const errorMessage = getLoginErrorMessage(
     pickQueryValue(resolvedSearchParams?.error),
   );
+  const activationMessage =
+    pickQueryValue(resolvedSearchParams?.activated) === "success"
+      ? "Your account is active. Continue with onboarding."
+      : "";
 
   return (
     <div className="staff-app-shell login">
@@ -97,10 +103,18 @@ export default async function StaffAppLoginPage({
             />
 
             {errorMessage ? <p className="staff-app-inline-alert danger">{errorMessage}</p> : null}
+            {activationMessage ? (
+              <p className="staff-app-inline-alert success">{activationMessage}</p>
+            ) : null}
             <button type="submit" className="staff-app-button">
               Log in to staff app
             </button>
+
           </form>
+
+          <div className="staff-app-login-secondary-action">
+            <WorkAtScmModal />
+          </div>
         </section>
       </div>
     </div>

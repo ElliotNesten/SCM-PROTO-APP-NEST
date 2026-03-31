@@ -624,6 +624,134 @@
   cursor: not-allowed;
 }
 
+.staff-app-login-secondary-action {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.staff-app-work-at-scm-trigger {
+  width: 100%;
+}
+
+.staff-app-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(11, 22, 40, 0.48);
+  backdrop-filter: blur(8px);
+}
+
+.staff-app-modal-card,
+.staff-app-create-password-card {
+  width: min(100%, 32rem);
+  display: grid;
+  gap: 1rem;
+  padding: 1.15rem;
+  border: 1px solid rgba(177, 191, 213, 0.42);
+  border-radius: 1.6rem;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 24px 56px rgba(18, 36, 63, 0.18);
+}
+
+.staff-app-modal-head,
+.staff-app-modal-actions {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.85rem;
+}
+
+.staff-app-modal-head h2 {
+  margin: 0;
+  color: #10203a;
+}
+
+.staff-app-modal-head p {
+  margin: 0.35rem 0 0;
+  color: #5f7188;
+  line-height: 1.55;
+}
+
+.staff-app-modal-close {
+  flex: 0 0 auto;
+  width: 2.6rem;
+  height: 2.6rem;
+  border-radius: 999px;
+  background: #e6edf5;
+  color: #183452;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.staff-app-modal-form,
+.staff-app-modal-success,
+.staff-app-create-password-copy,
+.staff-app-create-password-form,
+.staff-app-onboarding-ready {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.staff-app-upload-field {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.95rem 1rem;
+  border: 1px dashed rgba(177, 191, 213, 0.85);
+  border-radius: 1.1rem;
+  background: rgba(246, 249, 253, 0.96);
+}
+
+.staff-app-upload-field input[type="file"] {
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.staff-app-upload-field strong {
+  color: #183452;
+}
+
+.staff-app-upload-field small {
+  color: #5f7188;
+}
+
+.staff-app-modal-actions {
+  justify-content: flex-end;
+}
+
+.staff-app-modal-actions .staff-app-button,
+.staff-app-onboarding-ready form .staff-app-button {
+  width: auto;
+  min-width: 10rem;
+}
+
+.staff-app-create-password-card h1 {
+  margin: 0;
+  color: #10203a;
+  font-size: clamp(2rem, 7vw, 2.5rem);
+  line-height: 1;
+}
+
+.staff-app-create-password-card p {
+  margin: 0;
+  color: #5f7188;
+  line-height: 1.55;
+}
+
+.staff-app-create-password-card strong {
+  color: #183452;
+}
+
+.staff-app-onboarding-card {
+  width: min(100%, 34rem);
+}
+
 .staff-app-home-hero {
   gap: 1rem;
   border-radius: 1.85rem;
@@ -2804,6 +2932,17 @@
 
   .staff-app-guides-grid {
     grid-template-columns: 1fr;
+  }
+
+  .staff-app-modal-head,
+  .staff-app-modal-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .staff-app-modal-actions .staff-app-button,
+  .staff-app-onboarding-ready form .staff-app-button {
+    width: 100%;
   }
 }
 

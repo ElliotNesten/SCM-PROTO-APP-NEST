@@ -371,6 +371,8 @@ type NewStaffProfileInput = {
   bankName?: string;
   bankDetails: string;
   personalNumber: string;
+  profileImageName?: string;
+  profileImageUrl?: string;
   driverLicenseManual?: boolean;
   driverLicenseAutomatic?: boolean;
   allergies?: string;
@@ -508,8 +510,8 @@ export async function createStoredStaffProfile(input: NewStaffProfileInput) {
     registrationLabel: getRegistrationLabel(input.registrationStatus),
     profileApproved: input.profileApproved,
     profileApprovalLabel: getProfileApprovalLabel(input.profileApproved),
-    profileImageName: "",
-    profileImageUrl: undefined,
+    profileImageName: input.profileImageName ?? "",
+    profileImageUrl: input.profileImageUrl,
     bankName: input.bankName ?? "",
     bankDetails: input.bankDetails,
     personalNumber: input.personalNumber,

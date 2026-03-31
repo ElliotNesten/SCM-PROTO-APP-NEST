@@ -1,14 +1,17 @@
 import Link from "next/link";
 
 import { SystemSettingsCompensationEditor } from "@/components/system-settings-compensation-editor";
+import { SystemSettingsApplicationEmailEditor } from "@/components/system-settings-application-email-editor";
 import { PageHeader } from "@/components/page-header";
 import { SystemSettingsPolicyUploader } from "@/components/system-settings-policy-uploader";
 import { SystemSettingsScmInfoEditor } from "@/components/system-settings-scm-info-editor";
 import { SystemSettingsTemplateEditor } from "@/components/system-settings-template-editor";
 import { SystemSettingsTextEditingPanel } from "@/components/system-settings-text-editing-panel";
+import { getPostmarkConfigurationStatus } from "@/lib/postmark";
 import { requireSuperAdminProfile } from "@/lib/auth-session";
 import { getSystemPolicySettings } from "@/lib/system-policy-store";
 import { getSystemCompensationSettings } from "@/lib/system-compensation-store";
+import { getApprovedApplicationEmailTemplate } from "@/lib/system-email-template-store";
 import { getSystemScmInfoPdfSettings } from "@/lib/system-scm-info-pdf-store";
 import { getSystemScmInfoSettings } from "@/lib/system-scm-info-store";
 import { getSystemPdfTemplates } from "@/lib/system-template-store";
@@ -17,6 +20,7 @@ export default async function SystemSettingsPage() {
   await requireSuperAdminProfile();
   const [
     templateState,
+    approvedApplicationEmailTemplate,
     policySettings,
     compensationSettings,
     scmInfoSettings,
@@ -24,11 +28,13 @@ export default async function SystemSettingsPage() {
   ] =
     await Promise.all([
       getSystemPdfTemplates(),
+      getApprovedApplicationEmailTemplate(),
       getSystemPolicySettings(),
       getSystemCompensationSettings(),
       getSystemScmInfoSettings(),
       getSystemScmInfoPdfSettings(),
     ]);
+  const postmarkStatus = getPostmarkConfigurationStatus();
 
   return (
     <>
@@ -44,6 +50,10 @@ export default async function SystemSettingsPage() {
       />
 
       <SystemSettingsTextEditingPanel />
+      <SystemSettingsApplicationEmailEditor
+        initialTemplate={approvedApplicationEmailTemplate}
+        postmarkStatus={postmarkStatus}
+      />
       <SystemSettingsPolicyUploader initialPolicy={policySettings} />
       <SystemSettingsCompensationEditor initialSettings={compensationSettings} />
       <SystemSettingsScmInfoEditor

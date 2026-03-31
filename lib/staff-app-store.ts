@@ -46,6 +46,12 @@ function createSeedStaffAppAccounts(): StaffAppAccount[] {
 type LegacyStaffAppAccount = StaffAppAccount & {
   approvedRoles?: StaffAppScopeRole[];
   staffLevel?: number;
+  createdFromApplicationId?: string | null;
+  isActive?: boolean;
+  mustCompleteOnboarding?: boolean;
+  passwordSetAt?: string | null;
+  activatedAt?: string | null;
+  lastLoginAt?: string | null;
 };
 
 function normalizeRoleScopes(
@@ -67,7 +73,8 @@ function normalizeRoleScopes(
   return [] as StaffAppRoleScope[];
 }
 
-function createStaffAppAccountFromLinkedStaffProfile(profile: {
+function createStaffAppAccountFromLinkedStaffProfile(
+  profile: {
   id: string;
   displayName: string;
   email: string;
@@ -78,10 +85,20 @@ function createStaffAppAccountFromLinkedStaffProfile(profile: {
   roles: string[];
   priority: number;
   profileImageUrl?: string;
-}): StaffAppAccount {
+},
+  options?: {
+    createdFromApplicationId?: string | null;
+    passwordHash?: string;
+    isActive?: boolean;
+    mustCompleteOnboarding?: boolean;
+    passwordSetAt?: string | null;
+    activatedAt?: string | null;
+  },
+): StaffAppAccount {
   return {
     id: `staff-app-${profile.id}`,
     linkedStaffProfileId: profile.id,
+    createdFromApplicationId: options?.createdFromApplicationId ?? null,
     displayName: profile.displayName,
     email: profile.email,
     phone: profile.phone,
@@ -93,7 +110,13 @@ function createStaffAppAccountFromLinkedStaffProfile(profile: {
       profile.priority,
     ),
     profileImageUrl: profile.profileImageUrl,
-    passwordHash: createPasswordHash(getSeedScmStaffPassword(profile.email)),
+    passwordHash:
+      options?.passwordHash ?? createPasswordHash(getSeedScmStaffPassword(profile.email)),
+    isActive: options?.isActive ?? true,
+    mustCompleteOnboarding: options?.mustCompleteOnboarding ?? false,
+    passwordSetAt: options?.passwordSetAt ?? null,
+    activatedAt: options?.activatedAt ?? null,
+    lastLoginAt: null,
   };
 }
 
@@ -101,6 +124,7 @@ function normalizeStaffAppAccount(account: LegacyStaffAppAccount): StaffAppAccou
   return {
     id: account.id,
     linkedStaffProfileId: account.linkedStaffProfileId,
+    createdFromApplicationId: account.createdFromApplicationId ?? null,
     displayName: account.displayName,
     email: account.email,
     phone: account.phone,
@@ -109,6 +133,11 @@ function normalizeStaffAppAccount(account: LegacyStaffAppAccount): StaffAppAccou
     roleScopes: normalizeRoleScopes(account.roleScopes, account.approvedRoles, account.staffLevel),
     profileImageUrl: account.profileImageUrl,
     passwordHash: account.passwordHash,
+    isActive: account.isActive ?? true,
+    mustCompleteOnboarding: account.mustCompleteOnboarding ?? false,
+    passwordSetAt: account.passwordSetAt ?? null,
+    activatedAt: account.activatedAt ?? null,
+    lastLoginAt: account.lastLoginAt ?? null,
   };
 }
 
@@ -159,7 +188,15 @@ export async function getStaffAppAccountByLinkedStaffProfileId(staffProfileId: s
 }
 
 export function verifyStaffAppAccountPassword(account: StaffAppAccount, password: string) {
+  if (!account.isActive || !account.passwordHash.trim()) {
+    return false;
+  }
+
   return verifyPasswordHash(password, account.passwordHash);
+}
+
+export function canStaffAppAccountSignIn(account: StaffAppAccount) {
+  return account.isActive && account.passwordHash.trim().length > 0;
 }
 
 export async function updateStaffAppAccountPassword(accountId: string, password: string) {
@@ -173,6 +210,7 @@ export async function updateStaffAppAccountPassword(accountId: string, password:
   accounts[accountIndex] = {
     ...accounts[accountIndex],
     passwordHash: createPasswordHash(password),
+    passwordSetAt: new Date().toISOString(),
   };
 
   await writeStaffAppAccountStore(accounts);
@@ -195,6 +233,7 @@ export async function updateStaffAppAccountPasswordByLinkedStaffProfileId(
   accounts[accountIndex] = {
     ...accounts[accountIndex],
     passwordHash: createPasswordHash(password),
+    passwordSetAt: new Date().toISOString(),
   };
 
   await writeStaffAppAccountStore(accounts);
@@ -308,4 +347,102 @@ export async function ensureStaffAppAccountForLinkedStaffProfile(profile: {
   accounts.push(createdAccount);
   await tryWriteStaffAppAccountStore(accounts);
   return createdAccount;
+}
+
+export async function createPendingStaffAppAccountForLinkedStaffProfile(profile: {
+  id: string;
+  displayName: string;
+  email: string;
+  phone: string;
+  country: string;
+  region: string;
+  roleProfiles?: Partial<StoredStaffRoleProfiles>;
+  roles: string[];
+  priority: number;
+  profileImageUrl?: string;
+  createdFromApplicationId?: string | null;
+}) {
+  const accounts = await readStaffAppAccountStore();
+  const accountIndex = accounts.findIndex(
+    (account) =>
+      account.linkedStaffProfileId === profile.id ||
+      account.email.toLowerCase() === profile.email.toLowerCase(),
+  );
+  const pendingAccount = createStaffAppAccountFromLinkedStaffProfile(profile, {
+    createdFromApplicationId: profile.createdFromApplicationId ?? null,
+    passwordHash: "",
+    isActive: false,
+    mustCompleteOnboarding: true,
+    passwordSetAt: null,
+    activatedAt: null,
+  });
+
+  if (accountIndex === -1) {
+    accounts.push(pendingAccount);
+  } else {
+    accounts[accountIndex] = {
+      ...accounts[accountIndex],
+      ...pendingAccount,
+      id: accounts[accountIndex].id,
+    };
+  }
+
+  await tryWriteStaffAppAccountStore(accounts);
+  return accountIndex === -1 ? pendingAccount : accounts[accountIndex];
+}
+
+export async function activateStaffAppAccountById(accountId: string, password: string) {
+  const accounts = await readStaffAppAccountStore();
+  const accountIndex = accounts.findIndex((account) => account.id === accountId);
+
+  if (accountIndex === -1) {
+    return null;
+  }
+
+  const now = new Date().toISOString();
+  accounts[accountIndex] = {
+    ...accounts[accountIndex],
+    passwordHash: createPasswordHash(password),
+    isActive: true,
+    mustCompleteOnboarding: true,
+    passwordSetAt: now,
+    activatedAt: now,
+  };
+
+  await writeStaffAppAccountStore(accounts);
+  return accounts[accountIndex];
+}
+
+export async function markStaffAppAccountOnboardingCompleted(accountId: string) {
+  const accounts = await readStaffAppAccountStore();
+  const accountIndex = accounts.findIndex((account) => account.id === accountId);
+
+  if (accountIndex === -1) {
+    return null;
+  }
+
+  accounts[accountIndex] = {
+    ...accounts[accountIndex],
+    mustCompleteOnboarding: false,
+  };
+
+  await writeStaffAppAccountStore(accounts);
+  return accounts[accountIndex];
+}
+
+export async function touchStaffAppAccountLastLogin(accountId: string) {
+  const accounts = await readStaffAppAccountStore();
+  const accountIndex = accounts.findIndex((account) => account.id === accountId);
+
+  if (accountIndex === -1) {
+    return null;
+  }
+
+  accounts[accountIndex] = {
+    ...accounts[accountIndex],
+    lastLoginAt: new Date().toISOString(),
+  };
+
+  await tryWriteStaffAppAccountStore(accounts);
+  return accounts[accountIndex];
 }

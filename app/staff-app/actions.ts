@@ -22,8 +22,14 @@ import {
 import { verifyPasswordHash } from "@/lib/password-utils";
 import { getStoredScmStaffProfileByEmail } from "@/lib/scm-staff-store";
 import {
+  acknowledgeStaffOnboardingWelcome,
+  upsertStaffOnboardingRecord,
+} from "@/lib/staff-onboarding-store";
+import {
   ensureStaffAppAccountForLinkedStaffProfile,
   getStaffAppAccountByEmail,
+  markStaffAppAccountOnboardingCompleted,
+  touchStaffAppAccountLastLogin,
   updateStaffAppAccountPassword,
   verifyStaffAppAccountPassword,
 } from "@/lib/staff-app-store";
@@ -85,7 +91,8 @@ export async function loginToStaffApp(formData: FormData) {
     subjectType: "staff",
     accountId: account.id,
   });
-  redirect("/staff-app/home");
+  await touchStaffAppAccountLastLogin(account.id);
+  redirect(account.mustCompleteOnboarding ? "/staff-app/onboarding" : "/staff-app/home");
 }
 
 export async function logoutOfStaffApp() {
@@ -183,6 +190,75 @@ export async function updateStaffAppPersonalDetails(formData: FormData) {
   revalidatePath(`/people/${account.linkedStaffProfileId}`);
   revalidatePath("/people");
   redirect("/staff-app/profile/personal-details?status=success");
+}
+
+export async function submitStaffAppOnboarding(formData: FormData) {
+  const account = await getCurrentStaffAppAccount();
+  const personalNumber = readString(formData, "personalNumber");
+  const bankName = readString(formData, "bankName");
+  const bankAccount = readString(formData, "bankAccount");
+  const allergies = readString(formData, "allergies");
+  const driverLicenseManual = readCheckbox(formData, "driverLicenseManual");
+  const driverLicenseAutomatic = readCheckbox(formData, "driverLicenseAutomatic");
+
+  if (!account) {
+    redirect("/staff-app/login");
+  }
+
+  if (!account.linkedStaffProfileId) {
+    redirect("/staff-app/onboarding?status=unavailable");
+  }
+
+  if (!personalNumber || !bankName || !bankAccount) {
+    redirect("/staff-app/onboarding?status=missing");
+  }
+
+  await upsertStaffOnboardingRecord({
+    staffProfileId: account.linkedStaffProfileId,
+    staffAppAccountId: account.id,
+    personalNumber,
+    bankName,
+    bankAccount,
+    allergies,
+    driverLicenseManual,
+    driverLicenseAutomatic,
+  });
+
+  await updateStoredStaffProfile(account.linkedStaffProfileId, {
+    personalNumber,
+    bankName,
+    bankDetails: bankAccount,
+    allergies,
+    driverLicenseManual,
+    driverLicenseAutomatic,
+    pendingRecords: [
+      "Policy confirmations",
+      "Own bookings",
+      "Own contracts",
+      "Own payslips",
+      "Own completed gigs",
+    ],
+  });
+
+  revalidatePath("/staff-app/onboarding");
+  revalidatePath("/staff-app/profile");
+  revalidatePath(`/people/${account.linkedStaffProfileId}`);
+  redirect("/staff-app/onboarding?status=ready");
+}
+
+export async function finishStaffAppOnboarding() {
+  const account = await getCurrentStaffAppAccount();
+
+  if (!account) {
+    redirect("/staff-app/login");
+  }
+
+  await acknowledgeStaffOnboardingWelcome(account.id);
+  await markStaffAppAccountOnboardingCompleted(account.id);
+
+  revalidatePath("/staff-app/onboarding");
+  revalidatePath("/staff-app/home");
+  redirect("/staff-app/home");
 }
 
 export async function checkInToStaffAppTodayShift(formData: FormData) {

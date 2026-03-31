@@ -20,6 +20,20 @@ import type { StaffRoleKey } from "@/types/staff-role";
 const storeDirectory = path.join(process.cwd(), "data");
 const storePath = path.join(storeDirectory, "shift-store.json");
 
+function shouldIgnoreReadOnlyStoreWriteError(error: unknown) {
+  const errorCode =
+    typeof error === "object" && error && "code" in error
+      ? String(error.code)
+      : "";
+
+  return (
+    errorCode === "EACCES" ||
+    errorCode === "EPERM" ||
+    errorCode === "EROFS" ||
+    errorCode === "ENOENT"
+  );
+}
+
 const roleOrder = ["Stand Leader", "Seller", "Runner"] as const;
 
 type StoredShiftRecord = Omit<Shift, "priorityLevel"> & {
@@ -285,12 +299,18 @@ async function syncShiftsWithGigs() {
     });
 
   if (didChange) {
-    await writeShiftStore(syncedShifts);
-    await Promise.all(
-      [...gigIdsWithClearedAssignments].map((gigId) =>
-        invalidateStoredGigTimeReportArtifacts(gigId),
-      ),
-    );
+    try {
+      await writeShiftStore(syncedShifts);
+      await Promise.all(
+        [...gigIdsWithClearedAssignments].map((gigId) =>
+          invalidateStoredGigTimeReportArtifacts(gigId),
+        ),
+      );
+    } catch (error) {
+      if (!shouldIgnoreReadOnlyStoreWriteError(error)) {
+        throw error;
+      }
+    }
   }
 
   return syncedShifts;

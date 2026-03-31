@@ -16,6 +16,21 @@ import {
 
 const storeDirectory = path.join(process.cwd(), "data");
 const storePath = path.join(storeDirectory, "scm-staff-store.json");
+
+function shouldIgnoreReadOnlyStoreWriteError(error: unknown) {
+  const errorCode =
+    typeof error === "object" && error && "code" in error
+      ? String(error.code)
+      : "";
+
+  return (
+    errorCode === "EACCES" ||
+    errorCode === "EPERM" ||
+    errorCode === "EROFS" ||
+    errorCode === "ENOENT"
+  );
+}
+
 function normalizeRegions(regions: string[]) {
   return Array.from(
     new Set(
@@ -188,7 +203,13 @@ async function readScmStaffStore() {
     .filter((profile): profile is StoredScmStaffProfile => Boolean(profile));
 
   if (normalizedProfiles.length !== parsed.length) {
-    await writeScmStaffStore(normalizedProfiles);
+    try {
+      await writeScmStaffStore(normalizedProfiles);
+    } catch (error) {
+      if (!shouldIgnoreReadOnlyStoreWriteError(error)) {
+        throw error;
+      }
+    }
   }
 
   return normalizedProfiles;

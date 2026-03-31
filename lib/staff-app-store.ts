@@ -15,6 +15,30 @@ import type { StoredStaffRoleProfiles } from "@/types/staff-role";
 const storeDirectory = path.join(process.cwd(), "data");
 const storePath = path.join(storeDirectory, "staff-app-account-store.json");
 
+function shouldIgnoreReadOnlyStoreWriteError(error: unknown) {
+  const errorCode =
+    typeof error === "object" && error && "code" in error
+      ? String(error.code)
+      : "";
+
+  return (
+    errorCode === "EACCES" ||
+    errorCode === "EPERM" ||
+    errorCode === "EROFS" ||
+    errorCode === "ENOENT"
+  );
+}
+
+async function tryWriteStaffAppAccountStore(accounts: StaffAppAccount[]) {
+  try {
+    await writeStaffAppAccountStore(accounts);
+  } catch (error) {
+    if (!shouldIgnoreReadOnlyStoreWriteError(error)) {
+      throw error;
+    }
+  }
+}
+
 function createSeedStaffAppAccounts(): StaffAppAccount[] {
   return [
     {
@@ -226,7 +250,7 @@ export async function syncStaffAppAccountFromLinkedStaffProfile(profile: {
     profileImageUrl: profile.profileImageUrl,
   };
 
-  await writeStaffAppAccountStore(accounts);
+  await tryWriteStaffAppAccountStore(accounts);
   return accounts[accountIndex];
 }
 
@@ -269,7 +293,7 @@ export async function ensureStaffAppAccountForLinkedStaffProfile(profile: {
     };
 
     accounts[linkedIndex] = nextAccount;
-    await writeStaffAppAccountStore(accounts);
+    await tryWriteStaffAppAccountStore(accounts);
     return nextAccount;
   }
 
@@ -292,12 +316,12 @@ export async function ensureStaffAppAccountForLinkedStaffProfile(profile: {
     };
 
     accounts[emailIndex] = nextAccount;
-    await writeStaffAppAccountStore(accounts);
+    await tryWriteStaffAppAccountStore(accounts);
     return nextAccount;
   }
 
   const createdAccount = createStaffAppAccountFromLinkedStaffProfile(profile);
   accounts.push(createdAccount);
-  await writeStaffAppAccountStore(accounts);
+  await tryWriteStaffAppAccountStore(accounts);
   return createdAccount;
 }

@@ -26,6 +26,20 @@ import type {
 const storeDirectory = path.join(process.cwd(), "data");
 const storePath = path.join(storeDirectory, "gig-store.json");
 
+function shouldIgnoreReadOnlyStoreWriteError(error: unknown) {
+  const errorCode =
+    typeof error === "object" && error && "code" in error
+      ? String(error.code)
+      : "";
+
+  return (
+    errorCode === "EACCES" ||
+    errorCode === "EPERM" ||
+    errorCode === "EROFS" ||
+    errorCode === "ENOENT"
+  );
+}
+
 type NewGigInput = {
   artist: string;
   arena: string;
@@ -408,7 +422,13 @@ async function readGigStore(): Promise<Gig[]> {
   const normalizedGigs = normalizedEntries.map((entry) => entry.gig);
 
   if (normalizedEntries.some((entry) => entry.didChange)) {
-    await writeGigStore(normalizedGigs);
+    try {
+      await writeGigStore(normalizedGigs);
+    } catch (error) {
+      if (!shouldIgnoreReadOnlyStoreWriteError(error)) {
+        throw error;
+      }
+    }
   }
 
   return normalizedGigs;

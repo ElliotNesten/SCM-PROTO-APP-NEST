@@ -238,7 +238,7 @@ function addMinutesToTime(value: string, offsetMinutes: number) {
   return formatMinutesAsTime(parseTimeToMinutes(value) + offsetMinutes);
 }
 
-function hasValue(value: string | undefined) {
+function hasValue(value: string | undefined): value is string {
   return typeof value === "string" && value.trim().length > 0;
 }
 

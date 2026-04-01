@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { formatStaffAppDate, getStaffAppDocuments } from "@/lib/staff-app-data";
+import { StaffAppPayrollSnapshotDetails } from "@/components/staff-app/payroll-snapshot-details";
+import { getStaffAppDocuments } from "@/lib/staff-app-data";
 import { requireCurrentStaffAppAccount } from "@/lib/staff-app-session";
 
 type StaffAppPayslipPageProps = {
@@ -26,28 +27,7 @@ export default async function StaffAppPayslipPage({
         Back to documents
       </Link>
 
-      <div className="staff-app-card emphasis">
-        <p className="staff-app-kicker">Payslip</p>
-        <h1>{payslip.monthLabel}</h1>
-        <p className="staff-app-muted">Issued {formatStaffAppDate(payslip.issuedAt)}</p>
-      </div>
-
-      <div className="staff-app-card">
-        <div className="staff-app-detail-grid">
-          <div className="staff-app-detail-cell">
-            <span>Net pay</span>
-            <strong>{payslip.netPayLabel}</strong>
-          </div>
-          <div className="staff-app-detail-cell">
-            <span>Gross pay</span>
-            <strong>{payslip.grossPayLabel}</strong>
-          </div>
-          <div className="staff-app-detail-cell full">
-            <span>Summary</span>
-            <strong>{payslip.summary}</strong>
-          </div>
-        </div>
-      </div>
+      <StaffAppPayrollSnapshotDetails payslip={payslip} />
     </section>
   );
 }

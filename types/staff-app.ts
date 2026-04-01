@@ -141,9 +141,33 @@ export interface StaffAppPayslip {
   id: string;
   monthLabel: string;
   issuedAt: string;
-  netPayLabel: string;
+  periodStart: string;
+  periodEnd: string;
+  periodLabel: string;
   grossPayLabel: string;
+  totalWorkedHoursLabel: string;
+  mealBenefitTaxLabel: string;
+  mealBenefitTaxCount: number;
+  gigCount: number;
+  shiftCount: number;
   summary: string;
+  entries: StaffAppPayslipEntry[];
+}
+
+export interface StaffAppPayslipEntry {
+  id: string;
+  gigId: string;
+  shiftId: string;
+  gigName: string;
+  date: string;
+  dateLabel: string;
+  role: string;
+  workedHoursLabel: string;
+  hourlyRateLabel: string;
+  grossCalculationLabel: string;
+  grossPayLabel: string;
+  mealBenefitCount: number;
+  mealBenefitTaxLabel: string;
 }
 
 export interface StaffAppColleague {

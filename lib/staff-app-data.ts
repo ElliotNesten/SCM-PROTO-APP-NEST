@@ -7,6 +7,7 @@ import {
   formatHourlyRateLabel,
   resolveEffectiveHourlyRate,
 } from "@/lib/compensation";
+import { getStaffAppPayrollSnapshots } from "@/lib/staff-app-payroll";
 import {
   buildStaffAppFeedPassId,
 } from "@/lib/staff-app-pass-ids";
@@ -33,7 +34,6 @@ import type {
   StaffAppManagedGig,
   StaffAppMessageThread,
   StaffAppOpenPass,
-  StaffAppPayslip,
   StaffAppRole,
   StaffAppScheduledShift,
 } from "@/types/staff-app";
@@ -190,25 +190,6 @@ const passSeeds: StaffAppPassSeed[] = [
     fallbackEndTime: "23:00",
     payRateLabel: "SEK 180 / hour",
     dressCode: "SCM uniform required",
-  },
-];
-
-const payslipSeeds: StaffAppPayslip[] = [
-  {
-    id: "payslip-2026-03",
-    monthLabel: "March 2026",
-    issuedAt: "2026-03-27",
-    netPayLabel: "SEK 4,980",
-    grossPayLabel: "SEK 6,200",
-    summary: "2 completed shifts, approved time reports, payout scheduled on 28 March.",
-  },
-  {
-    id: "payslip-2026-02",
-    monthLabel: "February 2026",
-    issuedAt: "2026-02-27",
-    netPayLabel: "SEK 3,460",
-    grossPayLabel: "SEK 4,250",
-    summary: "1 shift paid out with travel reimbursement included.",
   },
 ];
 
@@ -1186,12 +1167,13 @@ export async function getStaffAppMessageThreadById(
 
 export async function getStaffAppDocuments(account: StaffAppAccount) {
   const linkedStaffId = account.linkedStaffProfileId;
+  const payslips = await getStaffAppPayrollSnapshots(account);
 
   if (!linkedStaffId) {
     return {
       employmentContracts: [] as StaffAppDocumentLink[],
       timeReports: [] as StaffAppDocumentLink[],
-      payslips: payslipSeeds,
+      payslips,
     };
   }
 
@@ -1209,7 +1191,7 @@ export async function getStaffAppDocuments(account: StaffAppAccount) {
   return {
     employmentContracts: links.filter((document) => document.kind === "Employment Contract"),
     timeReports: links.filter((document) => document.kind === "Time Report"),
-    payslips: payslipSeeds,
+    payslips,
   };
 }
 

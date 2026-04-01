@@ -1600,6 +1600,28 @@
   white-space: nowrap;
 }
 
+.staff-app-payslip-entry-card {
+  align-items: center;
+}
+
+.staff-app-payslip-entry-amounts {
+  display: grid;
+  justify-items: end;
+  gap: 0.18rem;
+  text-align: right;
+}
+
+.staff-app-payslip-entry-amounts strong {
+  color: #10203a;
+  font-size: 1rem;
+}
+
+.staff-app-payslip-entry-amounts span {
+  color: #6d7f95;
+  font-size: 0.82rem;
+  line-height: 1.35;
+}
+
 @media (max-width: 560px) {
   .staff-app-documents-table {
     overflow: hidden;
@@ -1635,6 +1657,15 @@
 
   .staff-app-documents-download {
     width: 100%;
+  }
+
+  .staff-app-payslip-entry-card {
+    align-items: flex-start;
+  }
+
+  .staff-app-payslip-entry-amounts {
+    justify-items: start;
+    text-align: left;
   }
 }
 

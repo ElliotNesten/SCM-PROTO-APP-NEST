@@ -1,7 +1,13 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
 
-import { defaultArenaCatalog, type ArenaCatalogEntry } from "@/data/predefined-arenas";
+import {
+  createEmptyArenaCatalogDocuments,
+  defaultArenaCatalog,
+  type ArenaCatalogDocumentAsset,
+  type ArenaCatalogDocumentKey,
+  type ArenaCatalogEntry,
+} from "@/data/predefined-arenas";
 import { equipmentOptions } from "@/data/equipment-options";
 import { normalizeScandinavianCountry } from "@/lib/scandinavian-countries";
 import {
@@ -230,6 +236,35 @@ function normalizeHubCard(
   } satisfies StaffAppScmInfoHubCard;
 }
 
+function normalizeArenaCatalogDocumentAsset(
+  rawAsset: Partial<ArenaCatalogDocumentAsset> | null | undefined,
+) {
+  return {
+    pdfUrl: normalizeString(rawAsset?.pdfUrl),
+    fileName: normalizeString(rawAsset?.fileName),
+    uploadedAt: normalizeString(rawAsset?.uploadedAt),
+    uploadedBy: normalizeString(rawAsset?.uploadedBy),
+  } satisfies ArenaCatalogDocumentAsset;
+}
+
+function normalizeArenaCatalogDocuments(
+  rawDocuments:
+    | Partial<Record<ArenaCatalogDocumentKey, Partial<ArenaCatalogDocumentAsset>>>
+    | null
+    | undefined,
+) {
+  const emptyDocuments = createEmptyArenaCatalogDocuments();
+
+  return {
+    arenaInfo: normalizeArenaCatalogDocumentAsset(
+      rawDocuments?.arenaInfo ?? emptyDocuments.arenaInfo,
+    ),
+    fireEscapePlan: normalizeArenaCatalogDocumentAsset(
+      rawDocuments?.fireEscapePlan ?? emptyDocuments.fireEscapePlan,
+    ),
+  } satisfies Record<ArenaCatalogDocumentKey, ArenaCatalogDocumentAsset>;
+}
+
 function normalizeArenaCatalogEntry(
   rawEntry: Partial<ArenaCatalogEntry> | null | undefined,
   index: number,
@@ -254,6 +289,7 @@ function normalizeArenaCatalogEntry(
           : [],
       ),
     ),
+    documents: normalizeArenaCatalogDocuments(rawEntry?.documents),
   } satisfies ArenaCatalogEntry;
 }
 

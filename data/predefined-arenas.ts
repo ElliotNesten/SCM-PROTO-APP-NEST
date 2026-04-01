@@ -1,12 +1,27 @@
 import { getPredefinedSuggestions, type PredefinedSuggestion } from "@/lib/predefined-suggestions";
 import type { ScandinavianCountry } from "@/lib/scandinavian-countries";
 
+export type ArenaCatalogDocumentKey = "arenaInfo" | "fireEscapePlan";
+
+export type ArenaCatalogDocumentAsset = {
+  pdfUrl: string;
+  fileName: string;
+  uploadedAt: string;
+  uploadedBy: string;
+};
+
+export const arenaCatalogDocumentKeys: ArenaCatalogDocumentKey[] = [
+  "arenaInfo",
+  "fireEscapePlan",
+];
+
 export type ArenaCatalogEntry = {
   id: string;
   name: string;
   city: string;
   country: ScandinavianCountry;
   aliases: string[];
+  documents: Record<ArenaCatalogDocumentKey, ArenaCatalogDocumentAsset>;
 };
 
 export type ArenaCatalogLocation = {
@@ -14,7 +29,34 @@ export type ArenaCatalogLocation = {
   country: ScandinavianCountry;
 };
 
-export const defaultArenaCatalog: ArenaCatalogEntry[] = [
+export function createEmptyArenaCatalogDocumentAsset(): ArenaCatalogDocumentAsset {
+  return {
+    pdfUrl: "",
+    fileName: "",
+    uploadedAt: "",
+    uploadedBy: "",
+  };
+}
+
+export function createEmptyArenaCatalogDocuments() {
+  return {
+    arenaInfo: createEmptyArenaCatalogDocumentAsset(),
+    fireEscapePlan: createEmptyArenaCatalogDocumentAsset(),
+  } satisfies Record<ArenaCatalogDocumentKey, ArenaCatalogDocumentAsset>;
+}
+
+export function getArenaCatalogDocumentLabel(documentKey: ArenaCatalogDocumentKey) {
+  switch (documentKey) {
+    case "arenaInfo":
+      return "Arena info";
+    case "fireEscapePlan":
+      return "FIRE ESCAPE PLAN";
+  }
+}
+
+type BaseArenaCatalogEntry = Omit<ArenaCatalogEntry, "documents">;
+
+const baseArenaCatalog: BaseArenaCatalogEntry[] = [
   {
     id: "se-avicii-arena",
     name: "Avicii Arena",
@@ -233,6 +275,11 @@ export const defaultArenaCatalog: ArenaCatalogEntry[] = [
     aliases: [],
   },
 ];
+
+export const defaultArenaCatalog: ArenaCatalogEntry[] = baseArenaCatalog.map((arena) => ({
+  ...arena,
+  documents: createEmptyArenaCatalogDocuments(),
+}));
 
 export function normalizeArenaLookupValue(value: string) {
   return value

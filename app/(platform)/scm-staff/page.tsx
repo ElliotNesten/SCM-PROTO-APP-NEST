@@ -1,8 +1,8 @@
 import { unstable_noStore as noStore } from "next/cache";
-import Image from "next/image";
 import Link from "next/link";
 
 import { PageHeader } from "@/components/page-header";
+import { ProfileImage } from "@/components/profile-image";
 import { ScmRolePermissionGuide } from "@/components/scm-role-permission-guide";
 import { StatusBadge } from "@/components/status-badge";
 import { getAllStoredGigs } from "@/lib/gig-store";
@@ -320,17 +320,13 @@ export default async function ScmStaffPage() {
               const cardContent = (
                 <>
                   <div className="staff-list-avatar" aria-hidden="true">
-                    {profile.profileImageUrl ? (
-                      <Image
-                        src={profile.profileImageUrl}
-                        alt={`${profile.displayName} profile`}
-                        width={75}
-                        height={75}
-                        className="staff-list-avatar-img"
-                      />
-                    ) : (
-                      getDisplayInitials(profile.displayName)
-                    )}
+                    <ProfileImage
+                      displayName={profile.displayName}
+                      imageUrl={profile.profileImageUrl}
+                      alt={`${profile.displayName} profile`}
+                      className="staff-list-avatar-img"
+                      fallbackText={getDisplayInitials(profile.displayName)}
+                    />
                   </div>
 
                   <div className="staff-grid-card-body scm-staff-card-body">

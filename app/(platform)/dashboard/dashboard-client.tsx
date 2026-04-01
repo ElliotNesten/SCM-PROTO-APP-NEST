@@ -413,7 +413,7 @@ export function DashboardClient({
   const filteredGigs = gigs.filter((gig) => {
     const gigSection = resolveGigRegisterSection(gig);
 
-    if (gigSection === "archived") {
+    if (gigSection === "closed") {
       return false;
     }
 
@@ -469,7 +469,7 @@ export function DashboardClient({
   const calendarMonth = addMonths(baseCalendarMonth, monthOffset);
   const calendarRows = buildCalendarRows(calendarMonth, filteredGigs);
   const openGigs = gigs.filter(
-    (gig) => resolveGigRegisterSection(gig) !== "archived",
+    (gig) => resolveGigRegisterSection(gig) !== "closed",
   ).length;
 
   function pushFilterRoute(nextFilters: DashboardFilters) {

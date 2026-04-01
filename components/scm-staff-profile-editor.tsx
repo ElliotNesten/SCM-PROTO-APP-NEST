@@ -92,7 +92,9 @@ export function ScmStaffProfileEditor({
   canManageAdministrativeFields = true,
   canEditRole = true,
   canEditProfileImage = true,
+  canChangePassword = false,
   canRevealStoredPassword = false,
+  requiresCurrentPassword = false,
   initialStatusMessage = "",
 }: {
   initialProfile: StoredScmStaffProfile;
@@ -102,7 +104,9 @@ export function ScmStaffProfileEditor({
   canManageAdministrativeFields?: boolean;
   canEditRole?: boolean;
   canEditProfileImage?: boolean;
+  canChangePassword?: boolean;
   canRevealStoredPassword?: boolean;
+  requiresCurrentPassword?: boolean;
   initialStatusMessage?: string;
 }) {
   const router = useRouter();
@@ -112,9 +116,11 @@ export function ScmStaffProfileEditor({
   const [deleting, setDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [saveMessage, setSaveMessage] = useState(initialStatusMessage);
+  const [currentPasswordDraft, setCurrentPasswordDraft] = useState("");
   const [passwordDraft, setPasswordDraft] = useState(
     canRevealStoredPassword ? (initialProfile.passwordPlaintext ?? "") : "",
   );
+  const [confirmPasswordDraft, setConfirmPasswordDraft] = useState("");
   const [showPasswordDraft, setShowPasswordDraft] = useState(false);
   const [regionDraft, setRegionDraft] = useState("");
   const imageInputRef = useRef<HTMLInputElement | null>(null);
@@ -123,10 +129,17 @@ export function ScmStaffProfileEditor({
   const isRegionalManager = profile.roleKey === "regionalManager";
   const usesScopedAccess = isRegionalManager;
   const showsSwedenRegions = isRegionalManager && profile.country === "Sweden";
-  const passwordFieldLabel = canRevealStoredPassword ? "Registered password" : "Password";
+  const canEditPassword = canRevealStoredPassword || canChangePassword;
+  const passwordFieldLabel = canRevealStoredPassword
+    ? "Registered password"
+    : requiresCurrentPassword
+      ? "Change password"
+      : "Password";
   const passwordFieldPlaceholder = canRevealStoredPassword
     ? "Leave blank to keep the current password"
-    : "Enter a new password to replace the current one";
+    : requiresCurrentPassword
+      ? "New password"
+      : "Enter a new password to replace the current one";
 
   const availableRegionOptions = useMemo(
     () => dedupeStrings([...swedenRegionOptions, ...profile.regions]),
@@ -209,13 +222,56 @@ export function ScmStaffProfileEditor({
     const nextCountry =
       profile.roleKey === "regionalManager" ? profile.country : "Global";
     const nextRegions = profile.roleKey === "regionalManager" ? profile.regions : [];
+    const trimmedCurrentPasswordDraft = currentPasswordDraft.trim();
     const trimmedPasswordDraft = passwordDraft.trim();
+    const trimmedConfirmPasswordDraft = confirmPasswordDraft.trim();
     const currentStoredPassword = profile.passwordPlaintext?.trim() ?? "";
-    const nextPassword =
-      trimmedPasswordDraft.length === 0 ||
-      (canRevealStoredPassword && trimmedPasswordDraft === currentStoredPassword)
-        ? ""
-        : passwordDraft;
+    const touchedSelfServicePasswordFields =
+      trimmedCurrentPasswordDraft.length > 0 ||
+      trimmedPasswordDraft.length > 0 ||
+      trimmedConfirmPasswordDraft.length > 0;
+    let nextPassword = "";
+
+    if (canRevealStoredPassword) {
+      if (
+        trimmedPasswordDraft.length > 0 &&
+        trimmedPasswordDraft !== currentStoredPassword
+      ) {
+        if (trimmedPasswordDraft.length < 8) {
+          setSaveMessage("SCM Staff password must be at least 8 characters long.");
+          setSaving(false);
+          return;
+        }
+
+        nextPassword = trimmedPasswordDraft;
+      }
+    } else if (canChangePassword && touchedSelfServicePasswordFields) {
+      if (
+        !trimmedCurrentPasswordDraft ||
+        !trimmedPasswordDraft ||
+        !trimmedConfirmPasswordDraft
+      ) {
+        setSaveMessage(
+          "Enter your current password, your new password, and confirm it before saving.",
+        );
+        setSaving(false);
+        return;
+      }
+
+      if (trimmedPasswordDraft.length < 8) {
+        setSaveMessage("SCM Staff password must be at least 8 characters long.");
+        setSaving(false);
+        return;
+      }
+
+      if (trimmedPasswordDraft !== trimmedConfirmPasswordDraft) {
+        setSaveMessage("The new password confirmation does not match.");
+        setSaving(false);
+        return;
+      }
+
+      nextPassword = trimmedPasswordDraft;
+    }
 
     const response = await fetch(`/api/scm-staff/${profile.id}`, {
       method: "PATCH",
@@ -225,6 +281,7 @@ export function ScmStaffProfileEditor({
       body: JSON.stringify({
         displayName: profile.displayName.trim(),
         email: profile.email.trim(),
+        currentPassword: requiresCurrentPassword ? trimmedCurrentPasswordDraft : undefined,
         password: nextPassword,
         phone: profile.phone.trim(),
         roleKey: canEditRole ? profile.roleKey : undefined,
@@ -239,9 +296,12 @@ export function ScmStaffProfileEditor({
 
     if (response.ok && payload?.profile) {
       setProfile(payload.profile);
+      setCurrentPasswordDraft("");
       setPasswordDraft(
         canRevealStoredPassword ? (payload.profile.passwordPlaintext ?? "") : "",
       );
+      setConfirmPasswordDraft("");
+      setShowPasswordDraft(false);
       setSaveMessage("SCM staff profile saved.");
       router.refresh();
     } else {
@@ -426,36 +486,94 @@ export function ScmStaffProfileEditor({
                 />
               </label>
 
-              <label className="key-value-card key-value-card-editable">
+              <div className="key-value-card key-value-card-editable">
                 <small>{passwordFieldLabel}</small>
-                <div className="password-field-row">
-                  <input
-                    type={showPasswordDraft ? "text" : "password"}
-                    value={passwordDraft}
-                    placeholder={passwordFieldPlaceholder}
-                    onChange={(event) => setPasswordDraft(event.currentTarget.value)}
-                  />
-                  <button
-                    type="button"
-                    className="button ghost password-visibility-button"
-                    onClick={() => setShowPasswordDraft((current) => !current)}
-                  >
-                    {showPasswordDraft ? "Hide" : "Show"}
-                  </button>
-                </div>
+                {canRevealStoredPassword ? (
+                  <div className="password-field-row">
+                    <input
+                      type={showPasswordDraft ? "text" : "password"}
+                      value={passwordDraft}
+                      placeholder={passwordFieldPlaceholder}
+                      onChange={(event) => setPasswordDraft(event.currentTarget.value)}
+                    />
+                    <button
+                      type="button"
+                      className="button ghost password-visibility-button"
+                      onClick={() => setShowPasswordDraft((current) => !current)}
+                    >
+                      {showPasswordDraft ? "Hide" : "Show"}
+                    </button>
+                  </div>
+                ) : canChangePassword && requiresCurrentPassword ? (
+                  <div className="password-field-stack">
+                    <input
+                      type={showPasswordDraft ? "text" : "password"}
+                      value={currentPasswordDraft}
+                      placeholder="Current password"
+                      onChange={(event) => setCurrentPasswordDraft(event.currentTarget.value)}
+                    />
+                    <div className="password-field-row">
+                      <input
+                        type={showPasswordDraft ? "text" : "password"}
+                        value={passwordDraft}
+                        placeholder={passwordFieldPlaceholder}
+                        onChange={(event) => setPasswordDraft(event.currentTarget.value)}
+                      />
+                      <button
+                        type="button"
+                        className="button ghost password-visibility-button"
+                        onClick={() => setShowPasswordDraft((current) => !current)}
+                      >
+                        {showPasswordDraft ? "Hide" : "Show"}
+                      </button>
+                    </div>
+                    <input
+                      type={showPasswordDraft ? "text" : "password"}
+                      value={confirmPasswordDraft}
+                      placeholder="Confirm new password"
+                      onChange={(event) => setConfirmPasswordDraft(event.currentTarget.value)}
+                    />
+                  </div>
+                ) : canEditPassword ? (
+                  <div className="password-field-row">
+                    <input
+                      type={showPasswordDraft ? "text" : "password"}
+                      value={passwordDraft}
+                      placeholder={passwordFieldPlaceholder}
+                      onChange={(event) => setPasswordDraft(event.currentTarget.value)}
+                    />
+                    <button
+                      type="button"
+                      className="button ghost password-visibility-button"
+                      onClick={() => setShowPasswordDraft((current) => !current)}
+                    >
+                      {showPasswordDraft ? "Hide" : "Show"}
+                    </button>
+                  </div>
+                ) : (
+                  <p className="muted small-text">
+                    Only Super Admin can view or reset another SCM Staff password.
+                  </p>
+                )}
                 {canRevealStoredPassword && !profile.passwordPlaintext?.trim() ? (
                   <p className="muted small-text">
                     The current password is not stored yet. Save a new password here, or have
                     the user log in once to register it.
                   </p>
                 ) : null}
-                {!canRevealStoredPassword ? (
+                {canChangePassword && requiresCurrentPassword ? (
+                  <p className="muted small-text">
+                    Change your own login password here. Enter your current password and choose a
+                    new one with at least 8 characters.
+                  </p>
+                ) : null}
+                {!canRevealStoredPassword && canEditPassword && !requiresCurrentPassword ? (
                   <p className="muted small-text">
                     The current registered password is hidden for your role. Enter a new one to
                     replace it.
                   </p>
                 ) : null}
-              </label>
+              </div>
 
               <label className="key-value-card key-value-card-editable">
                 <small>Role</small>

@@ -51,6 +51,7 @@ export default async function ScmStaffProfilePage({
   }
 
   const canRevealStoredPassword = isSuperAdminRole(currentScmStaffProfile.roleKey);
+  const isOwnProfile = currentScmStaffProfile.id === profile.id;
   const editableProfile = canRevealStoredPassword
     ? profile
     : redactScmStaffPasswordPlaintext(profile);
@@ -62,10 +63,12 @@ export default async function ScmStaffProfilePage({
       canManageAdministrativeFields
       canEditProfileImage={
         isSuperAdminRole(currentScmStaffProfile.roleKey) ||
-        currentScmStaffProfile.id === profile.id
+        isOwnProfile
       }
       canEditRole={isSuperAdminRole(currentScmStaffProfile.roleKey)}
+      canChangePassword={canRevealStoredPassword || isOwnProfile}
       canRevealStoredPassword={canRevealStoredPassword}
+      requiresCurrentPassword={isOwnProfile && !canRevealStoredPassword}
       initialStatusMessage={getInviteStatusMessage(
         pickQueryValue(resolvedSearchParams?.invite),
       )}

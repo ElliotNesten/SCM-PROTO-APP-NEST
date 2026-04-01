@@ -116,7 +116,9 @@ export default async function ProfilePage() {
         )}
         canEditProfileImage
         canEditRole={isSuperAdminRole(currentScmStaffProfile.roleKey)}
+        canChangePassword
         canRevealStoredPassword={canRevealStoredPassword}
+        requiresCurrentPassword={!canRevealStoredPassword}
       />
     </>
   );

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
-import { createPasswordHash } from "@/lib/password-utils";
+import { createPasswordHash, verifyPasswordHash } from "@/lib/password-utils";
 import {
   canAccessScmStaffAdministration,
   getCurrentAuthenticatedScmStaffProfile,
@@ -24,6 +24,7 @@ type RouteContext = {
 type ScmStaffPayload = {
   displayName?: string;
   email?: string;
+  currentPassword?: string;
   password?: string;
   phone?: string;
   roleKey?: ScmStaffRoleKey;
@@ -61,6 +62,8 @@ export async function PATCH(request: Request, context: RouteContext) {
 
   const isOwnProfile = currentProfile.id === existingProfile.id;
   const canRevealStoredPassword = isSuperAdminRole(currentProfile.roleKey);
+  const requestedPassword = payload.password?.trim() ?? "";
+  const requestedCurrentPassword = payload.currentPassword?.trim() ?? "";
 
   const nextRoleKey = payload.roleKey ?? existingProfile.roleKey;
 
@@ -80,16 +83,48 @@ export async function PATCH(request: Request, context: RouteContext) {
     );
   }
 
+  if (requestedPassword) {
+    if (!canRevealStoredPassword && !isOwnProfile) {
+      return NextResponse.json(
+        { error: "You can only change your own SCM Staff password." },
+        { status: 403 },
+      );
+    }
+
+    if (requestedPassword.length < 8) {
+      return NextResponse.json(
+        { error: "SCM Staff password must be at least 8 characters long." },
+        { status: 400 },
+      );
+    }
+
+    if (!canRevealStoredPassword) {
+      if (!requestedCurrentPassword) {
+        return NextResponse.json(
+          { error: "Enter your current password to change it." },
+          { status: 400 },
+        );
+      }
+
+      if (!verifyPasswordHash(requestedCurrentPassword, existingProfile.passwordHash)) {
+        return NextResponse.json(
+          { error: "Your current password is incorrect." },
+          { status: 400 },
+        );
+      }
+    }
+  }
+
   const updatedProfile = await updateStoredScmStaffProfile(personId, {
     displayName: payload.displayName ?? existingProfile.displayName,
     email: payload.email ?? existingProfile.email,
     passwordHash:
-      typeof payload.password === "string" && payload.password.trim()
-        ? createPasswordHash(payload.password)
+      requestedPassword
+        ? createPasswordHash(requestedPassword)
         : existingProfile.passwordHash,
     passwordPlaintext:
-      typeof payload.password === "string" && payload.password.trim()
-        ? payload.password.trim()
+      requestedPassword
+        ? requestedPassword
         : existingProfile.passwordPlaintext,
     phone: payload.phone ?? existingProfile.phone,
     roleKey: nextRoleKey,

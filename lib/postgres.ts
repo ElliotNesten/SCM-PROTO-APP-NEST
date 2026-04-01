@@ -8,6 +8,9 @@ const globalForPostgres = globalThis as typeof globalThis & {
   __scmPostgresSchemaFailed?: boolean;
 };
 
+const defaultProductionConnectTimeoutSeconds = 3;
+const defaultNonProductionConnectTimeoutSeconds = 30;
+
 function getDatabaseUrl() {
   return (
     process.env.DATABASE_URL?.trim() ||
@@ -21,8 +24,49 @@ export function isDatabaseConfigured() {
   return Boolean(getDatabaseUrl());
 }
 
+function parsePositiveNumber(value: string | undefined) {
+  if (!value) {
+    return null;
+  }
+
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+}
+
+function getConnectTimeoutSeconds() {
+  const configuredTimeout =
+    parsePositiveNumber(process.env.SCM_POSTGRES_CONNECT_TIMEOUT?.trim()) ??
+    parsePositiveNumber(process.env.PGCONNECT_TIMEOUT?.trim());
+
+  if (configuredTimeout !== null) {
+    return configuredTimeout;
+  }
+
+  return process.env.NODE_ENV === "production"
+    ? defaultProductionConnectTimeoutSeconds
+    : defaultNonProductionConnectTimeoutSeconds;
+}
+
+async function markPostgresUnavailable() {
+  globalForPostgres.__scmPostgresSchemaFailed = true;
+  globalForPostgres.__scmPostgresSchemaPromise = undefined;
+
+  const client = globalForPostgres.__scmPostgresClient;
+  globalForPostgres.__scmPostgresClient = undefined;
+
+  if (!client) {
+    return;
+  }
+
+  try {
+    await client.end({ timeout: 0 });
+  } catch {
+    // Swallow shutdown errors so callers can fall back to file-backed storage immediately.
+  }
+}
+
 export function getPostgresClient() {
-  if (!isDatabaseConfigured()) {
+  if (!isDatabaseConfigured() || globalForPostgres.__scmPostgresSchemaFailed) {
     return null;
   }
 
@@ -30,6 +74,9 @@ export function getPostgresClient() {
     globalForPostgres.__scmPostgresClient = postgres(getDatabaseUrl(), {
       max: 1,
       prepare: false,
+      // Fail fast in production so the app can use its bundled JSON fallback
+      // instead of appearing frozen while an unreachable database times out.
+      connect_timeout: getConnectTimeoutSeconds(),
     });
   }
 
@@ -257,8 +304,8 @@ export async function ensureProductionStorageSchema() {
         on shifts (gig_id);
     `)
       .then(() => undefined)
-      .catch((error) => {
-        globalForPostgres.__scmPostgresSchemaFailed = true;
+      .catch(async (error) => {
+        await markPostgresUnavailable();
         console.error(
           "Failed to ensure the SCM Postgres schema. Falling back to existing tables and bundled data where possible.",
           error,

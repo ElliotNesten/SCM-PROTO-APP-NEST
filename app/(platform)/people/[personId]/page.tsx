@@ -4,7 +4,10 @@ import { redirect } from "next/navigation";
 
 import { StaffProfileEditor } from "@/components/staff-profile-editor";
 import { requireCurrentAuthenticatedScmStaffProfile } from "@/lib/auth-session";
-import { canAccessPlatformStaffDirectory } from "@/lib/platform-access";
+import {
+  canAccessPlatformFieldStaffProfile,
+  canAccessPlatformStaffDirectory,
+} from "@/lib/platform-access";
 import { getStaffAppAccountByLinkedStaffProfileId } from "@/lib/staff-app-store";
 import { getStoredStaffDocuments } from "@/lib/staff-document-store";
 import { getStoredStaffProfileById } from "@/lib/staff-store";
@@ -23,9 +26,8 @@ export default async function PersonProfilePage({ params }: PersonProfilePagePro
   }
 
   const { personId } = await params;
-  const [profile, documents, compensationSettings] = await Promise.all([
+  const [profile, compensationSettings] = await Promise.all([
     getStoredStaffProfileById(personId),
-    getStoredStaffDocuments(personId),
     getSystemCompensationSettings(),
   ]);
 
@@ -33,16 +35,29 @@ export default async function PersonProfilePage({ params }: PersonProfilePagePro
     notFound();
   }
 
-  const linkedStaffAppAccount = await getStaffAppAccountByLinkedStaffProfileId(profile.id);
+  const showExtendedCards =
+    currentProfile.roleKey !== "regionalManager" ||
+    canAccessPlatformFieldStaffProfile(currentProfile, profile);
+  const [documents, linkedStaffAppAccount] = showExtendedCards
+    ? await Promise.all([
+        getStoredStaffDocuments(personId),
+        getStaffAppAccountByLinkedStaffProfileId(profile.id),
+      ])
+    : [[], null] as const;
 
   return (
     <StaffProfileEditor
       initialProfile={profile}
       initialDocuments={documents}
       compensationSettings={compensationSettings}
-      linkedStaffAppAccount={{
-        roleScopes: linkedStaffAppAccount?.roleScopes ?? [],
-      }}
+      linkedStaffAppAccount={
+        linkedStaffAppAccount
+          ? {
+              roleScopes: linkedStaffAppAccount.roleScopes ?? [],
+            }
+          : null
+      }
+      showExtendedCards={showExtendedCards}
     />
   );
 }

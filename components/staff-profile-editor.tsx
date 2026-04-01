@@ -53,6 +53,7 @@ export function StaffProfileEditor({
   initialDocuments,
   compensationSettings,
   linkedStaffAppAccount,
+  showExtendedCards = true,
 }: {
   initialProfile: StoredStaffProfile;
   initialDocuments: StoredStaffDocument[];
@@ -60,6 +61,7 @@ export function StaffProfileEditor({
   linkedStaffAppAccount: {
     roleScopes: StaffAppRoleScope[];
   } | null;
+  showExtendedCards?: boolean;
 }) {
   const router = useRouter();
   const [profile, setProfile] = useState(initialProfile);
@@ -126,6 +128,11 @@ export function StaffProfileEditor({
   void liveStaffAppScope;
 
   useEffect(() => {
+    if (!showExtendedCards) {
+      setRolesCardHeight(null);
+      return;
+    }
+
     const employeeProfileCard = employeeProfileCardRef.current;
 
     if (!employeeProfileCard || typeof window === "undefined") {
@@ -154,7 +161,7 @@ export function StaffProfileEditor({
       resizeObserver.disconnect();
       window.removeEventListener("resize", syncRolesCardHeight);
     };
-  }, []);
+  }, [showExtendedCards]);
 
   useEffect(() => {
     if (showRegionInput) {
@@ -732,6 +739,7 @@ export function StaffProfileEditor({
           compensationSettings.defaultHourlyRates,
         )
       : null;
+  const showStaffAppAccessCard = showExtendedCards && linkedStaffAppAccount !== null;
 
   return (
     <div className="staff-profile-editor">
@@ -775,7 +783,11 @@ export function StaffProfileEditor({
         eyebrow=""
       />
 
-      <section className="content-grid staff-profile-grid">
+      <section
+        className={`content-grid staff-profile-grid${
+          showExtendedCards ? "" : " staff-profile-grid--employee-only"
+        }`}
+      >
         <div className="stack-column staff-profile-primary-column">
           <div ref={employeeProfileCardRef} className="card staff-profile-compact-card">
             <div className="section-head">
@@ -1004,200 +1016,6 @@ export function StaffProfileEditor({
                 </div>
               </div>
             </div>
-          </div>
-
-          <div
-            className="card staff-profile-compact-card staff-profile-roles-card"
-            style={rolesCardHeight ? { height: `${rolesCardHeight}px` } : undefined}
-          >
-            <div className="section-head">
-              <div>
-                <p className="eyebrow">Roles</p>
-                <h2>Role scope and notes</h2>
-              </div>
-            </div>
-
-            <div className="staff-profile-role-grid">
-              {staffRoleKeys.map((roleKey) => {
-                const roleProfile = profile.roleProfiles[roleKey];
-                const normalizedHourlyRateOverride = sanitizeHourlyRateOverride(
-                  roleProfile.hourlyRateOverride,
-                  profile.country,
-                  roleKey,
-                  compensationSettings.defaultHourlyRates,
-                );
-                const standardHourlyRate = getStandardHourlyRate(
-                  profile.country,
-                  roleKey,
-                  compensationSettings.defaultHourlyRates,
-                );
-                const effectiveHourlyRate = resolveEffectiveHourlyRate({
-                  country: profile.country,
-                  roleKey,
-                  roleProfiles: {
-                    ...profile.roleProfiles,
-                    [roleKey]: {
-                      ...roleProfile,
-                      hourlyRateOverride: normalizedHourlyRateOverride,
-                    },
-                  },
-                  defaultHourlyRates: compensationSettings.defaultHourlyRates,
-                });
-                const hasHourlyRateOverride = normalizedHourlyRateOverride !== null;
-                const isCommentOpen = openRoleComments[roleKey] ?? false;
-                const hasComment = roleProfile.comment.trim().length > 0;
-                const isHourlyRateEditorEnabled = approvedHourlyRateEditors[roleKey] ?? false;
-
-                return (
-                  <div
-                    key={roleKey}
-                    className={`key-value-card key-value-card-editable staff-profile-role-card${
-                      roleProfile.enabled ? " active" : ""
-                    }`}
-                  >
-                    <div className="staff-profile-role-card-head">
-                      <div>
-                        <strong>{formatRoleScopeLabel(roleKey)}</strong>
-                      </div>
-                    </div>
-
-                    <div className="staff-profile-role-control-grid">
-                      <button
-                        type="button"
-                        className={`staff-profile-role-control-card staff-profile-role-permission-control${
-                          roleProfile.enabled ? " active" : ""
-                        }`}
-                        onClick={() =>
-                          updateRoleProfile(roleKey, {
-                            enabled: !roleProfile.enabled,
-                          })
-                        }
-                      >
-                        <span>Permission</span>
-                        <strong>{roleProfile.enabled ? "On" : "Off"}</strong>
-                      </button>
-
-                      <div className="staff-profile-role-control-card staff-profile-role-priority-control">
-                        <span>Priority level</span>
-                        <div className="staff-profile-role-priority-stepper">
-                          <button
-                            type="button"
-                            className="staff-profile-role-priority-button"
-                            onClick={() => changeRolePriority(roleKey, -1)}
-                            disabled={roleProfile.priority <= 1}
-                            aria-label={`Decrease priority for ${roleKey}`}
-                          >
-                            -
-                          </button>
-                          <strong>{roleProfile.priority}</strong>
-                          <button
-                            type="button"
-                            className="staff-profile-role-priority-button"
-                            onClick={() => changeRolePriority(roleKey, 1)}
-                            disabled={roleProfile.priority >= 5}
-                            aria-label={`Increase priority for ${roleKey}`}
-                          >
-                            +
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="staff-profile-role-rate-grid">
-                      <div className="staff-profile-role-rate-pill">
-                        <span>Standard wage</span>
-                        <strong>{standardHourlyRate.label}</strong>
-                      </div>
-                      <div
-                        className={`staff-profile-role-rate-pill staff-profile-role-rate-pill-editable${
-                          hasHourlyRateOverride ? " active" : ""
-                        }${isHourlyRateEditorEnabled ? " editing" : ""}`}
-                      >
-                        <div className="staff-profile-role-rate-pill-head">
-                          <span>Effective wage</span>
-                          <span
-                            className={`staff-profile-role-rate-edit-status${
-                              isHourlyRateEditorEnabled ? " editing" : ""
-                            }`}
-                          >
-                            {isHourlyRateEditorEnabled ? "Editing" : "Locked"}
-                          </span>
-                        </div>
-                        {isHourlyRateEditorEnabled ? (
-                          <div className="staff-profile-role-rate-input-row">
-                            <span className="staff-profile-role-rate-prefix">
-                              {effectiveHourlyRate.currency}
-                            </span>
-                            <input
-                              ref={(node) => {
-                                hourlyRateInputRefs.current[roleKey] = node;
-                              }}
-                              type="number"
-                              min={1}
-                              step={1}
-                              inputMode="numeric"
-                              className="staff-profile-role-rate-input"
-                              aria-label={`Effective wage for ${roleKey}`}
-                              placeholder={`${standardHourlyRate.hourlyRate}`}
-                              value={roleProfile.hourlyRateOverride ?? ""}
-                              onChange={(event) =>
-                                updateRoleProfile(roleKey, {
-                                  hourlyRateOverride:
-                                    event.currentTarget.value.trim().length > 0
-                                      ? Number(event.currentTarget.value)
-                                      : null,
-                                })
-                              }
-                            />
-                            <span className="staff-profile-role-rate-suffix">/ h</span>
-                          </div>
-                        ) : (
-                          <button
-                            type="button"
-                            className="staff-profile-role-rate-trigger"
-                            onClick={() => requestHourlyRateEdit(roleKey)}
-                          >
-                            <strong>{effectiveHourlyRate.label}</strong>
-                            <span>Unlock to edit</span>
-                          </button>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="staff-profile-role-comment">
-                      <button
-                        type="button"
-                        className={`staff-profile-role-comment-toggle${
-                          isCommentOpen ? " open" : ""
-                        }${hasComment ? " has-value" : ""}`}
-                        onClick={() => toggleRoleComment(roleKey)}
-                        aria-expanded={isCommentOpen}
-                      >
-                        <span>Comment</span>
-                        <span className="staff-profile-role-comment-toggle-meta">
-                          {isCommentOpen ? "Hide" : hasComment ? "Edit" : "Add"}
-                        </span>
-                      </button>
-
-                      {isCommentOpen ? (
-                        <label className="staff-profile-inline-field staff-profile-role-comment-field">
-                          <span>Comment</span>
-                          <textarea
-                            rows={2}
-                            value={roleProfile.comment}
-                            onChange={(event) =>
-                              updateRoleProfile(roleKey, {
-                                comment: event.currentTarget.value,
-                              })
-                            }
-                          />
-                        </label>
-                      ) : null}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
 
             {saveMessage ? (
               <div className="overview-editor-actions overview-editor-actions-status-only staff-profile-actions">
@@ -1206,7 +1024,205 @@ export function StaffProfileEditor({
             ) : null}
           </div>
 
-          {linkedStaffAppAccount ? (
+          {showExtendedCards ? (
+            <div
+              className="card staff-profile-compact-card staff-profile-roles-card"
+              style={rolesCardHeight ? { height: `${rolesCardHeight}px` } : undefined}
+            >
+              <div className="section-head">
+                <div>
+                  <p className="eyebrow">Roles</p>
+                  <h2>Role scope and notes</h2>
+                </div>
+              </div>
+
+              <div className="staff-profile-role-grid">
+                {staffRoleKeys.map((roleKey) => {
+                  const roleProfile = profile.roleProfiles[roleKey];
+                  const normalizedHourlyRateOverride = sanitizeHourlyRateOverride(
+                    roleProfile.hourlyRateOverride,
+                    profile.country,
+                    roleKey,
+                    compensationSettings.defaultHourlyRates,
+                  );
+                  const standardHourlyRate = getStandardHourlyRate(
+                    profile.country,
+                    roleKey,
+                    compensationSettings.defaultHourlyRates,
+                  );
+                  const effectiveHourlyRate = resolveEffectiveHourlyRate({
+                    country: profile.country,
+                    roleKey,
+                    roleProfiles: {
+                      ...profile.roleProfiles,
+                      [roleKey]: {
+                        ...roleProfile,
+                        hourlyRateOverride: normalizedHourlyRateOverride,
+                      },
+                    },
+                    defaultHourlyRates: compensationSettings.defaultHourlyRates,
+                  });
+                  const hasHourlyRateOverride = normalizedHourlyRateOverride !== null;
+                  const isCommentOpen = openRoleComments[roleKey] ?? false;
+                  const hasComment = roleProfile.comment.trim().length > 0;
+                  const isHourlyRateEditorEnabled =
+                    approvedHourlyRateEditors[roleKey] ?? false;
+
+                  return (
+                    <div
+                      key={roleKey}
+                      className={`key-value-card key-value-card-editable staff-profile-role-card${
+                        roleProfile.enabled ? " active" : ""
+                      }`}
+                    >
+                      <div className="staff-profile-role-card-head">
+                        <div>
+                          <strong>{formatRoleScopeLabel(roleKey)}</strong>
+                        </div>
+                      </div>
+
+                      <div className="staff-profile-role-control-grid">
+                        <button
+                          type="button"
+                          className={`staff-profile-role-control-card staff-profile-role-permission-control${
+                            roleProfile.enabled ? " active" : ""
+                          }`}
+                          onClick={() =>
+                            updateRoleProfile(roleKey, {
+                              enabled: !roleProfile.enabled,
+                            })
+                          }
+                        >
+                          <span>Permission</span>
+                          <strong>{roleProfile.enabled ? "On" : "Off"}</strong>
+                        </button>
+
+                        <div className="staff-profile-role-control-card staff-profile-role-priority-control">
+                          <span>Priority level</span>
+                          <div className="staff-profile-role-priority-stepper">
+                            <button
+                              type="button"
+                              className="staff-profile-role-priority-button"
+                              onClick={() => changeRolePriority(roleKey, -1)}
+                              disabled={roleProfile.priority <= 1}
+                              aria-label={`Decrease priority for ${roleKey}`}
+                            >
+                              -
+                            </button>
+                            <strong>{roleProfile.priority}</strong>
+                            <button
+                              type="button"
+                              className="staff-profile-role-priority-button"
+                              onClick={() => changeRolePriority(roleKey, 1)}
+                              disabled={roleProfile.priority >= 5}
+                              aria-label={`Increase priority for ${roleKey}`}
+                            >
+                              +
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="staff-profile-role-rate-grid">
+                        <div className="staff-profile-role-rate-pill">
+                          <span>Standard wage</span>
+                          <strong>{standardHourlyRate.label}</strong>
+                        </div>
+                        <div
+                          className={`staff-profile-role-rate-pill staff-profile-role-rate-pill-editable${
+                            hasHourlyRateOverride ? " active" : ""
+                          }${isHourlyRateEditorEnabled ? " editing" : ""}`}
+                        >
+                          <div className="staff-profile-role-rate-pill-head">
+                            <span>Effective wage</span>
+                            <span
+                              className={`staff-profile-role-rate-edit-status${
+                                isHourlyRateEditorEnabled ? " editing" : ""
+                              }`}
+                            >
+                              {isHourlyRateEditorEnabled ? "Editing" : "Locked"}
+                            </span>
+                          </div>
+                          {isHourlyRateEditorEnabled ? (
+                            <div className="staff-profile-role-rate-input-row">
+                              <span className="staff-profile-role-rate-prefix">
+                                {effectiveHourlyRate.currency}
+                              </span>
+                              <input
+                                ref={(node) => {
+                                  hourlyRateInputRefs.current[roleKey] = node;
+                                }}
+                                type="number"
+                                min={1}
+                                step={1}
+                                inputMode="numeric"
+                                className="staff-profile-role-rate-input"
+                                aria-label={`Effective wage for ${roleKey}`}
+                                placeholder={`${standardHourlyRate.hourlyRate}`}
+                                value={roleProfile.hourlyRateOverride ?? ""}
+                                onChange={(event) =>
+                                  updateRoleProfile(roleKey, {
+                                    hourlyRateOverride:
+                                      event.currentTarget.value.trim().length > 0
+                                        ? Number(event.currentTarget.value)
+                                        : null,
+                                  })
+                                }
+                              />
+                              <span className="staff-profile-role-rate-suffix">/ h</span>
+                            </div>
+                          ) : (
+                            <button
+                              type="button"
+                              className="staff-profile-role-rate-trigger"
+                              onClick={() => requestHourlyRateEdit(roleKey)}
+                            >
+                              <strong>{effectiveHourlyRate.label}</strong>
+                              <span>Unlock to edit</span>
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="staff-profile-role-comment">
+                        <button
+                          type="button"
+                          className={`staff-profile-role-comment-toggle${
+                            isCommentOpen ? " open" : ""
+                          }${hasComment ? " has-value" : ""}`}
+                          onClick={() => toggleRoleComment(roleKey)}
+                          aria-expanded={isCommentOpen}
+                        >
+                          <span>Comment</span>
+                          <span className="staff-profile-role-comment-toggle-meta">
+                            {isCommentOpen ? "Hide" : hasComment ? "Edit" : "Add"}
+                          </span>
+                        </button>
+
+                        {isCommentOpen ? (
+                          <label className="staff-profile-inline-field staff-profile-role-comment-field">
+                            <span>Comment</span>
+                            <textarea
+                              rows={2}
+                              value={roleProfile.comment}
+                              onChange={(event) =>
+                                updateRoleProfile(roleKey, {
+                                  comment: event.currentTarget.value,
+                                })
+                              }
+                            />
+                          </label>
+                        ) : null}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+            </div>
+          ) : null}
+
+          {showStaffAppAccessCard ? (
             <div className="card staff-profile-compact-card staff-profile-secondary-card">
               <div className="section-head">
                 <div>
@@ -1259,13 +1275,15 @@ export function StaffProfileEditor({
           ) : null}
         </div>
 
-        <div
-          className={`stack-column staff-profile-documents-column${
-            linkedStaffAppAccount ? "" : " staff-profile-documents-column-full"
-          }`}
-        >
-          <StaffDocumentsPanel personId={profile.id} initialDocuments={initialDocuments} />
-        </div>
+        {showExtendedCards ? (
+          <div
+            className={`stack-column staff-profile-documents-column${
+              showStaffAppAccessCard ? "" : " staff-profile-documents-column-full"
+            }`}
+          >
+            <StaffDocumentsPanel personId={profile.id} initialDocuments={initialDocuments} />
+          </div>
+        ) : null}
       </section>
 
       {showDeleteConfirm ? (

@@ -1,6 +1,7 @@
 import { getAllStoredGigs } from "@/lib/gig-store";
+import { canAccessPlatformFieldStaffProfile } from "@/lib/platform-access";
 import { getAllStoredScmStaffProfiles } from "@/lib/scm-staff-store";
-import { getAllStoredStaffProfiles, type StoredStaffProfile } from "@/lib/staff-store";
+import { getAllStoredStaffProfiles } from "@/lib/staff-store";
 import type { Gig } from "@/types/scm";
 import {
   getRegionalManagerRegionSummary,
@@ -52,34 +53,6 @@ function canAccessGig(profile: StoredScmStaffProfile, gig: Gig) {
       return matchesProfileRegions(profile.regions, [gig.region, gig.city]);
     case "temporaryGigManager":
       return profile.assignedGigIds.includes(gig.id);
-    default:
-      return false;
-  }
-}
-
-function canAccessFieldStaffProfile(
-  profile: StoredScmStaffProfile,
-  staffProfile: StoredStaffProfile,
-) {
-  if (staffProfile.approvalStatus !== "Approved") {
-    return false;
-  }
-
-  switch (profile.roleKey) {
-    case "superAdmin":
-    case "officeStaff":
-      return true;
-    case "regionalManager":
-      if (normalizeScopeValue(profile.country) !== normalizeScopeValue(staffProfile.country)) {
-        return false;
-      }
-
-      return matchesProfileRegions(profile.regions, [
-        staffProfile.region,
-        ...(staffProfile.regions ?? []),
-      ]);
-    case "temporaryGigManager":
-      return false;
     default:
       return false;
   }
@@ -164,7 +137,7 @@ export async function getStaffAppScmData(profile: StoredScmStaffProfile) {
   );
   const staffingGapGigs = accessibleGigs.filter((gig) => gig.staffingProgress < 100);
   const fieldStaffProfiles = allFieldStaff
-    .filter((staffProfile) => canAccessFieldStaffProfile(profile, staffProfile))
+    .filter((staffProfile) => canAccessPlatformFieldStaffProfile(profile, staffProfile))
     .sort((left, right) => left.displayName.localeCompare(right.displayName));
   const scmPeers = allScmProfiles
     .filter((peerProfile) => canAccessScmPeer(profile, peerProfile))

@@ -9,7 +9,6 @@ import {
   requireCurrentAuthenticatedScmStaffProfile,
 } from "@/lib/auth-session";
 import { getAllStoredGigs } from "@/lib/gig-store";
-import { redactScmStaffPasswordPlaintext } from "@/lib/scm-staff-store";
 import { filterPlatformGigsForProfile, isTemporaryGigManagerProfile } from "@/lib/platform-access";
 
 export default async function ProfilePage() {
@@ -101,9 +100,8 @@ export default async function ProfilePage() {
   }
 
   const canRevealStoredPassword = isSuperAdminRole(currentScmStaffProfile.roleKey);
-  const editableProfile = canRevealStoredPassword
-    ? currentScmStaffProfile
-    : redactScmStaffPasswordPlaintext(currentScmStaffProfile);
+  const canViewStoredPassword = true;
+  const editableProfile = currentScmStaffProfile;
 
   return (
     <>
@@ -117,6 +115,7 @@ export default async function ProfilePage() {
         canEditProfileImage
         canEditRole={isSuperAdminRole(currentScmStaffProfile.roleKey)}
         canChangePassword
+        canViewStoredPassword={canViewStoredPassword}
         canRevealStoredPassword={canRevealStoredPassword}
         requiresCurrentPassword={!canRevealStoredPassword}
       />

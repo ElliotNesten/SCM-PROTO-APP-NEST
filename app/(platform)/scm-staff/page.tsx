@@ -7,9 +7,10 @@ import { ScmRolePermissionGuide } from "@/components/scm-role-permission-guide";
 import { StatusBadge } from "@/components/status-badge";
 import { getAllStoredGigs } from "@/lib/gig-store";
 import {
+  canAccessScmStaffDirectory,
   canAccessScmStaffAdministration,
   isSuperAdminRole,
-  requireScmStaffAdministrationProfile,
+  requireScmStaffDirectoryProfile,
 } from "@/lib/auth-session";
 import {
   canAccessPlatformStaffDirectory,
@@ -191,7 +192,8 @@ function getDirectoryRoleStats(profiles: DirectoryProfile[]) {
 }
 
 function getRolePermissionChecklist(roleKey: ScmStaffRoleKey): ScmPermissionChecklistItem[] {
-  const canOpenScmStaffAdmin = canAccessScmStaffAdministration(roleKey);
+  const canOpenScmStaffDirectory = canAccessScmStaffDirectory(roleKey);
+  const canManageScmStaffProfiles = canAccessScmStaffAdministration(roleKey);
   const canOpenStaffDirectory = canAccessPlatformStaffDirectory(roleKey);
   const canCreateAndEditGigs = canCreatePlatformGigs(roleKey);
   const canShareGigInfo = canManageGigShare(roleKey);
@@ -201,7 +203,8 @@ function getRolePermissionChecklist(roleKey: ScmStaffRoleKey): ScmPermissionChec
   const canManageSystemSettings = isSuperAdminRole(roleKey);
 
   return [
-    { label: "Open SCM Staff admin", allowed: canOpenScmStaffAdmin },
+    { label: "Open SCM Staff directory", allowed: canOpenScmStaffDirectory },
+    { label: "Create and manage SCM Staff profiles", allowed: canManageScmStaffProfiles },
     { label: "Access Staff directory", allowed: canOpenStaffDirectory },
     { label: "Create and edit gigs", allowed: canCreateAndEditGigs },
     { label: "Share gig info and invite Temp GMs", allowed: canShareGigInfo },
@@ -213,7 +216,8 @@ function getRolePermissionChecklist(roleKey: ScmStaffRoleKey): ScmPermissionChec
 
 export default async function ScmStaffPage() {
   noStore();
-  await requireScmStaffAdministrationProfile();
+  const currentProfile = await requireScmStaffDirectoryProfile();
+  const canManageScmStaffProfiles = canAccessScmStaffAdministration(currentProfile.roleKey);
   const [profiles, storedGigs, staffProfiles] = await Promise.all([
     getAllStoredScmStaffProfiles(),
     getAllStoredGigs(),
@@ -241,11 +245,13 @@ export default async function ScmStaffPage() {
         title="SCM Staff"
         subtitle="Role-based access and admin scope for the platform."
         actions={
-          <div className="page-actions">
-            <Link href="/scm-staff/new" className="button">
-              New SCM Staff
-            </Link>
-          </div>
+          canManageScmStaffProfiles ? (
+            <div className="page-actions">
+              <Link href="/scm-staff/new" className="button">
+                New SCM Staff
+              </Link>
+            </div>
+          ) : undefined
         }
       />
 

@@ -3,8 +3,9 @@ import { unstable_noStore as noStore } from "next/cache";
 
 import { ScmStaffProfileEditor } from "@/components/scm-staff-profile-editor";
 import {
+  canAccessScmStaffAdministration,
   isSuperAdminRole,
-  requireScmStaffAdministrationProfile,
+  requireScmStaffDirectoryProfile,
 } from "@/lib/auth-session";
 import {
   getStoredScmStaffProfileById,
@@ -42,7 +43,7 @@ export default async function ScmStaffProfilePage({
   const { personId } = await params;
   const resolvedSearchParams = searchParams ? await searchParams : undefined;
   const [currentScmStaffProfile, profile] = await Promise.all([
-    requireScmStaffAdministrationProfile(),
+    requireScmStaffDirectoryProfile(),
     getStoredScmStaffProfileById(personId),
   ]);
 
@@ -50,23 +51,30 @@ export default async function ScmStaffProfilePage({
     notFound();
   }
 
+  const canManageAdministrativeFields = canAccessScmStaffAdministration(
+    currentScmStaffProfile.roleKey,
+  );
   const canRevealStoredPassword = isSuperAdminRole(currentScmStaffProfile.roleKey);
   const isOwnProfile = currentScmStaffProfile.id === profile.id;
-  const editableProfile = canRevealStoredPassword
+  const canEditBasicFields = canManageAdministrativeFields || isOwnProfile;
+  const canViewStoredPassword = canRevealStoredPassword || isOwnProfile;
+  const editableProfile = canViewStoredPassword
     ? profile
     : redactScmStaffPasswordPlaintext(profile);
 
   return (
     <ScmStaffProfileEditor
       initialProfile={editableProfile}
-      allowDelete
-      canManageAdministrativeFields
+      allowDelete={canManageAdministrativeFields}
+      canEditBasicFields={canEditBasicFields}
+      canManageAdministrativeFields={canManageAdministrativeFields}
       canEditProfileImage={
         isSuperAdminRole(currentScmStaffProfile.roleKey) ||
         isOwnProfile
       }
       canEditRole={isSuperAdminRole(currentScmStaffProfile.roleKey)}
       canChangePassword={canRevealStoredPassword || isOwnProfile}
+      canViewStoredPassword={canViewStoredPassword}
       canRevealStoredPassword={canRevealStoredPassword}
       requiresCurrentPassword={isOwnProfile && !canRevealStoredPassword}
       initialStatusMessage={getInviteStatusMessage(

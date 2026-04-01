@@ -202,6 +202,23 @@ export async function ensureProductionStorageSchema() {
         record_json text not null
       );
 
+      create table if not exists staff_documents (
+        id text primary key,
+        user_id text not null,
+        gig_id text not null,
+        shift_id text not null,
+        gig_date text not null,
+        generated_at text not null,
+        document_kind text not null,
+        record_json text not null
+      );
+
+      create index if not exists idx_staff_documents_user_id
+        on staff_documents (user_id);
+
+      create index if not exists idx_staff_documents_gig_id
+        on staff_documents (gig_id);
+
       create table if not exists system_email_templates (
         id text primary key,
         template_json text not null,

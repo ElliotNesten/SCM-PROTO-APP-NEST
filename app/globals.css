@@ -4479,11 +4479,23 @@ a.queue-card:hover {
 
 .create-gig-primary-card {
   min-width: 0;
+  position: relative;
+  z-index: 0;
+}
+
+.create-gig-primary-card:has(.predefined-autocomplete.open) {
+  z-index: 24;
 }
 
 .predefined-autocomplete {
   position: relative;
   z-index: 8;
+}
+
+.field:has(.predefined-autocomplete.open),
+.key-value-card:has(.predefined-autocomplete.open) {
+  position: relative;
+  z-index: 12;
 }
 
 .predefined-autocomplete.open input {
@@ -5444,6 +5456,10 @@ a.queue-card:hover {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   align-items: start;
   gap: var(--staff-profile-page-gap);
+}
+
+.staff-profile-grid--employee-only {
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .staff-profile-primary-column {
@@ -7003,6 +7019,12 @@ a.queue-card:hover {
 
 .gig-overview-core-card {
   padding: 0.9rem;
+  position: relative;
+  z-index: 0;
+}
+
+.gig-overview-core-card:has(.predefined-autocomplete.open) {
+  z-index: 24;
 }
 
 .gig-overview-core-card .section-head {

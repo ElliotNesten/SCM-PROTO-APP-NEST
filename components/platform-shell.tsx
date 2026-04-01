@@ -8,7 +8,7 @@ import { ProfileImage } from "@/components/profile-image";
 import { getBrandSettings } from "@/lib/brand-store";
 import { GlobalSearch } from "@/components/global-search";
 import {
-  canAccessScmStaffAdministration,
+  canAccessScmStaffDirectory,
   getCurrentAuthenticatedUserSummary,
   isSuperAdminRole,
 } from "@/lib/auth-session";
@@ -47,7 +47,7 @@ export async function PlatformShell({ children }: { children: ReactNode }) {
             />
 
             <SidebarNav
-              canAccessScmStaff={canAccessScmStaffAdministration(currentUser.roleKey)}
+              canAccessScmStaff={canAccessScmStaffDirectory(currentUser.roleKey)}
               canAccessStaffDirectory={canAccessStaffDirectory}
             />
           </div>

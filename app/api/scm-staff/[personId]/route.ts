@@ -38,6 +38,21 @@ type ScmStaffPayload = {
   notes?: string;
 };
 
+function normalizeScopeRegions(regions: string[]) {
+  return regions.map((region) => region.trim()).filter(Boolean);
+}
+
+function haveSameRegions(left: string[], right: string[]) {
+  const normalizedLeft = normalizeScopeRegions(left);
+  const normalizedRight = normalizeScopeRegions(right);
+
+  if (normalizedLeft.length !== normalizedRight.length) {
+    return false;
+  }
+
+  return normalizedLeft.every((region, index) => region === normalizedRight[index]);
+}
+
 export async function PATCH(request: Request, context: RouteContext) {
   const { personId } = await context.params;
   const payload = (await request.json().catch(() => null)) as ScmStaffPayload | null;
@@ -61,9 +76,24 @@ export async function PATCH(request: Request, context: RouteContext) {
   }
 
   const isOwnProfile = currentProfile.id === existingProfile.id;
+  const canManageAdministrativeFields = canAccessScmStaffAdministration(currentProfile.roleKey);
+  const canEditBasicFields = canManageAdministrativeFields || isOwnProfile;
   const canRevealStoredPassword = isSuperAdminRole(currentProfile.roleKey);
+  const canViewStoredPassword = canRevealStoredPassword || isOwnProfile;
   const requestedPassword = payload.password?.trim() ?? "";
   const requestedCurrentPassword = payload.currentPassword?.trim() ?? "";
+  const nextCountry = payload.country?.trim() ?? existingProfile.country;
+  const nextRegions = Array.isArray(payload.regions)
+    ? normalizeScopeRegions(payload.regions)
+    : existingProfile.regions;
+  const nextNotes = payload.notes?.trim() ?? existingProfile.notes;
+
+  if (!canEditBasicFields) {
+    return NextResponse.json(
+      { error: "You can only edit your own SCM Staff profile." },
+      { status: 403 },
+    );
+  }
 
   const nextRoleKey = payload.roleKey ?? existingProfile.roleKey;
 
@@ -79,6 +109,18 @@ export async function PATCH(request: Request, context: RouteContext) {
   if (isChangingRole && !isSuperAdminRole(currentProfile.roleKey)) {
     return NextResponse.json(
       { error: "Only Super Admin can change SCM Staff roles." },
+      { status: 403 },
+    );
+  }
+
+  if (
+    !canManageAdministrativeFields &&
+    (nextCountry !== existingProfile.country ||
+      !haveSameRegions(nextRegions, existingProfile.regions) ||
+      nextNotes !== existingProfile.notes)
+  ) {
+    return NextResponse.json(
+      { error: "You can only change SCM Staff scope settings for profiles you administer." },
       { status: 403 },
     );
   }
@@ -116,8 +158,14 @@ export async function PATCH(request: Request, context: RouteContext) {
   }
 
   const updatedProfile = await updateStoredScmStaffProfile(personId, {
-    displayName: payload.displayName ?? existingProfile.displayName,
-    email: payload.email ?? existingProfile.email,
+    displayName:
+      canEditBasicFields
+        ? (payload.displayName ?? existingProfile.displayName)
+        : existingProfile.displayName,
+    email:
+      canEditBasicFields
+        ? (payload.email ?? existingProfile.email)
+        : existingProfile.email,
     passwordHash:
       requestedPassword
         ? createPasswordHash(requestedPassword)
@@ -126,16 +174,19 @@ export async function PATCH(request: Request, context: RouteContext) {
       requestedPassword
         ? requestedPassword
         : existingProfile.passwordPlaintext,
-    phone: payload.phone ?? existingProfile.phone,
+    phone:
+      canEditBasicFields
+        ? (payload.phone ?? existingProfile.phone)
+        : existingProfile.phone,
     roleKey: nextRoleKey,
-    country: payload.country ?? existingProfile.country,
-    regions: Array.isArray(payload.regions) ? payload.regions : existingProfile.regions,
+    country: canManageAdministrativeFields ? nextCountry : existingProfile.country,
+    regions: canManageAdministrativeFields ? nextRegions : existingProfile.regions,
     assignedGigIds: [],
     linkedStaffId: undefined,
     linkedStaffName: undefined,
     profileImageName: payload.profileImageName ?? existingProfile.profileImageName,
     profileImageUrl: payload.profileImageUrl ?? existingProfile.profileImageUrl,
-    notes: payload.notes ?? existingProfile.notes,
+    notes: canManageAdministrativeFields ? nextNotes : existingProfile.notes,
   });
 
   if (!updatedProfile) {
@@ -149,7 +200,7 @@ export async function PATCH(request: Request, context: RouteContext) {
 
   return NextResponse.json({
     ok: true,
-    profile: canRevealStoredPassword
+    profile: canViewStoredPassword
       ? updatedProfile
       : redactScmStaffPasswordPlaintext(updatedProfile),
     isOwnProfile,

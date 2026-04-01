@@ -209,6 +209,14 @@ export function canAccessScmStaffAdministration(roleKey: ScmStaffRoleKey) {
   return roleKey === "superAdmin" || roleKey === "officeStaff";
 }
 
+export function canAccessScmStaffDirectory(roleKey: ScmStaffRoleKey) {
+  return (
+    roleKey === "superAdmin" ||
+    roleKey === "officeStaff" ||
+    roleKey === "regionalManager"
+  );
+}
+
 export function isSuperAdminRole(roleKey: ScmStaffRoleKey) {
   return roleKey === "superAdmin";
 }
@@ -217,6 +225,16 @@ export async function requireScmStaffAdministrationProfile() {
   const profile = await requireCurrentAuthenticatedScmStaffProfile();
 
   if (!canAccessScmStaffAdministration(profile.roleKey)) {
+    redirect("/dashboard");
+  }
+
+  return profile;
+}
+
+export async function requireScmStaffDirectoryProfile() {
+  const profile = await requireCurrentAuthenticatedScmStaffProfile();
+
+  if (!canAccessScmStaffDirectory(profile.roleKey)) {
     redirect("/dashboard");
   }
 

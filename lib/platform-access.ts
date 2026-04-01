@@ -1,3 +1,4 @@
+import type { StoredStaffProfile } from "@/lib/staff-store";
 import type { Gig } from "@/types/scm";
 import type { ScmStaffRoleKey, StoredScmStaffProfile } from "@/types/scm-rbac";
 
@@ -6,8 +7,34 @@ type PlatformAccessProfile =
   | null
   | undefined;
 
+type PlatformFieldStaffScopeProfile =
+  | Pick<StoredScmStaffProfile, "roleKey" | "country" | "regions">
+  | null
+  | undefined;
+
+type PlatformFieldStaffScopeTarget =
+  | Pick<StoredStaffProfile, "approvalStatus" | "country" | "region" | "regions">
+  | null
+  | undefined;
+
 function isTemporaryGigManagerRole(roleKey: ScmStaffRoleKey | undefined) {
   return roleKey === "temporaryGigManager";
+}
+
+function normalizeScopeValue(value: string) {
+  return value.trim().toLowerCase();
+}
+
+function matchesPlatformScopeRegions(profileRegions: string[], scopeValues: string[]) {
+  if (profileRegions.length === 0) {
+    return true;
+  }
+
+  const normalizedValues = scopeValues.map(normalizeScopeValue).filter(Boolean);
+
+  return profileRegions.some((region) =>
+    normalizedValues.includes(normalizeScopeValue(region)),
+  );
 }
 
 export function isTemporaryGigManagerProfile(profile: PlatformAccessProfile) {
@@ -59,4 +86,36 @@ export function canAccessPlatformStaffDirectory(roleKey: ScmStaffRoleKey | undef
 
 export function canUsePlatformGlobalSearch(roleKey: ScmStaffRoleKey | undefined) {
   return !isTemporaryGigManagerRole(roleKey);
+}
+
+export function canAccessPlatformFieldStaffProfile(
+  profile: PlatformFieldStaffScopeProfile,
+  staffProfile: PlatformFieldStaffScopeTarget,
+) {
+  if (!profile || !staffProfile) {
+    return false;
+  }
+
+  if (staffProfile.approvalStatus !== "Approved") {
+    return false;
+  }
+
+  switch (profile.roleKey) {
+    case "superAdmin":
+    case "officeStaff":
+      return true;
+    case "regionalManager":
+      if (normalizeScopeValue(profile.country) !== normalizeScopeValue(staffProfile.country)) {
+        return false;
+      }
+
+      return matchesPlatformScopeRegions(profile.regions, [
+        staffProfile.region,
+        ...(staffProfile.regions ?? []),
+      ]);
+    case "temporaryGigManager":
+      return false;
+    default:
+      return false;
+  }
 }

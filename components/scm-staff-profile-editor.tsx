@@ -89,10 +89,12 @@ export function ScmStaffProfileEditor({
   backHref = "/scm-staff",
   backLabel = "Back to SCM Staff",
   allowDelete = false,
+  canEditBasicFields = true,
   canManageAdministrativeFields = true,
   canEditRole = true,
   canEditProfileImage = true,
   canChangePassword = false,
+  canViewStoredPassword = false,
   canRevealStoredPassword = false,
   requiresCurrentPassword = false,
   initialStatusMessage = "",
@@ -101,10 +103,12 @@ export function ScmStaffProfileEditor({
   backHref?: string;
   backLabel?: string;
   allowDelete?: boolean;
+  canEditBasicFields?: boolean;
   canManageAdministrativeFields?: boolean;
   canEditRole?: boolean;
   canEditProfileImage?: boolean;
   canChangePassword?: boolean;
+  canViewStoredPassword?: boolean;
   canRevealStoredPassword?: boolean;
   requiresCurrentPassword?: boolean;
   initialStatusMessage?: string;
@@ -121,6 +125,7 @@ export function ScmStaffProfileEditor({
     canRevealStoredPassword ? (initialProfile.passwordPlaintext ?? "") : "",
   );
   const [confirmPasswordDraft, setConfirmPasswordDraft] = useState("");
+  const [showStoredPassword, setShowStoredPassword] = useState(false);
   const [showPasswordDraft, setShowPasswordDraft] = useState(false);
   const [regionDraft, setRegionDraft] = useState("");
   const imageInputRef = useRef<HTMLInputElement | null>(null);
@@ -130,8 +135,13 @@ export function ScmStaffProfileEditor({
   const usesScopedAccess = isRegionalManager;
   const showsSwedenRegions = isRegionalManager && profile.country === "Sweden";
   const canEditPassword = canRevealStoredPassword || canChangePassword;
+  const canSaveProfile =
+    canEditBasicFields || canManageAdministrativeFields || canEditRole || canEditPassword;
+  const canViewStoredPasswordReference = canViewStoredPassword && !canRevealStoredPassword;
   const passwordFieldLabel = canRevealStoredPassword
     ? "Registered password"
+    : canViewStoredPasswordReference
+      ? "Password"
     : requiresCurrentPassword
       ? "Change password"
       : "Password";
@@ -216,6 +226,11 @@ export function ScmStaffProfileEditor({
   }
 
   async function saveProfile() {
+    if (!canSaveProfile) {
+      setSaveMessage("You can only edit your own SCM Staff profile.");
+      return;
+    }
+
     setSaving(true);
     setSaveMessage("");
 
@@ -279,14 +294,14 @@ export function ScmStaffProfileEditor({
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        displayName: profile.displayName.trim(),
-        email: profile.email.trim(),
+        displayName: canEditBasicFields ? profile.displayName.trim() : undefined,
+        email: canEditBasicFields ? profile.email.trim() : undefined,
         currentPassword: requiresCurrentPassword ? trimmedCurrentPasswordDraft : undefined,
         password: nextPassword,
-        phone: profile.phone.trim(),
+        phone: canEditBasicFields ? profile.phone.trim() : undefined,
         roleKey: canEditRole ? profile.roleKey : undefined,
-        country: nextCountry,
-        regions: nextRegions,
+        country: canManageAdministrativeFields ? nextCountry : undefined,
+        regions: canManageAdministrativeFields ? nextRegions : undefined,
       }),
     });
 
@@ -464,6 +479,7 @@ export function ScmStaffProfileEditor({
                 <input
                   type="text"
                   value={profile.displayName}
+                  disabled={!canEditBasicFields}
                   onChange={(event) => updateField("displayName", event.currentTarget.value)}
                 />
               </label>
@@ -473,6 +489,7 @@ export function ScmStaffProfileEditor({
                 <input
                   type="email"
                   value={profile.email}
+                  disabled={!canEditBasicFields}
                   onChange={(event) => updateField("email", event.currentTarget.value)}
                 />
               </label>
@@ -482,6 +499,7 @@ export function ScmStaffProfileEditor({
                 <input
                   type="text"
                   value={profile.phone}
+                  disabled={!canEditBasicFields}
                   onChange={(event) => updateField("phone", event.currentTarget.value)}
                 />
               </label>
@@ -506,6 +524,24 @@ export function ScmStaffProfileEditor({
                   </div>
                 ) : canChangePassword && requiresCurrentPassword ? (
                   <div className="password-field-stack">
+                    {canViewStoredPasswordReference ? (
+                      <div className="password-field-row">
+                        <input
+                          type={showStoredPassword ? "text" : "password"}
+                          value={profile.passwordPlaintext ?? ""}
+                          placeholder="Saved password is not available yet"
+                          readOnly
+                        />
+                        <button
+                          type="button"
+                          className="button ghost password-visibility-button"
+                          onClick={() => setShowStoredPassword((current) => !current)}
+                          disabled={!profile.passwordPlaintext?.trim()}
+                        >
+                          {showStoredPassword ? "Hide" : "Show"}
+                        </button>
+                      </div>
+                    ) : null}
                     <input
                       type={showPasswordDraft ? "text" : "password"}
                       value={currentPasswordDraft}
@@ -555,10 +591,10 @@ export function ScmStaffProfileEditor({
                     Only Super Admin can view or reset another SCM Staff password.
                   </p>
                 )}
-                {canRevealStoredPassword && !profile.passwordPlaintext?.trim() ? (
+                {canViewStoredPassword && !profile.passwordPlaintext?.trim() ? (
                   <p className="muted small-text">
-                    The current password is not stored yet. Save a new password here, or have
-                    the user log in once to register it.
+                    The current password is not stored yet. Save a new password here, or log in
+                    once more to register it.
                   </p>
                 ) : null}
                 {canChangePassword && requiresCurrentPassword ? (
@@ -679,7 +715,13 @@ export function ScmStaffProfileEditor({
             </div>
 
             <div className="overview-editor-actions staff-profile-actions">
-              <p className="muted">{saveMessage}</p>
+              <p className="muted">
+                {saveMessage ||
+                  (!canSaveProfile
+                    ? "This SCM Staff profile is read-only for your role."
+                    : "")}
+              </p>
+              {canSaveProfile ? (
                 <button
                   type="button"
                   className="button"
@@ -690,6 +732,7 @@ export function ScmStaffProfileEditor({
                 >
                   {saving ? "Saving..." : "Save profile"}
                 </button>
+              ) : null}
             </div>
           </div>
         </div>

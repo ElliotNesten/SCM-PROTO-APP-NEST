@@ -27,6 +27,19 @@ type SearchResponse = {
   results?: GlobalSearchResult[];
 };
 
+function getSearchBadgeClassName(result: GlobalSearchResult) {
+  if (result.kind !== "Gig" || !result.badge) {
+    return "header-search-badge";
+  }
+
+  const normalizedBadge = result.badge
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "-");
+
+  return `header-search-badge gig-status ${normalizedBadge}`;
+}
+
 export function GlobalSearch() {
   const router = useRouter();
   const pathname = usePathname();
@@ -161,7 +174,7 @@ export function GlobalSearch() {
                       {result.kind}
                     </span>
                     {result.badge ? (
-                      <span className="header-search-badge">{result.badge}</span>
+                      <span className={getSearchBadgeClassName(result)}>{result.badge}</span>
                     ) : null}
                   </div>
                   <strong className="header-search-title">{result.title}</strong>

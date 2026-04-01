@@ -1,9 +1,11 @@
 import { randomUUID } from "crypto";
-import { promises as fs } from "fs";
 import path from "path";
 
+import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 
+import { deleteStoredPublicUpload, storePublicUpload } from "@/lib/public-file-storage";
+import { syncStaffAppAccountFromLinkedStaffProfile } from "@/lib/staff-app-store";
 import {
   getStoredStaffProfileById,
   updateStoredStaffImage,
@@ -28,27 +30,11 @@ function sanitizeFileBaseName(fileName: string) {
 }
 
 async function deletePreviousImage(currentImageUrl: string | undefined) {
-  if (!currentImageUrl || !currentImageUrl.startsWith("/staff-images/")) {
-    return;
-  }
-
-  const relativeSegments = currentImageUrl.split("/").filter(Boolean);
-  const filePath = path.join(publicRootDirectory, ...relativeSegments);
-  const normalizedPath = path.normalize(filePath);
-  const normalizedPublicRoot = path.normalize(publicRootDirectory);
-
-  if (!normalizedPath.startsWith(normalizedPublicRoot)) {
-    return;
-  }
-
-  try {
-    await fs.unlink(normalizedPath);
-  } catch (error) {
-    const unlinkError = error as NodeJS.ErrnoException;
-    if (unlinkError.code !== "ENOENT") {
-      throw error;
-    }
-  }
+  await deleteStoredPublicUpload({
+    fileUrl: currentImageUrl,
+    localUrlPrefix: "/staff-images/",
+    localRootDirectory: imageRootDirectory,
+  });
 }
 
 export async function POST(request: Request, context: RouteContext) {
@@ -86,13 +72,13 @@ export async function POST(request: Request, context: RouteContext) {
   const normalizedExtension = fileExtension || "png";
   const storageFileName = `${baseName}-${uniqueSuffix}.${normalizedExtension}`;
   const personDirectory = path.join(imageRootDirectory, personId);
-  const outputPath = path.join(personDirectory, storageFileName);
-
-  await fs.mkdir(personDirectory, { recursive: true });
-  const fileBuffer = Buffer.from(await uploadedEntry.arrayBuffer());
-  await fs.writeFile(outputPath, fileBuffer);
-
-  const profileImageUrl = `/staff-images/${personId}/${storageFileName}`;
+  const profileImageUrl = await storePublicUpload({
+    blobPath: `staff-images/${personId}/${storageFileName}`,
+    file: uploadedEntry,
+    localDirectory: personDirectory,
+    localFileName: storageFileName,
+    localUrlPath: `/staff-images/${personId}/${storageFileName}`,
+  });
   const updatedProfile = await updateStoredStaffImage(personId, {
     profileImageName: storageFileName,
     profileImageUrl,
@@ -102,7 +88,22 @@ export async function POST(request: Request, context: RouteContext) {
     return NextResponse.json({ error: "Staff profile not found." }, { status: 404 });
   }
 
+  await syncStaffAppAccountFromLinkedStaffProfile({
+    id: updatedProfile.id,
+    displayName: updatedProfile.displayName,
+    email: updatedProfile.email,
+    phone: updatedProfile.phone,
+    country: updatedProfile.country,
+    region: updatedProfile.region,
+    roleProfiles: updatedProfile.roleProfiles,
+    roles: updatedProfile.roles,
+    priority: updatedProfile.priority,
+    profileImageUrl: updatedProfile.profileImageUrl,
+  });
+
   await deletePreviousImage(profile.profileImageUrl);
+  revalidatePath("/people");
+  revalidatePath(`/people/${personId}`);
 
   return NextResponse.json({
     ok: true,

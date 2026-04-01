@@ -1,12 +1,12 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { StaffDocumentsPanel } from "@/components/staff-documents-panel";
 import { PageHeader } from "@/components/page-header";
+import { ProfileImage } from "@/components/profile-image";
 import {
   formatHourlyRateLabel,
   getStandardHourlyRate,
@@ -33,15 +33,6 @@ type RoleHourlyRateChange = {
   previousLabel: string;
   nextLabel: string;
 };
-
-function getDisplayInitials(name: string) {
-  return name
-    .split(" ")
-    .map((part) => part.trim()[0] ?? "")
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
-}
 
 function dedupeStrings(values: string[]) {
   return Array.from(
@@ -750,17 +741,13 @@ export function StaffProfileEditor({
         leading={
           <div className="staff-profile-header-image">
             <div className="staff-profile-header-image-preview">
-              {profile.profileImageUrl ? (
-                <Image
-                  src={profile.profileImageUrl}
-                  alt={`${profile.displayName} profile`}
-                  className="staff-profile-header-image-media"
-                  width={108}
-                  height={108}
-                />
-              ) : (
-                getDisplayInitials(profile.displayName)
-              )}
+              <ProfileImage
+                displayName={profile.displayName}
+                imageUrl={profile.profileImageUrl}
+                alt={`${profile.displayName} profile`}
+                className="staff-profile-header-image-media"
+                loading="eager"
+              />
               <label
                 className="staff-profile-header-image-trigger"
                 htmlFor={`staff-image-${profile.id}`}

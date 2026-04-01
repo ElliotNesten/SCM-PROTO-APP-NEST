@@ -1,9 +1,9 @@
 import Link from "next/link";
-import Image from "next/image";
 import { unstable_noStore as noStore } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { PageHeader } from "@/components/page-header";
+import { ProfileImage } from "@/components/profile-image";
 import { StaffApplicationReviewPanel } from "@/components/staff-application-review-panel";
 import { StaffRegionEditFilter } from "@/components/staff-region-edit-filter";
 import { StatusBadge } from "@/components/status-badge";
@@ -46,15 +46,6 @@ function normalizeRegionList(regions: string[], fallbackRegion: string) {
   );
 
   return normalized;
-}
-
-function getDisplayInitials(name: string) {
-  return name
-    .split(" ")
-    .map((part) => part.trim()[0] ?? "")
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
 }
 
 function getCountryFlag(country: string) {
@@ -402,17 +393,12 @@ export default async function PeoplePage({ searchParams }: PeoplePageProps) {
                     className="staff-grid-card"
                   >
                     <div className="staff-list-avatar" aria-hidden="true">
-                      {person.profileImageUrl ? (
-                        <Image
-                          src={person.profileImageUrl}
-                          alt=""
-                          className="staff-list-avatar-img"
-                          width={72}
-                          height={72}
-                        />
-                      ) : (
-                        getDisplayInitials(person.displayName)
-                      )}
+                      <ProfileImage
+                        displayName={person.displayName}
+                        imageUrl={person.profileImageUrl}
+                        alt=""
+                        className="staff-list-avatar-img"
+                      />
                     </div>
                     <div className="staff-grid-card-body">
                       <div className="staff-list-name-row">

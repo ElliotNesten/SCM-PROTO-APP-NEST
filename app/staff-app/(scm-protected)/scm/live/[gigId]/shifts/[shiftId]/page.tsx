@@ -1,7 +1,7 @@
-import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { ProfileImage } from "@/components/profile-image";
 import { formatStaffAppDate } from "@/lib/staff-app-data";
 import { getStaffAppScmShiftWorkspace } from "@/lib/staff-app-scm-ops";
 import { requireCurrentStaffAppScmProfile } from "@/lib/staff-app-session";
@@ -131,20 +131,14 @@ export default async function StaffAppScmShiftPage({
               <article key={entry.id} className="staff-app-scm-live-roster-card detail">
                 <div className="staff-app-scm-live-person-row">
                   <div className="staff-app-scm-live-person-avatar">
-                    {entry.staffProfileImageUrl ? (
-                      <Image
-                        src={entry.staffProfileImageUrl}
-                        alt={entry.staffName}
-                        fill
-                        sizes="56px"
-                        className="staff-app-scm-live-person-avatar-image"
-                        unoptimized
-                      />
-                    ) : (
-                      <span className="staff-app-scm-live-person-avatar-fallback">
-                        {getPersonInitials(entry.staffName)}
-                      </span>
-                    )}
+                    <ProfileImage
+                      displayName={entry.staffName}
+                      imageUrl={entry.staffProfileImageUrl}
+                      alt={entry.staffName}
+                      className="staff-app-scm-live-person-avatar-image"
+                      fallbackClassName="staff-app-scm-live-person-avatar-fallback"
+                      fallbackText={getPersonInitials(entry.staffName)}
+                    />
                   </div>
 
                   <div className="staff-app-scm-live-roster-copy">

@@ -1,7 +1,6 @@
 import {
   approveStaffApplication,
   rejectStaffApplication,
-  resendStaffApplicationActivationEmail,
 } from "@/app/(platform)/people/application-actions";
 import { StaffApplicationAvatar } from "@/components/staff-application-avatar";
 import { StatusBadge } from "@/components/status-badge";
@@ -65,9 +64,9 @@ export function StaffApplicationReviewPanel({
   applications: StoredStaffApplication[];
   reviewCode?: string;
 }) {
-  const pendingCount = applications.filter(
+  const visibleApplications = applications.filter(
     (application) => application.status === "pending",
-  ).length;
+  );
   const reviewMessage = getReviewMessage(reviewCode);
 
   return (
@@ -80,18 +79,16 @@ export function StaffApplicationReviewPanel({
             Review incoming applications, approve profiles, and trigger account activation.
           </p>
         </div>
-        <span className="helper-caption">
-          {pendingCount} pending of {applications.length}
-        </span>
+        <span className="helper-caption">{visibleApplications.length} pending</span>
       </div>
 
       {reviewMessage ? <p className="system-settings-feedback">{reviewMessage}</p> : null}
 
-      {applications.length === 0 ? (
-        <div className="empty-panel">No job applications have been submitted yet.</div>
+      {visibleApplications.length === 0 ? (
+        <div className="empty-panel">No pending job applications right now.</div>
       ) : (
         <div className="staff-application-list">
-          {applications.map((application) => (
+          {visibleApplications.map((application) => (
             <article key={application.id} className="staff-application-card">
               <div className="staff-application-card-main">
                 <StaffApplicationAvatar
@@ -146,31 +143,20 @@ export function StaffApplicationReviewPanel({
                 </div>
               </div>
 
-              {application.status === "pending" ? (
-                <div className="staff-application-actions">
-                  <form action={approveStaffApplication}>
-                    <input type="hidden" name="applicationId" value={application.id} />
-                    <button type="submit" className="button">
-                      Godkann
-                    </button>
-                  </form>
-                  <form action={rejectStaffApplication}>
-                    <input type="hidden" name="applicationId" value={application.id} />
-                    <button type="submit" className="button ghost">
-                      Avsla
-                    </button>
-                  </form>
-                </div>
-              ) : application.status === "approved" ? (
-                <div className="staff-application-actions">
-                  <form action={resendStaffApplicationActivationEmail}>
-                    <input type="hidden" name="applicationId" value={application.id} />
-                    <button type="submit" className="button ghost">
-                      Send activation email again
-                    </button>
-                  </form>
-                </div>
-              ) : null}
+              <div className="staff-application-actions">
+                <form action={approveStaffApplication}>
+                  <input type="hidden" name="applicationId" value={application.id} />
+                  <button type="submit" className="button">
+                    Godkann
+                  </button>
+                </form>
+                <form action={rejectStaffApplication}>
+                  <input type="hidden" name="applicationId" value={application.id} />
+                  <button type="submit" className="button ghost">
+                    Avsla
+                  </button>
+                </form>
+              </div>
             </article>
           ))}
         </div>

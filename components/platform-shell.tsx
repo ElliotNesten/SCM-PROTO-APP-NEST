@@ -1,10 +1,10 @@
 import type { ReactNode } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { unstable_noStore as noStore } from "next/cache";
 
 import { logoutCurrentUser } from "@/app/auth-actions";
 import { BrandLogoUploader } from "@/components/brand-logo-uploader";
+import { ProfileImage } from "@/components/profile-image";
 import { getBrandSettings } from "@/lib/brand-store";
 import { GlobalSearch } from "@/components/global-search";
 import {
@@ -68,17 +68,13 @@ export async function PlatformShell({ children }: { children: ReactNode }) {
                 data-text-edit-exclude="true"
               >
                 <span className="profile-avatar">
-                  {currentUser.profileImageUrl ? (
-                    <Image
-                      src={currentUser.profileImageUrl}
-                      alt={`${currentUser.displayName} profile`}
-                      width={44}
-                      height={44}
-                      className="profile-avatar-image"
-                    />
-                  ) : (
-                    currentUser.initials
-                  )}
+                  <ProfileImage
+                    displayName={currentUser.displayName}
+                    imageUrl={currentUser.profileImageUrl}
+                    alt={`${currentUser.displayName} profile`}
+                    className="profile-avatar-image"
+                    fallbackText={currentUser.initials}
+                  />
                 </span>
                 <span className="profile-copy">
                   <strong>{currentUser.displayName}</strong>

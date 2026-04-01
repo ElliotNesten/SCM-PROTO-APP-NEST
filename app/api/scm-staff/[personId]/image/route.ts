@@ -1,10 +1,10 @@
 import { randomUUID } from "crypto";
-import { promises as fs } from "fs";
 import path from "path";
 
 import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 
+import { deleteStoredPublicUpload, storePublicUpload } from "@/lib/public-file-storage";
 import {
   getStoredScmStaffProfileById,
   updateStoredScmStaffImage,
@@ -29,27 +29,11 @@ function sanitizeFileBaseName(fileName: string) {
 }
 
 async function deletePreviousImage(currentImageUrl: string | undefined) {
-  if (!currentImageUrl || !currentImageUrl.startsWith("/scm-staff-images/")) {
-    return;
-  }
-
-  const relativeSegments = currentImageUrl.split("/").filter(Boolean);
-  const filePath = path.join(publicRootDirectory, ...relativeSegments);
-  const normalizedPath = path.normalize(filePath);
-  const normalizedPublicRoot = path.normalize(publicRootDirectory);
-
-  if (!normalizedPath.startsWith(normalizedPublicRoot)) {
-    return;
-  }
-
-  try {
-    await fs.unlink(normalizedPath);
-  } catch (error) {
-    const unlinkError = error as NodeJS.ErrnoException;
-    if (unlinkError.code !== "ENOENT") {
-      throw error;
-    }
-  }
+  await deleteStoredPublicUpload({
+    fileUrl: currentImageUrl,
+    localUrlPrefix: "/scm-staff-images/",
+    localRootDirectory: imageRootDirectory,
+  });
 }
 
 export async function POST(request: Request, context: RouteContext) {
@@ -87,13 +71,13 @@ export async function POST(request: Request, context: RouteContext) {
   const normalizedExtension = fileExtension || "png";
   const storageFileName = `${baseName}-${uniqueSuffix}.${normalizedExtension}`;
   const personDirectory = path.join(imageRootDirectory, personId);
-  const outputPath = path.join(personDirectory, storageFileName);
-
-  await fs.mkdir(personDirectory, { recursive: true });
-  const fileBuffer = Buffer.from(await uploadedEntry.arrayBuffer());
-  await fs.writeFile(outputPath, fileBuffer);
-
-  const profileImageUrl = `/scm-staff-images/${personId}/${storageFileName}`;
+  const profileImageUrl = await storePublicUpload({
+    blobPath: `scm-staff-images/${personId}/${storageFileName}`,
+    file: uploadedEntry,
+    localDirectory: personDirectory,
+    localFileName: storageFileName,
+    localUrlPath: `/scm-staff-images/${personId}/${storageFileName}`,
+  });
   const updatedProfile = await updateStoredScmStaffImage(personId, {
     profileImageName: storageFileName,
     profileImageUrl,

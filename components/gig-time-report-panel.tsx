@@ -954,6 +954,10 @@ export function GigTimeReportPanel({
                   By approving this time report, it becomes final. You cannot
                   withdraw it or change the time report later.
                 </p>
+                <p className="muted">
+                  The gig date will also be locked once approved because legal payroll
+                  documents and contracts will be generated from this final version.
+                </p>
               </div>
 
               <div className="confirm-modal-actions">

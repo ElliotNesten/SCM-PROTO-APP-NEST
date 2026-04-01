@@ -359,6 +359,29 @@ async function removeFileStoredStaffDocumentsForPerson(personId: string) {
   return currentDocuments.length - nextDocuments.length;
 }
 
+async function rebuildStoredStaffDocumentForGigMetadata(
+  document: StoredStaffDocument,
+  {
+    gigName,
+    gigDate,
+  }: {
+    gigName: string;
+    gigDate: string;
+  },
+) {
+  const nextDocument = normalizeStoredStaffDocument({
+    ...document,
+    gigName,
+    gigDate,
+    fileName: buildFileName(gigName, gigDate, document.shiftRole, document.documentKind),
+  });
+
+  return {
+    ...nextDocument,
+    fileSize: (await buildStaffDocumentPdf(nextDocument)).byteLength,
+  };
+}
+
 export async function buildStoredStaffDocumentRecord({
   userId,
   gigId,
@@ -516,4 +539,63 @@ export async function removeStoredStaffDocumentsForPerson(personId: string) {
     logStaffDocumentStoreFallback(`removeStoredStaffDocumentsForPerson(${personId})`, error);
     return removeFileStoredStaffDocumentsForPerson(personId);
   }
+}
+
+export async function syncStoredStaffDocumentsForGigMetadata(
+  gigId: string,
+  {
+    gigName,
+    gigDate,
+  }: {
+    gigName: string;
+    gigDate: string;
+  },
+) {
+  const normalizedGigId = gigId.trim();
+  const normalizedGigName = normalizeGigName(gigName);
+  const normalizedGigDate = gigDate.trim();
+
+  if (!normalizedGigId || !normalizedGigDate) {
+    return [] as StoredStaffDocument[];
+  }
+
+  const currentGigDocuments = (await getAllStoredStaffDocuments()).filter(
+    (document) => document.gigId === normalizedGigId,
+  );
+
+  if (currentGigDocuments.length === 0) {
+    return [] as StoredStaffDocument[];
+  }
+
+  let didChange = false;
+  const nextGigDocuments = await Promise.all(
+    currentGigDocuments.map(async (document) => {
+      const nextFileName = buildFileName(
+        normalizedGigName,
+        normalizedGigDate,
+        document.shiftRole,
+        document.documentKind,
+      );
+
+      if (
+        document.gigName === normalizedGigName &&
+        document.gigDate === normalizedGigDate &&
+        document.fileName === nextFileName
+      ) {
+        return normalizeStoredStaffDocument(document);
+      }
+
+      didChange = true;
+      return rebuildStoredStaffDocumentForGigMetadata(document, {
+        gigName: normalizedGigName,
+        gigDate: normalizedGigDate,
+      });
+    }),
+  );
+
+  if (didChange) {
+    await replaceStoredStaffDocumentsForGig(normalizedGigId, nextGigDocuments);
+  }
+
+  return nextGigDocuments;
 }

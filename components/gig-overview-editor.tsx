@@ -196,6 +196,22 @@ export function GigOverviewEditor({
   const hasFullCoreDetailAccess = coreDetailsAccess === "full";
   const hasRegionalManagerCoreAccess = coreDetailsAccess === "regionalManagerLimited";
   const hasAssignedTemporaryGigManagers = assignedTemporaryGigManagers.length > 0;
+  const isGigDateLocked = Boolean(gig.timeReportFinalApprovedAt);
+
+  useEffect(() => {
+    const nextState = buildInitialState(gig);
+
+    setForm(nextState);
+    setVisibleStandardNoteFields(
+      standardNoteFieldOptions
+        .filter(({ key }) => nextState[key].trim())
+        .map(({ key }) => key),
+    );
+    setShowNoteFieldPicker(false);
+    setSaveMessage(null);
+    setShareGigMessage(null);
+    setUpdatingTemporaryGigManagerId(null);
+  }, [gig]);
 
   useEffect(() => {
     setAssignedTemporaryGigManagers(temporaryGigManagers);
@@ -274,6 +290,13 @@ export function GigOverviewEditor({
     if (!isScmRepresentativeSelectionValid) {
       setSaveMessage(
         "Choose an SCM representative from the profile list, or use Temporary Gig Manager.",
+      );
+      return false;
+    }
+
+    if (isGigDateLocked && nextForm.date !== gig.date) {
+      setSaveMessage(
+        "Gig date is locked after the full time report has been approved because legal payroll documents and contracts have been signed.",
       );
       return false;
     }
@@ -359,6 +382,10 @@ export function GigOverviewEditor({
       | "ticketsSold"
       | "estimatedSpendPerVisitor",
   ) {
+    if (field === "date" && isGigDateLocked) {
+      return false;
+    }
+
     if (hasFullCoreDetailAccess) {
       return true;
     }
@@ -565,6 +592,12 @@ export function GigOverviewEditor({
                 disabled={!canEditCoreField("date")}
                 onChange={(event) => updateField("date", event.currentTarget.value)}
               />
+              {isGigDateLocked ? (
+                <span className="muted small-text">
+                  Date locked because the full time report was approved and legal payroll
+                  documents and contracts have been signed.
+                </span>
+              ) : null}
             </label>
 
             <div className="key-value-card key-value-card-editable">

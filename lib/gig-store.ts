@@ -17,6 +17,7 @@ import {
   parseJsonValue,
   serializeJson,
 } from "@/lib/postgres";
+import { syncStoredStaffDocumentsForGigMetadata } from "@/lib/staff-document-store";
 import type {
   GigCommentField,
   GigDocumentSection,
@@ -973,7 +974,7 @@ export async function updateStoredGigEquipment(gigId: string, equipment: GigEqui
 }
 
 export async function updateStoredGigOverview(gigId: string, input: UpdateGigOverviewInput) {
-  return updateStoredGigRecord(gigId, (gig) => {
+  const updatedGig = await updateStoredGigRecord(gigId, (gig) => {
     const updatedGig = {
       ...gig,
       artist: input.artist.trim(),
@@ -1018,6 +1019,17 @@ export async function updateStoredGigOverview(gigId: string, input: UpdateGigOve
 
     return { gig: updatedGig, result: updatedGig };
   });
+
+  if (!updatedGig) {
+    return null;
+  }
+
+  await syncStoredStaffDocumentsForGigMetadata(updatedGig.id, {
+    gigName: updatedGig.artist,
+    gigDate: updatedGig.date,
+  });
+
+  return updatedGig;
 }
 
 export async function updateStoredGigProjectManager(gigId: string, projectManager: string) {

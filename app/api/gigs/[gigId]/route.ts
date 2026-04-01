@@ -78,10 +78,14 @@ function revalidateGigPaths(gigId: string) {
   revalidatePath("/gigs");
   revalidatePath("/dashboard");
   revalidatePath(`/gigs/${gigId}`);
+  revalidatePath("/people");
+  revalidatePath("/people/[personId]", "page");
   revalidatePath("/staff-app/gigs");
   revalidatePath("/staff-app/gigs/open");
   revalidatePath("/staff-app/gigs/standby");
   revalidatePath("/staff-app/gigs/unassigned");
+  revalidatePath("/staff-app/documents");
+  revalidatePath("/staff-app/documents/payslips/[payslipId]", "page");
   revalidatePath("/staff-app/home");
   revalidatePath("/staff-app/schedule");
   revalidatePath("/staff-app/check-in");
@@ -160,6 +164,20 @@ export async function PATCH(request: Request, context: RouteContext) {
         );
       }
     }
+  }
+
+  if (
+    existingGig.timeReportFinalApprovedAt &&
+    payload.date !== undefined &&
+    payload.date !== existingGig.date
+  ) {
+    return NextResponse.json(
+      {
+        error:
+          "Gig date is locked after the full time report has been approved because legal payroll documents and contracts have been signed.",
+      },
+      { status: 400 },
+    );
   }
 
   const updatedGig = await updateStoredGigOverview(gigId, {

@@ -58,6 +58,10 @@ const equipmentSummary = equipmentOptions.map((item) => item.label).join(", ");
 const storeDirectory = path.join(process.cwd(), "data");
 const storePath = path.join(storeDirectory, "system-scm-info-store.json");
 const systemSettingKey = "systemScmInfo";
+const defaultArenaInfoPageDescription =
+  "Filter countries first, then browse registered SCM arenas and open venue PDFs.";
+const legacyArenaInfoPageDescription =
+  "Filter countries first, then browse registered SCM arenas and venue notes.";
 
 function createDefaultStaffAppScmInfoSettings(): StaffAppScmInfoSettings {
   return {
@@ -192,7 +196,7 @@ function createDefaultStaffAppScmInfoSettings(): StaffAppScmInfoSettings {
     },
     arenaInfo: {
       pageTitle: "Arena Info",
-      pageDescription: "Filter countries first, then browse registered SCM arenas and venue notes.",
+      pageDescription: defaultArenaInfoPageDescription,
       fallbackArenaNoteTemplate: "SCM venue reference for {arena} in {city}.",
       emptyStateMessage: "No arenas are currently listed for this country.",
       catalog: defaultArenaCatalog,
@@ -297,6 +301,10 @@ function normalizeStoredStaffAppScmInfoSettings(
   rawSettings: Partial<StaffAppScmInfoSettings> | null | undefined,
 ) {
   const fallbackSettings = createDefaultStaffAppScmInfoSettings();
+  const normalizedArenaInfoPageDescription = normalizeString(
+    rawSettings?.arenaInfo?.pageDescription,
+    fallbackSettings.arenaInfo.pageDescription,
+  );
   const normalizedArenaCatalog =
     Array.isArray(rawSettings?.arenaInfo?.catalog) && rawSettings.arenaInfo.catalog.length > 0
       ? rawSettings.arenaInfo.catalog
@@ -345,10 +353,10 @@ function normalizeStoredStaffAppScmInfoSettings(
         rawSettings?.arenaInfo?.pageTitle,
         fallbackSettings.arenaInfo.pageTitle,
       ),
-      pageDescription: normalizeString(
-        rawSettings?.arenaInfo?.pageDescription,
-        fallbackSettings.arenaInfo.pageDescription,
-      ),
+      pageDescription:
+        normalizedArenaInfoPageDescription === legacyArenaInfoPageDescription
+          ? fallbackSettings.arenaInfo.pageDescription
+          : normalizedArenaInfoPageDescription,
       fallbackArenaNoteTemplate: normalizeString(
         rawSettings?.arenaInfo?.fallbackArenaNoteTemplate,
         fallbackSettings.arenaInfo.fallbackArenaNoteTemplate,

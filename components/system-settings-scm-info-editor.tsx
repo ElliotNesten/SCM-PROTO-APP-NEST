@@ -3,7 +3,13 @@
 import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
-import type { ArenaCatalogEntry } from "@/data/predefined-arenas";
+import {
+  arenaCatalogDocumentKeys,
+  createEmptyArenaCatalogDocuments,
+  getArenaCatalogDocumentLabel,
+  type ArenaCatalogDocumentKey,
+  type ArenaCatalogEntry,
+} from "@/data/predefined-arenas";
 import type { PublicUploadStorageStatus } from "@/lib/public-file-storage";
 import { scandinavianCountryOptions } from "@/lib/scandinavian-countries";
 import {
@@ -69,6 +75,13 @@ function buildItemUploadKey(
   return `item:${sectionId}:${itemIndex}:${slotIndex}`;
 }
 
+function buildArenaDocumentUploadKey(
+  arenaId: string,
+  documentKey: ArenaCatalogDocumentKey,
+) {
+  return `arena:${arenaId}:${documentKey}`;
+}
+
 function getPdfSlots(slots: StaffAppScmInfoPdfAsset[] | undefined) {
   const nextSlots = createEmptyStaffAppScmInfoPdfSlots();
 
@@ -109,6 +122,7 @@ function createEmptyArenaCatalogEntry(): ArenaCatalogEntry {
     city: "",
     country: "Sweden",
     aliases: [],
+    documents: createEmptyArenaCatalogDocuments(),
   };
 }
 
@@ -513,6 +527,30 @@ export function SystemSettingsScmInfoEditor({
     }));
   }
 
+  async function persistSettingsSnapshot(nextSettings: StaffAppScmInfoSettings) {
+    const response = await fetch("/api/system-settings/scm-info", {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        settings: nextSettings,
+      }),
+    });
+
+    const payload = (await response.json().catch(() => null)) as
+      | { error?: string; settings?: StaffAppScmInfoSettings }
+      | null;
+
+    if (!response.ok || !payload?.settings) {
+      setFeedbackMessage(payload?.error ?? "Could not save SCM info settings.");
+      return null;
+    }
+
+    setSettings(payload.settings);
+    return payload.settings;
+  }
+
   function updateSectionPdfLabel(
     sectionId: StaffAppScmInfoSectionKey,
     slotIndex: number,
@@ -674,6 +712,114 @@ export function SystemSettingsScmInfoEditor({
 
     setPdfSettings(payload.pdfs);
     setFeedbackMessage("Guide PDF removed.");
+    setDeletingKey(null);
+
+    startTransition(() => {
+      router.refresh();
+    });
+  }
+
+  async function uploadArenaDocument(
+    arenaId: string,
+    documentKey: ArenaCatalogDocumentKey,
+    file: File,
+  ) {
+    if (uploadDisabled) {
+      setFeedbackMessage(uploadStatus.message);
+      return;
+    }
+
+    const targetArena = settings.arenaInfo.catalog.find((arena) => arena.id === arenaId);
+
+    if (!targetArena?.name.trim() || !targetArena.city.trim()) {
+      setFeedbackMessage("Fill in arena name and city before uploading PDFs.");
+      return;
+    }
+
+    const uploadKey = buildArenaDocumentUploadKey(arenaId, documentKey);
+    setUploadingKey(uploadKey);
+    setFeedbackMessage(null);
+
+    const persistedSettings = await persistSettingsSnapshot(settings);
+
+    if (!persistedSettings) {
+      setUploadingKey(null);
+      return;
+    }
+
+    const formData = new FormData();
+    formData.set("arenaId", arenaId);
+    formData.set("documentKey", documentKey);
+    formData.set("file", file);
+
+    const response = await fetch("/api/system-settings/scm-info-arena-documents", {
+      method: "POST",
+      body: formData,
+    });
+
+    const payload = (await response.json().catch(() => null)) as
+      | { error?: string; settings?: StaffAppScmInfoSettings }
+      | null;
+
+    if (!response.ok || !payload?.settings) {
+      setFeedbackMessage(payload?.error ?? "Could not upload the arena PDF.");
+      setUploadingKey(null);
+      return;
+    }
+
+    setSettings(payload.settings);
+    setFeedbackMessage(`${getArenaCatalogDocumentLabel(documentKey)} updated.`);
+    setUploadingKey(null);
+
+    const input = fileInputRefs.current[uploadKey];
+
+    if (input) {
+      input.value = "";
+    }
+
+    startTransition(() => {
+      router.refresh();
+    });
+  }
+
+  async function deleteArenaDocument(
+    arenaId: string,
+    documentKey: ArenaCatalogDocumentKey,
+  ) {
+    const actionKey = buildArenaDocumentUploadKey(arenaId, documentKey);
+    setDeletingKey(actionKey);
+    setFeedbackMessage(null);
+
+    const persistedSettings = await persistSettingsSnapshot(settings);
+
+    if (!persistedSettings) {
+      setDeletingKey(null);
+      return;
+    }
+
+    const response = await fetch("/api/system-settings/scm-info-arena-documents", {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        arenaId,
+        documentKey,
+      }),
+    });
+
+    const payload = (await response.json().catch(() => null)) as
+      | { error?: string; settings?: StaffAppScmInfoSettings }
+      | null;
+
+    if (!response.ok || !payload?.settings) {
+      setFeedbackMessage(payload?.error ?? "Could not delete the arena PDF.");
+      setDeletingKey(null);
+      return;
+    }
+
+    setSettings(payload.settings);
+    setFeedbackMessage(`${getArenaCatalogDocumentLabel(documentKey)} removed.`);
     setDeletingKey(null);
 
     startTransition(() => {
@@ -951,17 +1097,6 @@ export function SystemSettingsScmInfoEditor({
               />
 
               <SystemSettingsScmInfoTextPreviewField
-                label="Arena note template"
-                value={settings.arenaInfo.fallbackArenaNoteTemplate}
-                placeholder="Add fallback template"
-                rows={5}
-                className="system-settings-scm-info-span-two"
-                isEditing={editingField === "arenaInfo:fallbackArenaNoteTemplate"}
-                onToggle={() => toggleEditingField("arenaInfo:fallbackArenaNoteTemplate")}
-                onChange={(value) => updateArenaField("fallbackArenaNoteTemplate", value)}
-              />
-
-              <SystemSettingsScmInfoTextPreviewField
                 label="Empty state"
                 value={settings.arenaInfo.emptyStateMessage}
                 placeholder="Add empty state message"
@@ -986,8 +1121,17 @@ export function SystemSettingsScmInfoEditor({
               </button>
             </div>
             <p className="muted small-text">
-              This list powers arena autocomplete and auto-fills city and country in gig forms.
+              This list powers arena autocomplete in New Gig and the Arena Info page in the staff
+              app.
             </p>
+            <p className="muted small-text">
+              Each arena can publish two PDFs: Arena info and FIRE ESCAPE PLAN.
+            </p>
+            {uploadDisabled ? (
+              <div className="note-block tone-warn">
+                <p>{uploadStatus.message}</p>
+              </div>
+            ) : null}
           </div>
 
           <div className="system-settings-scm-info-entry-list">
@@ -1062,6 +1206,80 @@ export function SystemSettingsScmInfoEditor({
                       }
                     />
                   </label>
+                </div>
+
+                <div className="system-settings-scm-info-pdf-list">
+                  {arenaCatalogDocumentKeys.map((documentKey) => {
+                    const document = arena.documents[documentKey];
+                    const uploadKey = buildArenaDocumentUploadKey(arena.id, documentKey);
+                    const isUploading = uploadingKey === uploadKey;
+                    const isDeleting = deletingKey === uploadKey;
+
+                    return (
+                      <div key={uploadKey} className="system-settings-scm-info-pdf-row">
+                        <div className="system-settings-scm-info-pdf-row-meta">
+                          <strong>{getArenaCatalogDocumentLabel(documentKey)}</strong>
+                          <span>{document.fileName || "No file uploaded"}</span>
+                        </div>
+
+                        <input
+                          ref={(node) => registerInput(uploadKey, node)}
+                          className="gig-image-input"
+                          type="file"
+                          accept=".pdf,application/pdf"
+                          disabled={uploadDisabled}
+                          onChange={(event) => {
+                            const nextFile = event.currentTarget.files?.[0] ?? null;
+
+                            if (!nextFile) {
+                              return;
+                            }
+
+                            void uploadArenaDocument(arena.id, documentKey, nextFile);
+                          }}
+                        />
+
+                        <div className="system-settings-scm-info-pdf-actions">
+                          <button
+                            type="button"
+                            className="button ghost system-settings-scm-info-mini-button"
+                            onClick={() => triggerUpload(uploadKey)}
+                            disabled={uploadDisabled || isUploading || isDeleting || isPending}
+                          >
+                            {uploadDisabled
+                              ? "Unavailable"
+                              : isUploading
+                                ? "Uploading..."
+                                : document.pdfUrl
+                                  ? "Replace"
+                                  : "Upload"}
+                          </button>
+
+                          {document.pdfUrl ? (
+                            <a
+                              href={document.pdfUrl}
+                              className="button ghost system-settings-scm-info-mini-button"
+                              target="_blank"
+                              rel="noreferrer"
+                            >
+                              Preview
+                            </a>
+                          ) : null}
+
+                          {document.pdfUrl ? (
+                            <button
+                              type="button"
+                              className="button ghost danger-outline system-settings-scm-info-mini-button"
+                              onClick={() => void deleteArenaDocument(arena.id, documentKey)}
+                              disabled={isUploading || isDeleting || isPending}
+                            >
+                              {isDeleting ? "Deleting..." : "Delete"}
+                            </button>
+                          ) : null}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </article>
             ))}

@@ -2,31 +2,19 @@
 
 import { useState } from "react";
 
+import { StaffAppGuidePdfLink } from "@/components/staff-app/guide-pdf-link";
+
 type StaffAppArenaItem = {
   id: string;
   country: string;
   arena: string;
   city: string;
-  region: string;
-  gigCount: number;
-  latestDate: string;
-  notes: string;
+  documents: Array<{
+    id: string;
+    label: string;
+    href: string;
+  }>;
 };
-
-function formatArenaDate(value: string) {
-  const parsedDate = new Date(`${value}T12:00:00`);
-
-  if (Number.isNaN(parsedDate.getTime())) {
-    return value;
-  }
-
-  return new Intl.DateTimeFormat("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-    timeZone: "Europe/Stockholm",
-  }).format(parsedDate);
-}
 
 export function StaffAppArenaDirectory({
   arenas,
@@ -71,21 +59,36 @@ export function StaffAppArenaDirectory({
         <div className="staff-app-arena-list">
           {visibleArenas.map((arena) => (
             <article key={arena.id} className="staff-app-arena-card">
-              <div className="staff-app-arena-card-head">
-                <div>
-                  <p className="staff-app-kicker">{arena.country}</p>
-                  <h2>{arena.arena}</h2>
-                </div>
-                <span className="staff-app-badge neutral">{arena.gigCount} gigs</span>
+              <div className="staff-app-arena-card-head compact">
+                <p className="staff-app-kicker">{arena.country}</p>
+                <h2>{arena.arena}</h2>
               </div>
 
-              <div className="staff-app-arena-meta">
+              <div className="staff-app-arena-meta compact">
                 <span>{arena.city}</span>
-                <span>Region: {arena.region}</span>
-                <span>Latest activity: {formatArenaDate(arena.latestDate)}</span>
               </div>
 
-              <p className="staff-app-muted">{arena.notes}</p>
+              <div className="staff-app-arena-actions">
+                {arena.documents.map((document) =>
+                  document.href ? (
+                    <StaffAppGuidePdfLink
+                      key={document.id}
+                      href={document.href}
+                      label={document.label}
+                      className="staff-app-arena-document-button"
+                    />
+                  ) : (
+                    <button
+                      key={document.id}
+                      type="button"
+                      disabled
+                      className="staff-app-button secondary staff-app-guide-pdf-link disabled staff-app-arena-document-button"
+                    >
+                      {document.label}
+                    </button>
+                  ),
+                )}
+              </div>
             </article>
           ))}
         </div>

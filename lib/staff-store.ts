@@ -4,6 +4,13 @@ import path from "node:path";
 
 import { normalizeHourlyRateOverride } from "@/lib/compensation";
 import {
+  ensureProductionStorageSchema,
+  getPostgresClient,
+  isDatabaseConfigured,
+  parseJsonValue,
+  serializeJson,
+} from "@/lib/postgres";
+import {
   getPersonProfileView,
   peopleDirectory,
 } from "@/data/backend-user-data";
@@ -67,6 +74,37 @@ const archivedDocumentsStorePath = path.join(
   storeDirectory,
   "old-staff-documents.json",
 );
+
+type StaffProfileRow = {
+  id: string;
+  display_name: string;
+  email: string;
+  phone: string;
+  country: string;
+  region: string;
+  regions_json: string;
+  roles_json: string;
+  priority: number;
+  availability: string;
+  approval_status: StaffApprovalStatus;
+  access_role_label: string;
+  registration_status: RegistrationStatus;
+  registration_label: string;
+  profile_approved: boolean;
+  profile_approval_label: string;
+  profile_image_name: string;
+  profile_image_url: string | null;
+  bank_name: string;
+  bank_details: string;
+  personal_number: string;
+  driver_license_manual: boolean;
+  driver_license_automatic: boolean;
+  allergies: string;
+  role_profiles_json: string;
+  profile_comments: string;
+  documents_json: string;
+  pending_records_json: string;
+};
 
 function getRegistrationLabel(status: RegistrationStatus) {
   switch (status) {
@@ -252,6 +290,176 @@ function normalizeStoredStaffProfile(profile: StoredStaffProfile): StoredStaffPr
   };
 }
 
+function mapStaffProfileRow(row: StaffProfileRow): StoredStaffProfile {
+  return normalizeStoredStaffProfile({
+    id: row.id,
+    displayName: row.display_name,
+    email: row.email,
+    phone: row.phone,
+    country: row.country,
+    region: row.region,
+    regions: parseJsonValue<string[]>(row.regions_json, [row.region]),
+    roles: parseJsonValue<string[]>(row.roles_json, []),
+    priority: row.priority,
+    availability: row.availability,
+    approvalStatus: row.approval_status,
+    accessRoleLabel: row.access_role_label,
+    registrationStatus: row.registration_status,
+    registrationLabel: row.registration_label,
+    profileApproved: row.profile_approved,
+    profileApprovalLabel: row.profile_approval_label,
+    profileImageName: row.profile_image_name,
+    profileImageUrl: row.profile_image_url ?? undefined,
+    bankName: row.bank_name,
+    bankDetails: row.bank_details,
+    personalNumber: row.personal_number,
+    driverLicenseManual: row.driver_license_manual,
+    driverLicenseAutomatic: row.driver_license_automatic,
+    allergies: row.allergies,
+    roleProfiles: parseJsonValue<StoredStaffRoleProfiles>(row.role_profiles_json, {} as StoredStaffRoleProfiles),
+    profileComments: row.profile_comments,
+    documents: parseJsonValue<BackendDocumentSummary[]>(row.documents_json, []),
+    pendingRecords: parseJsonValue<string[]>(row.pending_records_json, []),
+  });
+}
+
+async function getDatabaseStaffProfiles() {
+  const sql = getPostgresClient();
+
+  if (!sql) {
+    return [] as StoredStaffProfile[];
+  }
+
+  await ensureProductionStorageSchema();
+  const rows = await sql<StaffProfileRow[]>`
+    select *
+    from staff_profiles
+    order by display_name asc
+  `;
+
+  return rows.map(mapStaffProfileRow);
+}
+
+async function getDatabaseStaffProfileById(personId: string) {
+  const sql = getPostgresClient();
+
+  if (!sql) {
+    return null;
+  }
+
+  await ensureProductionStorageSchema();
+  const rows = await sql<StaffProfileRow[]>`
+    select *
+    from staff_profiles
+    where id = ${personId}
+    limit 1
+  `;
+
+  return rows[0] ? mapStaffProfileRow(rows[0]) : null;
+}
+
+async function getDatabaseStaffProfileByEmail(email: string) {
+  const sql = getPostgresClient();
+
+  if (!sql) {
+    return null;
+  }
+
+  await ensureProductionStorageSchema();
+  const rows = await sql<StaffProfileRow[]>`
+    select *
+    from staff_profiles
+    where email_lower = ${email.trim().toLowerCase()}
+    limit 1
+  `;
+
+  return rows[0] ? mapStaffProfileRow(rows[0]) : null;
+}
+
+async function upsertDatabaseStaffProfile(profile: StoredStaffProfile) {
+  const sql = getPostgresClient();
+
+  if (!sql) {
+    return profile;
+  }
+
+  await ensureProductionStorageSchema();
+  await sql`
+    insert into staff_profiles (
+      id, display_name, email, email_lower, phone, country, region, regions_json, roles_json,
+      priority, availability, approval_status, access_role_label, registration_status,
+      registration_label, profile_approved, profile_approval_label, profile_image_name,
+      profile_image_url, bank_name, bank_details, personal_number, driver_license_manual,
+      driver_license_automatic, allergies, role_profiles_json, profile_comments, documents_json,
+      pending_records_json, created_at, updated_at
+    ) values (
+      ${profile.id},
+      ${profile.displayName},
+      ${profile.email},
+      ${profile.email.toLowerCase()},
+      ${profile.phone},
+      ${profile.country},
+      ${profile.region},
+      ${serializeJson(profile.regions)},
+      ${serializeJson(profile.roles)},
+      ${profile.priority},
+      ${profile.availability},
+      ${profile.approvalStatus},
+      ${profile.accessRoleLabel},
+      ${profile.registrationStatus},
+      ${profile.registrationLabel},
+      ${profile.profileApproved},
+      ${profile.profileApprovalLabel},
+      ${profile.profileImageName},
+      ${profile.profileImageUrl ?? null},
+      ${profile.bankName},
+      ${profile.bankDetails},
+      ${profile.personalNumber},
+      ${profile.driverLicenseManual},
+      ${profile.driverLicenseAutomatic},
+      ${profile.allergies},
+      ${serializeJson(profile.roleProfiles)},
+      ${profile.profileComments},
+      ${serializeJson(profile.documents)},
+      ${serializeJson(profile.pendingRecords)},
+      ${new Date().toISOString()},
+      ${new Date().toISOString()}
+    )
+    on conflict (id) do update set
+      display_name = excluded.display_name,
+      email = excluded.email,
+      email_lower = excluded.email_lower,
+      phone = excluded.phone,
+      country = excluded.country,
+      region = excluded.region,
+      regions_json = excluded.regions_json,
+      roles_json = excluded.roles_json,
+      priority = excluded.priority,
+      availability = excluded.availability,
+      approval_status = excluded.approval_status,
+      access_role_label = excluded.access_role_label,
+      registration_status = excluded.registration_status,
+      registration_label = excluded.registration_label,
+      profile_approved = excluded.profile_approved,
+      profile_approval_label = excluded.profile_approval_label,
+      profile_image_name = excluded.profile_image_name,
+      profile_image_url = excluded.profile_image_url,
+      bank_name = excluded.bank_name,
+      bank_details = excluded.bank_details,
+      personal_number = excluded.personal_number,
+      driver_license_manual = excluded.driver_license_manual,
+      driver_license_automatic = excluded.driver_license_automatic,
+      allergies = excluded.allergies,
+      role_profiles_json = excluded.role_profiles_json,
+      profile_comments = excluded.profile_comments,
+      documents_json = excluded.documents_json,
+      pending_records_json = excluded.pending_records_json,
+      updated_at = excluded.updated_at
+  `;
+
+  return profile;
+}
+
 function createSeedStaffProfiles(): StoredStaffProfile[] {
   return peopleDirectory.map((person) => {
     const profile = getPersonProfileView(person.id);
@@ -337,7 +545,28 @@ async function writeArchivedDocumentsStore(records: ArchivedStaffDocumentRecord[
 }
 
 export async function getAllStoredStaffProfiles() {
-  return readStaffStore();
+  const seedProfilesSource = isDatabaseConfigured()
+    ? createSeedStaffProfiles()
+    : await readStaffStore();
+  const [seedProfiles, databaseProfiles] = await Promise.all([
+    Promise.resolve(seedProfilesSource),
+    getDatabaseStaffProfiles(),
+  ]);
+  const seenIds = new Set<string>();
+  const seenEmails = new Set<string>();
+  const mergedProfiles = [...databaseProfiles, ...seedProfiles].filter((profile) => {
+    const normalizedEmail = profile.email.toLowerCase();
+
+    if (seenIds.has(profile.id) || seenEmails.has(normalizedEmail)) {
+      return false;
+    }
+
+    seenIds.add(profile.id);
+    seenEmails.add(normalizedEmail);
+    return true;
+  });
+
+  return mergedProfiles;
 }
 
 export async function getArchivedStaffDocuments() {
@@ -345,12 +574,28 @@ export async function getArchivedStaffDocuments() {
 }
 
 export async function getStoredStaffProfileById(personId: string) {
-  const profiles = await readStaffStore();
+  const databaseProfile = await getDatabaseStaffProfileById(personId);
+
+  if (databaseProfile) {
+    return databaseProfile;
+  }
+
+  const profiles = isDatabaseConfigured()
+    ? createSeedStaffProfiles()
+    : await readStaffStore();
   return profiles.find((profile) => profile.id === personId);
 }
 
 export async function getStoredStaffProfileByEmail(email: string) {
-  const profiles = await readStaffStore();
+  const databaseProfile = await getDatabaseStaffProfileByEmail(email);
+
+  if (databaseProfile) {
+    return databaseProfile;
+  }
+
+  const profiles = isDatabaseConfigured()
+    ? createSeedStaffProfiles()
+    : await readStaffStore();
   return profiles.find((profile) => profile.email.toLowerCase() === email.toLowerCase()) ?? null;
 }
 
@@ -415,6 +660,67 @@ export async function updateStoredStaffProfile(
   personId: string,
   updates: StaffProfileUpdate,
 ) {
+  const databaseProfile = await getDatabaseStaffProfileById(personId);
+
+  if (databaseProfile) {
+    const existingProfile = databaseProfile;
+    const nextRegistrationStatus =
+      updates.registrationStatus ?? existingProfile.registrationStatus;
+    const nextProfileApproved =
+      updates.profileApproved ?? existingProfile.profileApproved;
+    const requestedRegions =
+      updates.regions !== undefined ? normalizeRegions(updates.regions) : undefined;
+    const existingRegions = normalizeRegions(existingProfile.regions ?? [existingProfile.region]);
+    const nextRegions = requestedRegions ?? existingRegions;
+    const nextRegion =
+      updates.region !== undefined
+        ? updates.region.trim()
+        : nextRegions[0] ?? existingProfile.region;
+    const nextRoleProfiles = normalizeRoleProfiles(
+      updates.roleProfiles ?? existingProfile.roleProfiles,
+      updates.roles ?? existingProfile.roles,
+      updates.priority ?? existingProfile.priority,
+      updates.profileComments ?? existingProfile.profileComments,
+    );
+    const updatedProfile = normalizeStoredStaffProfile({
+      ...existingProfile,
+      ...updates,
+      region: nextRegion,
+      regions: nextRegions,
+      roles: deriveRolesFromProfiles(nextRoleProfiles),
+      priority: derivePriorityFromProfiles(
+        nextRoleProfiles,
+        updates.priority ?? existingProfile.priority,
+      ),
+      pendingRecords: updates.pendingRecords
+        ? [...updates.pendingRecords]
+        : existingProfile.pendingRecords,
+      approvalStatus:
+        updates.approvalStatus ??
+        (updates.registrationStatus
+          ? mapRegistrationStatusToApprovalStatus(updates.registrationStatus)
+          : existingProfile.approvalStatus),
+      registrationStatus: nextRegistrationStatus,
+      registrationLabel: getRegistrationLabel(nextRegistrationStatus),
+      profileApproved: nextProfileApproved,
+      profileApprovalLabel: getProfileApprovalLabel(nextProfileApproved),
+      bankName: updates.bankName ?? existingProfile.bankName ?? "",
+      driverLicenseManual:
+        updates.driverLicenseManual ?? existingProfile.driverLicenseManual ?? false,
+      driverLicenseAutomatic:
+        updates.driverLicenseAutomatic ?? existingProfile.driverLicenseAutomatic ?? false,
+      allergies: updates.allergies ?? existingProfile.allergies ?? "",
+      roleProfiles: nextRoleProfiles,
+      profileComments: deriveProfileCommentsFromProfiles(
+        nextRoleProfiles,
+        updates.profileComments ?? existingProfile.profileComments,
+      ),
+    });
+
+    await upsertDatabaseStaffProfile(updatedProfile);
+    return updatedProfile;
+  }
+
   const profiles = await readStaffStore();
   const profileIndex = profiles.findIndex((profile) => profile.id === personId);
 
@@ -491,7 +797,7 @@ export async function updateStoredStaffImage(
 }
 
 export async function createStoredStaffProfile(input: NewStaffProfileInput) {
-  const profiles = await readStaffStore();
+  const sql = getPostgresClient();
   const profileId = `staff-${randomUUID().slice(0, 8)}`;
   const normalizedProfile = normalizeStoredStaffProfile({
     id: profileId,
@@ -529,6 +835,12 @@ export async function createStoredStaffProfile(input: NewStaffProfileInput) {
     pendingRecords: [...input.pendingRecords],
   });
 
+  if (sql) {
+    await upsertDatabaseStaffProfile(normalizedProfile);
+    return normalizedProfile;
+  }
+
+  const profiles = await readStaffStore();
   profiles.unshift(normalizedProfile);
   await writeStaffStore(profiles);
 

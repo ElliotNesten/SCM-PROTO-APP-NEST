@@ -9,11 +9,36 @@ import {
 import {
   deriveStaffAppRoleScopesFromRoleProfiles,
 } from "@/lib/staff-app-scope";
+import {
+  ensureProductionStorageSchema,
+  getPostgresClient,
+  parseJsonValue,
+  serializeJson,
+} from "@/lib/postgres";
 import type { StaffAppAccount, StaffAppRoleScope, StaffAppScopeRole } from "@/types/staff-app";
 import type { StoredStaffRoleProfiles } from "@/types/staff-role";
 
 const storeDirectory = path.join(process.cwd(), "data");
 const storePath = path.join(storeDirectory, "staff-app-account-store.json");
+
+type StaffAppAccountRow = {
+  id: string;
+  linked_staff_profile_id: string | null;
+  created_from_application_id: string | null;
+  display_name: string;
+  email: string;
+  phone: string;
+  country: string;
+  region: string;
+  role_scopes_json: string;
+  profile_image_url: string | null;
+  password_hash: string;
+  is_active: boolean;
+  must_complete_onboarding: boolean;
+  password_set_at: string | null;
+  activated_at: string | null;
+  last_login_at: string | null;
+};
 
 function shouldIgnoreReadOnlyStoreWriteError(error: unknown) {
   const errorCode =
@@ -141,6 +166,156 @@ function normalizeStaffAppAccount(account: LegacyStaffAppAccount): StaffAppAccou
   };
 }
 
+function mapStaffAppAccountRow(row: StaffAppAccountRow): StaffAppAccount {
+  return {
+    id: row.id,
+    linkedStaffProfileId: row.linked_staff_profile_id ?? undefined,
+    createdFromApplicationId: row.created_from_application_id ?? null,
+    displayName: row.display_name,
+    email: row.email,
+    phone: row.phone,
+    country: row.country,
+    region: row.region,
+    roleScopes: parseJsonValue<StaffAppRoleScope[]>(row.role_scopes_json, []),
+    profileImageUrl: row.profile_image_url ?? undefined,
+    passwordHash: row.password_hash,
+    isActive: row.is_active,
+    mustCompleteOnboarding: row.must_complete_onboarding,
+    passwordSetAt: row.password_set_at,
+    activatedAt: row.activated_at,
+    lastLoginAt: row.last_login_at,
+  };
+}
+
+async function getDatabaseStaffAppAccounts() {
+  const sql = getPostgresClient();
+
+  if (!sql) {
+    return [] as StaffAppAccount[];
+  }
+
+  await ensureProductionStorageSchema();
+  const rows = await sql<StaffAppAccountRow[]>`
+    select *
+    from staff_app_accounts
+    order by display_name asc
+  `;
+
+  return rows.map(mapStaffAppAccountRow);
+}
+
+async function getDatabaseStaffAppAccountById(accountId: string) {
+  const sql = getPostgresClient();
+
+  if (!sql) {
+    return null;
+  }
+
+  await ensureProductionStorageSchema();
+  const rows = await sql<StaffAppAccountRow[]>`
+    select *
+    from staff_app_accounts
+    where id = ${accountId}
+    limit 1
+  `;
+
+  return rows[0] ? mapStaffAppAccountRow(rows[0]) : null;
+}
+
+async function getDatabaseStaffAppAccountByEmail(email: string) {
+  const sql = getPostgresClient();
+
+  if (!sql) {
+    return null;
+  }
+
+  await ensureProductionStorageSchema();
+  const rows = await sql<StaffAppAccountRow[]>`
+    select *
+    from staff_app_accounts
+    where email_lower = ${email.trim().toLowerCase()}
+    limit 1
+  `;
+
+  return rows[0] ? mapStaffAppAccountRow(rows[0]) : null;
+}
+
+async function getDatabaseStaffAppAccountByLinkedStaffProfileId(staffProfileId: string) {
+  const sql = getPostgresClient();
+
+  if (!sql) {
+    return null;
+  }
+
+  await ensureProductionStorageSchema();
+  const rows = await sql<StaffAppAccountRow[]>`
+    select *
+    from staff_app_accounts
+    where linked_staff_profile_id = ${staffProfileId}
+    limit 1
+  `;
+
+  return rows[0] ? mapStaffAppAccountRow(rows[0]) : null;
+}
+
+async function upsertDatabaseStaffAppAccount(account: StaffAppAccount) {
+  const sql = getPostgresClient();
+
+  if (!sql) {
+    return account;
+  }
+
+  await ensureProductionStorageSchema();
+  await sql`
+    insert into staff_app_accounts (
+      id, linked_staff_profile_id, created_from_application_id, display_name, email,
+      email_lower, phone, country, region, role_scopes_json, profile_image_url,
+      password_hash, is_active, must_complete_onboarding, password_set_at, activated_at,
+      last_login_at, created_at, updated_at
+    ) values (
+      ${account.id},
+      ${account.linkedStaffProfileId ?? null},
+      ${account.createdFromApplicationId ?? null},
+      ${account.displayName},
+      ${account.email},
+      ${account.email.toLowerCase()},
+      ${account.phone},
+      ${account.country},
+      ${account.region},
+      ${serializeJson(account.roleScopes)},
+      ${account.profileImageUrl ?? null},
+      ${account.passwordHash},
+      ${account.isActive},
+      ${account.mustCompleteOnboarding},
+      ${account.passwordSetAt ?? null},
+      ${account.activatedAt ?? null},
+      ${account.lastLoginAt ?? null},
+      ${new Date().toISOString()},
+      ${new Date().toISOString()}
+    )
+    on conflict (id) do update set
+      linked_staff_profile_id = excluded.linked_staff_profile_id,
+      created_from_application_id = excluded.created_from_application_id,
+      display_name = excluded.display_name,
+      email = excluded.email,
+      email_lower = excluded.email_lower,
+      phone = excluded.phone,
+      country = excluded.country,
+      region = excluded.region,
+      role_scopes_json = excluded.role_scopes_json,
+      profile_image_url = excluded.profile_image_url,
+      password_hash = excluded.password_hash,
+      is_active = excluded.is_active,
+      must_complete_onboarding = excluded.must_complete_onboarding,
+      password_set_at = excluded.password_set_at,
+      activated_at = excluded.activated_at,
+      last_login_at = excluded.last_login_at,
+      updated_at = excluded.updated_at
+  `;
+
+  return account;
+}
+
 async function ensureStaffAppAccountStore() {
   try {
     await fs.access(storePath);
@@ -165,15 +340,33 @@ async function writeStaffAppAccountStore(accounts: StaffAppAccount[]) {
 }
 
 export async function getAllStaffAppAccounts() {
+  const sql = getPostgresClient();
+
+  if (sql) {
+    return getDatabaseStaffAppAccounts();
+  }
+
   return readStaffAppAccountStore();
 }
 
 export async function getStaffAppAccountById(accountId: string) {
+  const sql = getPostgresClient();
+
+  if (sql) {
+    return getDatabaseStaffAppAccountById(accountId);
+  }
+
   const accounts = await readStaffAppAccountStore();
   return accounts.find((account) => account.id === accountId) ?? null;
 }
 
 export async function getStaffAppAccountByEmail(email: string) {
+  const sql = getPostgresClient();
+
+  if (sql) {
+    return getDatabaseStaffAppAccountByEmail(email);
+  }
+
   const accounts = await readStaffAppAccountStore();
   return (
     accounts.find((account) => account.email.toLowerCase() === email.toLowerCase()) ?? null
@@ -181,6 +374,12 @@ export async function getStaffAppAccountByEmail(email: string) {
 }
 
 export async function getStaffAppAccountByLinkedStaffProfileId(staffProfileId: string) {
+  const sql = getPostgresClient();
+
+  if (sql) {
+    return getDatabaseStaffAppAccountByLinkedStaffProfileId(staffProfileId);
+  }
+
   const accounts = await readStaffAppAccountStore();
   return (
     accounts.find((account) => account.linkedStaffProfileId === staffProfileId) ?? null
@@ -200,6 +399,25 @@ export function canStaffAppAccountSignIn(account: StaffAppAccount) {
 }
 
 export async function updateStaffAppAccountPassword(accountId: string, password: string) {
+  const sql = getPostgresClient();
+
+  if (sql) {
+    const currentAccount = await getStaffAppAccountById(accountId);
+
+    if (!currentAccount) {
+      return null;
+    }
+
+    const updatedAccount = {
+      ...currentAccount,
+      passwordHash: createPasswordHash(password),
+      passwordSetAt: new Date().toISOString(),
+    };
+
+    await upsertDatabaseStaffAppAccount(updatedAccount);
+    return updatedAccount;
+  }
+
   const accounts = await readStaffAppAccountStore();
   const accountIndex = accounts.findIndex((account) => account.id === accountId);
 
@@ -221,6 +439,25 @@ export async function updateStaffAppAccountPasswordByLinkedStaffProfileId(
   staffProfileId: string,
   password: string,
 ) {
+  const sql = getPostgresClient();
+
+  if (sql) {
+    const currentAccount = await getStaffAppAccountByLinkedStaffProfileId(staffProfileId);
+
+    if (!currentAccount) {
+      return null;
+    }
+
+    const updatedAccount = {
+      ...currentAccount,
+      passwordHash: createPasswordHash(password),
+      passwordSetAt: new Date().toISOString(),
+    };
+
+    await upsertDatabaseStaffAppAccount(updatedAccount);
+    return updatedAccount;
+  }
+
   const accounts = await readStaffAppAccountStore();
   const accountIndex = accounts.findIndex(
     (account) => account.linkedStaffProfileId === staffProfileId,
@@ -252,6 +489,29 @@ export async function syncStaffAppAccountFromLinkedStaffProfile(profile: {
   priority: number;
   profileImageUrl?: string;
 }) {
+  const sql = getPostgresClient();
+
+  if (sql) {
+    const ensuredAccount = await ensureStaffAppAccountForLinkedStaffProfile(profile);
+    const syncedAccount: StaffAppAccount = {
+      ...ensuredAccount,
+      displayName: profile.displayName,
+      email: profile.email,
+      phone: profile.phone,
+      country: profile.country,
+      region: profile.region,
+      roleScopes: deriveStaffAppRoleScopesFromRoleProfiles(
+        profile.roleProfiles,
+        profile.roles,
+        profile.priority,
+      ),
+      profileImageUrl: profile.profileImageUrl,
+    };
+
+    await upsertDatabaseStaffAppAccount(syncedAccount);
+    return syncedAccount;
+  }
+
   const ensuredAccount = await ensureStaffAppAccountForLinkedStaffProfile(profile);
   const accounts = await readStaffAppAccountStore();
   const accountIndex = accounts.findIndex(
@@ -289,6 +549,33 @@ export async function ensureStaffAppAccountForLinkedStaffProfile(profile: {
   priority: number;
   profileImageUrl?: string;
 }) {
+  const sql = getPostgresClient();
+
+  if (sql) {
+    const linkedAccount = await getDatabaseStaffAppAccountByLinkedStaffProfileId(profile.id);
+    const emailMatchedAccount = await getDatabaseStaffAppAccountByEmail(profile.email);
+    const currentAccount = linkedAccount ?? emailMatchedAccount;
+    const createdAccount = createStaffAppAccountFromLinkedStaffProfile(profile, {
+      passwordHash: currentAccount?.passwordHash,
+      isActive: currentAccount?.isActive ?? true,
+      mustCompleteOnboarding: currentAccount?.mustCompleteOnboarding ?? false,
+      passwordSetAt: currentAccount?.passwordSetAt ?? null,
+      activatedAt: currentAccount?.activatedAt ?? null,
+      createdFromApplicationId: currentAccount?.createdFromApplicationId ?? null,
+    });
+    const nextAccount: StaffAppAccount = currentAccount
+      ? {
+          ...currentAccount,
+          ...createdAccount,
+          id: currentAccount.id,
+          lastLoginAt: currentAccount.lastLoginAt ?? null,
+        }
+      : createdAccount;
+
+    await upsertDatabaseStaffAppAccount(nextAccount);
+    return nextAccount;
+  }
+
   const accounts = await readStaffAppAccountStore();
   const linkedIndex = accounts.findIndex(
     (account) => account.linkedStaffProfileId === profile.id,
@@ -362,6 +649,33 @@ export async function createPendingStaffAppAccountForLinkedStaffProfile(profile:
   profileImageUrl?: string;
   createdFromApplicationId?: string | null;
 }) {
+  const sql = getPostgresClient();
+
+  if (sql) {
+    const currentAccount =
+      (await getDatabaseStaffAppAccountByLinkedStaffProfileId(profile.id)) ??
+      (await getDatabaseStaffAppAccountByEmail(profile.email));
+    const pendingAccount = createStaffAppAccountFromLinkedStaffProfile(profile, {
+      createdFromApplicationId: profile.createdFromApplicationId ?? null,
+      passwordHash: "",
+      isActive: false,
+      mustCompleteOnboarding: true,
+      passwordSetAt: null,
+      activatedAt: null,
+    });
+    const nextAccount: StaffAppAccount = currentAccount
+      ? {
+          ...currentAccount,
+          ...pendingAccount,
+          id: currentAccount.id,
+          lastLoginAt: currentAccount.lastLoginAt ?? null,
+        }
+      : pendingAccount;
+
+    await upsertDatabaseStaffAppAccount(nextAccount);
+    return nextAccount;
+  }
+
   const accounts = await readStaffAppAccountStore();
   const accountIndex = accounts.findIndex(
     (account) =>
@@ -392,6 +706,29 @@ export async function createPendingStaffAppAccountForLinkedStaffProfile(profile:
 }
 
 export async function activateStaffAppAccountById(accountId: string, password: string) {
+  const sql = getPostgresClient();
+
+  if (sql) {
+    const currentAccount = await getStaffAppAccountById(accountId);
+
+    if (!currentAccount) {
+      return null;
+    }
+
+    const now = new Date().toISOString();
+    const activatedAccount = {
+      ...currentAccount,
+      passwordHash: createPasswordHash(password),
+      isActive: true,
+      mustCompleteOnboarding: true,
+      passwordSetAt: now,
+      activatedAt: now,
+    };
+
+    await upsertDatabaseStaffAppAccount(activatedAccount);
+    return activatedAccount;
+  }
+
   const accounts = await readStaffAppAccountStore();
   const accountIndex = accounts.findIndex((account) => account.id === accountId);
 
@@ -414,6 +751,24 @@ export async function activateStaffAppAccountById(accountId: string, password: s
 }
 
 export async function markStaffAppAccountOnboardingCompleted(accountId: string) {
+  const sql = getPostgresClient();
+
+  if (sql) {
+    const currentAccount = await getStaffAppAccountById(accountId);
+
+    if (!currentAccount) {
+      return null;
+    }
+
+    const updatedAccount = {
+      ...currentAccount,
+      mustCompleteOnboarding: false,
+    };
+
+    await upsertDatabaseStaffAppAccount(updatedAccount);
+    return updatedAccount;
+  }
+
   const accounts = await readStaffAppAccountStore();
   const accountIndex = accounts.findIndex((account) => account.id === accountId);
 
@@ -431,6 +786,24 @@ export async function markStaffAppAccountOnboardingCompleted(accountId: string) 
 }
 
 export async function touchStaffAppAccountLastLogin(accountId: string) {
+  const sql = getPostgresClient();
+
+  if (sql) {
+    const currentAccount = await getStaffAppAccountById(accountId);
+
+    if (!currentAccount) {
+      return null;
+    }
+
+    const updatedAccount = {
+      ...currentAccount,
+      lastLoginAt: new Date().toISOString(),
+    };
+
+    await upsertDatabaseStaffAppAccount(updatedAccount);
+    return updatedAccount;
+  }
+
   const accounts = await readStaffAppAccountStore();
   const accountIndex = accounts.findIndex((account) => account.id === accountId);
 

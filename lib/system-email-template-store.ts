@@ -1,6 +1,12 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 
+import {
+  ensureProductionStorageSchema,
+  getPostgresClient,
+  parseJsonValue,
+  serializeJson,
+} from "@/lib/postgres";
 import type { StaffApplicationApprovalEmailTemplate } from "@/types/job-applications";
 
 interface StoredSystemEmailTemplateState {
@@ -51,6 +57,30 @@ async function ensureSystemEmailTemplateStore() {
 }
 
 async function readSystemEmailTemplateStore() {
+  const sql = getPostgresClient();
+
+  if (sql) {
+    await ensureProductionStorageSchema();
+    const rows = await sql<{ template_json: string }[]>`
+      select template_json
+      from system_email_templates
+      where id = 'approvedApplication'
+      limit 1
+    `;
+    const defaults = createDefaultSystemEmailTemplateState();
+
+    return {
+      approvedApplication: {
+        ...defaults.approvedApplication,
+        ...parseJsonValue<Partial<StaffApplicationApprovalEmailTemplate>>(
+          rows[0]?.template_json,
+          {},
+        ),
+        id: "approvedApplication",
+      },
+    } satisfies StoredSystemEmailTemplateState;
+  }
+
   await ensureSystemEmailTemplateStore();
   const raw = await fs.readFile(storePath, "utf8");
   const parsed = JSON.parse(raw) as Partial<StoredSystemEmailTemplateState>;
@@ -85,6 +115,24 @@ export async function updateApprovedApplicationEmailTemplate(
       id: "approvedApplication",
     },
   };
+
+  const sql = getPostgresClient();
+
+  if (sql) {
+    await ensureProductionStorageSchema();
+    await sql`
+      insert into system_email_templates (id, template_json, updated_at)
+      values (
+        'approvedApplication',
+        ${serializeJson(nextState.approvedApplication)},
+        ${new Date().toISOString()}
+      )
+      on conflict (id) do update set
+        template_json = excluded.template_json,
+        updated_at = excluded.updated_at
+    `;
+    return nextState.approvedApplication;
+  }
 
   await fs.writeFile(storePath, JSON.stringify(nextState, null, 2), "utf8");
   return nextState.approvedApplication;

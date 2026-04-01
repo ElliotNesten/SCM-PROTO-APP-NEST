@@ -3,6 +3,7 @@ import { promises as fs } from "node:fs";
 import path from "node:path";
 
 import { NextResponse } from "next/server";
+import { put } from "@vercel/blob";
 
 import {
   createStoredStaffApplication,
@@ -20,6 +21,10 @@ const publicRootDirectory = path.join(process.cwd(), "public");
 const imageRootDirectory = path.join(publicRootDirectory, "application-images");
 const allowedExtensions = new Set(["png", "jpg", "jpeg", "webp"]);
 const maxFileSize = 5 * 1024 * 1024;
+
+function isBlobConfigured() {
+  return Boolean(process.env.BLOB_READ_WRITE_TOKEN?.trim());
+}
 
 function sanitizeFileBaseName(fileName: string) {
   return fileName
@@ -111,13 +116,26 @@ export async function POST(request: Request) {
     sanitizeFileBaseName(path.parse(profileImage.name).name) || "work-at-scm-profile";
   const normalizedExtension = fileExtension || "png";
   const storageFileName = `${baseName}-${randomUUID().slice(0, 8)}.${normalizedExtension}`;
-  const applicationDirectory = path.join(imageRootDirectory, applicationId);
-  const outputPath = path.join(applicationDirectory, storageFileName);
+  let profileImageUrl = `/application-images/${applicationId}/${storageFileName}`;
 
-  await fs.mkdir(applicationDirectory, { recursive: true });
-  await fs.writeFile(outputPath, Buffer.from(await profileImage.arrayBuffer()));
+  if (isBlobConfigured()) {
+    const blob = await put(
+      `staff-applications/${applicationId}/${storageFileName}`,
+      profileImage,
+      {
+        access: "public",
+        addRandomSuffix: false,
+      },
+    );
+    profileImageUrl = blob.url;
+  } else {
+    const applicationDirectory = path.join(imageRootDirectory, applicationId);
+    const outputPath = path.join(applicationDirectory, storageFileName);
 
-  const profileImageUrl = `/application-images/${applicationId}/${storageFileName}`;
+    await fs.mkdir(applicationDirectory, { recursive: true });
+    await fs.writeFile(outputPath, Buffer.from(await profileImage.arrayBuffer()));
+  }
+
   const application = await createStoredStaffApplication({
     id: applicationId,
     profileImageName: storageFileName,

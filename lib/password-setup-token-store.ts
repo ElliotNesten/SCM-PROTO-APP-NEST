@@ -2,6 +2,10 @@ import { createHmac, randomBytes, randomUUID } from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
 
+import {
+  ensureProductionStorageSchema,
+  getPostgresClient,
+} from "@/lib/postgres";
 import type {
   PasswordSetupTokenRecord,
   PasswordSetupTokenVerificationResult,
@@ -44,6 +48,34 @@ async function writePasswordSetupTokenStore(tokens: PasswordSetupTokenRecord[]) 
   await fs.writeFile(storePath, JSON.stringify(tokens, null, 2), "utf8");
 }
 
+type PasswordSetupTokenRow = {
+  id: string;
+  email: string;
+  staff_profile_id: string;
+  staff_app_account_id: string;
+  application_id: string | null;
+  token_hash: string;
+  created_at: string;
+  expires_at: string;
+  consumed_at: string | null;
+  invalidated_at: string | null;
+};
+
+function mapPasswordSetupTokenRow(row: PasswordSetupTokenRow): PasswordSetupTokenRecord {
+  return {
+    id: row.id,
+    email: row.email,
+    staffProfileId: row.staff_profile_id,
+    staffAppAccountId: row.staff_app_account_id,
+    applicationId: row.application_id,
+    tokenHash: row.token_hash,
+    createdAt: row.created_at,
+    expiresAt: row.expires_at,
+    consumedAt: row.consumed_at,
+    invalidatedAt: row.invalidated_at,
+  };
+}
+
 function getVerificationState(record: PasswordSetupTokenRecord | null) {
   if (!record) {
     return "missing" as const;
@@ -70,6 +102,58 @@ export async function createPasswordSetupToken(input: {
   staffAppAccountId: string;
   applicationId?: string | null;
 }) {
+  const sql = getPostgresClient();
+
+  if (sql) {
+    await ensureProductionStorageSchema();
+    const rawToken = randomBytes(32).toString("hex");
+    const now = new Date();
+    const invalidatedAt = now.toISOString();
+    const issuedToken: PasswordSetupTokenRecord = {
+      id: `pst-${randomUUID().slice(0, 8)}`,
+      email: input.email.trim(),
+      staffProfileId: input.staffProfileId,
+      staffAppAccountId: input.staffAppAccountId,
+      applicationId: input.applicationId ?? null,
+      tokenHash: hashPasswordSetupToken(rawToken),
+      createdAt: invalidatedAt,
+      expiresAt: new Date(now.getTime() + tokenLifetimeMs).toISOString(),
+      consumedAt: null,
+      invalidatedAt: null,
+    };
+
+    await sql`
+      update password_setup_tokens
+      set invalidated_at = coalesce(invalidated_at, ${invalidatedAt})
+      where staff_app_account_id = ${input.staffAppAccountId}
+        and invalidated_at is null
+        and consumed_at is null
+    `;
+    await sql`
+      insert into password_setup_tokens (
+        id, email, email_lower, staff_profile_id, staff_app_account_id, application_id,
+        token_hash, created_at, expires_at, consumed_at, invalidated_at
+      ) values (
+        ${issuedToken.id},
+        ${issuedToken.email},
+        ${issuedToken.email.toLowerCase()},
+        ${issuedToken.staffProfileId},
+        ${issuedToken.staffAppAccountId},
+        ${issuedToken.applicationId},
+        ${issuedToken.tokenHash},
+        ${issuedToken.createdAt},
+        ${issuedToken.expiresAt},
+        ${issuedToken.consumedAt},
+        ${issuedToken.invalidatedAt}
+      )
+    `;
+
+    return {
+      token: rawToken,
+      record: issuedToken,
+    };
+  }
+
   const tokens = await readPasswordSetupTokenStore();
   const rawToken = randomBytes(32).toString("hex");
   const now = new Date();
@@ -118,6 +202,24 @@ export async function verifyPasswordSetupToken(
     };
   }
 
+  const sql = getPostgresClient();
+
+  if (sql) {
+    await ensureProductionStorageSchema();
+    const rows = await sql<PasswordSetupTokenRow[]>`
+      select *
+      from password_setup_tokens
+      where token_hash = ${hashPasswordSetupToken(normalizedToken)}
+      limit 1
+    `;
+    const record = rows[0] ? mapPasswordSetupTokenRow(rows[0]) : null;
+
+    return {
+      state: getVerificationState(record),
+      record,
+    };
+  }
+
   const tokens = await readPasswordSetupTokenStore();
   const record =
     tokens.find((token) => token.tokenHash === hashPasswordSetupToken(normalizedToken)) ?? null;
@@ -133,6 +235,30 @@ export async function invalidatePasswordSetupToken(rawToken: string) {
 
   if (!normalizedToken) {
     return null;
+  }
+
+  const sql = getPostgresClient();
+
+  if (sql) {
+    const verification = await verifyPasswordSetupToken(normalizedToken);
+
+    if (!verification.record) {
+      return null;
+    }
+
+    const nextInvalidatedAt =
+      verification.record.invalidatedAt ?? new Date().toISOString();
+    await ensureProductionStorageSchema();
+    await sql`
+      update password_setup_tokens
+      set invalidated_at = ${nextInvalidatedAt}
+      where id = ${verification.record.id}
+    `;
+
+    return {
+      ...verification.record,
+      invalidatedAt: nextInvalidatedAt,
+    };
   }
 
   const tokens = await readPasswordSetupTokenStore();
@@ -158,6 +284,29 @@ export async function consumePasswordSetupToken(rawToken: string) {
 
   if (!normalizedToken) {
     return null;
+  }
+
+  const sql = getPostgresClient();
+
+  if (sql) {
+    const verification = await verifyPasswordSetupToken(normalizedToken);
+
+    if (verification.state !== "valid" || !verification.record) {
+      return null;
+    }
+
+    const consumedAt = new Date().toISOString();
+    await ensureProductionStorageSchema();
+    await sql`
+      update password_setup_tokens
+      set consumed_at = ${consumedAt}
+      where id = ${verification.record.id}
+    `;
+
+    return {
+      ...verification.record,
+      consumedAt,
+    };
   }
 
   const verification = await verifyPasswordSetupToken(normalizedToken);

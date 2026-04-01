@@ -2,6 +2,10 @@ import { randomUUID } from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
 
+import {
+  ensureProductionStorageSchema,
+  getPostgresClient,
+} from "@/lib/postgres";
 import type {
   StaffApplicationApprovalEmailStatus,
   StoredStaffApplication,
@@ -30,7 +34,66 @@ async function writeStaffApplicationStore(applications: StoredStaffApplication[]
   await fs.writeFile(storePath, JSON.stringify(applications, null, 2), "utf8");
 }
 
+type StaffApplicationRow = {
+  id: string;
+  status: StaffApplicationStatus;
+  profile_image_name: string;
+  profile_image_url: string;
+  display_name: string;
+  email: string;
+  phone: string;
+  country: string;
+  region: string;
+  submitted_at: string;
+  reviewed_at: string | null;
+  reviewed_by_profile_id: string | null;
+  reviewed_by_name: string | null;
+  rejection_reason: string | null;
+  converted_staff_profile_id: string | null;
+  approval_email_status: StaffApplicationApprovalEmailStatus;
+  approval_email_last_attempt_at: string | null;
+  approval_email_error: string | null;
+  password_setup_token_id: string | null;
+};
+
+function mapStaffApplicationRow(row: StaffApplicationRow): StoredStaffApplication {
+  return {
+    id: row.id,
+    status: row.status,
+    profileImageName: row.profile_image_name,
+    profileImageUrl: row.profile_image_url,
+    displayName: row.display_name,
+    email: row.email,
+    phone: row.phone,
+    country: row.country,
+    region: row.region,
+    submittedAt: row.submitted_at,
+    reviewedAt: row.reviewed_at,
+    reviewedByProfileId: row.reviewed_by_profile_id,
+    reviewedByName: row.reviewed_by_name,
+    rejectionReason: row.rejection_reason,
+    convertedStaffProfileId: row.converted_staff_profile_id,
+    approvalEmailStatus: row.approval_email_status,
+    approvalEmailLastAttemptAt: row.approval_email_last_attempt_at,
+    approvalEmailError: row.approval_email_error,
+    passwordSetupTokenId: row.password_setup_token_id,
+  };
+}
+
 export async function getAllStoredStaffApplications() {
+  const sql = getPostgresClient();
+
+  if (sql) {
+    await ensureProductionStorageSchema();
+    const rows = await sql<StaffApplicationRow[]>`
+      select *
+      from staff_applications
+      order by submitted_at desc
+    `;
+
+    return rows.map(mapStaffApplicationRow);
+  }
+
   const applications = await readStaffApplicationStore();
 
   return [...applications].sort(
@@ -40,25 +103,72 @@ export async function getAllStoredStaffApplications() {
 }
 
 export async function getStoredStaffApplicationById(applicationId: string) {
+  const sql = getPostgresClient();
+
+  if (sql) {
+    await ensureProductionStorageSchema();
+    const rows = await sql<StaffApplicationRow[]>`
+      select *
+      from staff_applications
+      where id = ${applicationId}
+      limit 1
+    `;
+
+    return rows[0] ? mapStaffApplicationRow(rows[0]) : null;
+  }
+
   const applications = await readStaffApplicationStore();
   return applications.find((application) => application.id === applicationId) ?? null;
 }
 
 export async function getStoredStaffApplicationByEmail(email: string) {
+  const sql = getPostgresClient();
+  const normalizedEmail = email.toLowerCase().trim();
+
+  if (sql) {
+    await ensureProductionStorageSchema();
+    const rows = await sql<StaffApplicationRow[]>`
+      select *
+      from staff_applications
+      where email_lower = ${normalizedEmail}
+      order by submitted_at desc
+      limit 1
+    `;
+
+    return rows[0] ? mapStaffApplicationRow(rows[0]) : null;
+  }
+
   const applications = await readStaffApplicationStore();
   return (
     applications.find(
-      (application) => application.email.toLowerCase() === email.toLowerCase(),
+      (application) => application.email.toLowerCase() === normalizedEmail,
     ) ?? null
   );
 }
 
 export async function getActiveStoredStaffApplicationByEmail(email: string) {
+  const sql = getPostgresClient();
+  const normalizedEmail = email.toLowerCase().trim();
+
+  if (sql) {
+    await ensureProductionStorageSchema();
+    const rows = await sql<StaffApplicationRow[]>`
+      select *
+      from staff_applications
+      where email_lower = ${normalizedEmail}
+        and status <> 'rejected'
+      order by submitted_at desc
+      limit 1
+    `;
+
+    return rows[0] ? mapStaffApplicationRow(rows[0]) : null;
+  }
+
   const applications = await readStaffApplicationStore();
   return (
     applications.find(
       (application) =>
-        application.email.toLowerCase() === email.toLowerCase() &&
+        application.email.toLowerCase() === normalizedEmail &&
         application.status !== "rejected",
     ) ?? null
   );
@@ -78,6 +188,65 @@ type CreateStaffApplicationInput = {
 export async function createStoredStaffApplication(
   input: CreateStaffApplicationInput,
 ) {
+  const sql = getPostgresClient();
+
+  if (sql) {
+    await ensureProductionStorageSchema();
+    const createdApplication: StoredStaffApplication = {
+      id: input.id ?? `application-${randomUUID().slice(0, 8)}`,
+      status: "pending",
+      profileImageName: input.profileImageName,
+      profileImageUrl: input.profileImageUrl,
+      displayName: input.displayName.trim(),
+      email: input.email.trim(),
+      phone: input.phone.trim(),
+      country: input.country.trim(),
+      region: input.region.trim(),
+      submittedAt: new Date().toISOString(),
+      reviewedAt: null,
+      reviewedByProfileId: null,
+      reviewedByName: null,
+      rejectionReason: null,
+      convertedStaffProfileId: null,
+      approvalEmailStatus: "not_requested",
+      approvalEmailLastAttemptAt: null,
+      approvalEmailError: null,
+      passwordSetupTokenId: null,
+    };
+
+    await sql`
+      insert into staff_applications (
+        id, status, profile_image_name, profile_image_url, display_name, email, email_lower,
+        phone, country, region, submitted_at, reviewed_at, reviewed_by_profile_id,
+        reviewed_by_name, rejection_reason, converted_staff_profile_id, approval_email_status,
+        approval_email_last_attempt_at, approval_email_error, password_setup_token_id
+      ) values (
+        ${createdApplication.id},
+        ${createdApplication.status},
+        ${createdApplication.profileImageName},
+        ${createdApplication.profileImageUrl},
+        ${createdApplication.displayName},
+        ${createdApplication.email},
+        ${createdApplication.email.toLowerCase()},
+        ${createdApplication.phone},
+        ${createdApplication.country},
+        ${createdApplication.region},
+        ${createdApplication.submittedAt},
+        ${createdApplication.reviewedAt},
+        ${createdApplication.reviewedByProfileId},
+        ${createdApplication.reviewedByName},
+        ${createdApplication.rejectionReason},
+        ${createdApplication.convertedStaffProfileId},
+        ${createdApplication.approvalEmailStatus},
+        ${createdApplication.approvalEmailLastAttemptAt},
+        ${createdApplication.approvalEmailError},
+        ${createdApplication.passwordSetupTokenId}
+      )
+    `;
+
+    return createdApplication;
+  }
+
   const applications = await readStaffApplicationStore();
   const createdApplication: StoredStaffApplication = {
     id: input.id ?? `application-${randomUUID().slice(0, 8)}`,
@@ -126,6 +295,40 @@ export async function updateStoredStaffApplication(
   applicationId: string,
   updates: StaffApplicationUpdate,
 ) {
+  const sql = getPostgresClient();
+
+  if (sql) {
+    const currentApplication = await getStoredStaffApplicationById(applicationId);
+
+    if (!currentApplication) {
+      return null;
+    }
+
+    const updatedApplication: StoredStaffApplication = {
+      ...currentApplication,
+      ...updates,
+    };
+
+    await ensureProductionStorageSchema();
+    await sql`
+      update staff_applications
+      set
+        status = ${updatedApplication.status},
+        reviewed_at = ${updatedApplication.reviewedAt},
+        reviewed_by_profile_id = ${updatedApplication.reviewedByProfileId},
+        reviewed_by_name = ${updatedApplication.reviewedByName},
+        rejection_reason = ${updatedApplication.rejectionReason},
+        converted_staff_profile_id = ${updatedApplication.convertedStaffProfileId},
+        approval_email_status = ${updatedApplication.approvalEmailStatus},
+        approval_email_last_attempt_at = ${updatedApplication.approvalEmailLastAttemptAt},
+        approval_email_error = ${updatedApplication.approvalEmailError},
+        password_setup_token_id = ${updatedApplication.passwordSetupTokenId}
+      where id = ${applicationId}
+    `;
+
+    return updatedApplication;
+  }
+
   const applications = await readStaffApplicationStore();
   const applicationIndex = applications.findIndex(
     (application) => application.id === applicationId,

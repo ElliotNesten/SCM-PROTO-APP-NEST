@@ -642,7 +642,7 @@
   justify-content: center;
   padding: 1rem;
   background: rgba(11, 22, 40, 0.48);
-  backdrop-filter: blur(8px);
+  overflow-y: auto;
 }
 
 .staff-app-modal-card,

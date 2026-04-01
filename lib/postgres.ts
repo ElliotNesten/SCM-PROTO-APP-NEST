@@ -164,6 +164,20 @@ export async function ensureProductionStorageSchema() {
         template_json text not null,
         updated_at text not null
       );
+
+      create table if not exists gigs (
+        id text primary key,
+        artist text not null,
+        date text not null,
+        country text not null,
+        status text not null,
+        gig_json text not null,
+        created_at text not null,
+        updated_at text not null
+      );
+
+      create index if not exists idx_gigs_date
+        on gigs (date);
     `)
       .then(() => undefined);
   }

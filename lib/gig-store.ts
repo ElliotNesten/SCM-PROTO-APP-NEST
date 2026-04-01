@@ -10,6 +10,13 @@ import {
   isGigDocumentSection,
   normalizeGigDocumentBoxName,
 } from "@/lib/gig-document-boxes";
+import {
+  ensureProductionStorageSchema,
+  getPostgresClient,
+  isDatabaseConfigured,
+  parseJsonValue,
+  serializeJson,
+} from "@/lib/postgres";
 import type {
   GigCommentField,
   GigDocumentSection,
@@ -25,6 +32,15 @@ import type {
 
 const storeDirectory = path.join(process.cwd(), "data");
 const storePath = path.join(storeDirectory, "gig-store.json");
+
+type GigRow = {
+  id: string;
+  artist: string;
+  date: string;
+  country: string;
+  status: GigStatus;
+  gig_json: string;
+};
 
 function shouldIgnoreReadOnlyStoreWriteError(error: unknown) {
   const errorCode =
@@ -414,6 +430,133 @@ async function ensureGigStore() {
   }
 }
 
+function getSeedStoredGigs() {
+  return seedGigs.map((gig) => normalizeStoredGig(gig).gig);
+}
+
+function mapGigRow(row: GigRow) {
+  const parsedGig = parseJsonValue<Gig>(row.gig_json, {
+    id: row.id,
+    artist: row.artist,
+    arena: "",
+    city: "",
+    country: row.country,
+    region: "",
+    date: row.date,
+    startTime: "16:00",
+    endTime: "23:00",
+    promoter: "",
+    merchCompany: "",
+    merchRepresentative: "",
+    scmRepresentative: "",
+    ticketsSold: 0,
+    estimatedSpendPerVisitor: 0,
+    status: row.status,
+    progress: 0,
+    staffingProgress: 0,
+    alertCount: 0,
+    notes: "No operations notes added yet.",
+  });
+
+  return normalizeStoredGig({
+    ...parsedGig,
+    id: row.id,
+    artist: parsedGig.artist || row.artist,
+    date: parsedGig.date || row.date,
+    country: parsedGig.country || row.country,
+    status: parsedGig.status || row.status,
+  }).gig;
+}
+
+async function getDatabaseGigs() {
+  const sql = getPostgresClient();
+
+  if (!sql) {
+    return [] as Gig[];
+  }
+
+  await ensureProductionStorageSchema();
+  const rows = await sql<GigRow[]>`
+    select id, artist, date, country, status, gig_json
+    from gigs
+    order by date asc, artist asc
+  `;
+
+  return rows.map(mapGigRow);
+}
+
+async function getDatabaseGigById(gigId: string) {
+  const sql = getPostgresClient();
+
+  if (!sql) {
+    return null;
+  }
+
+  await ensureProductionStorageSchema();
+  const rows = await sql<GigRow[]>`
+    select id, artist, date, country, status, gig_json
+    from gigs
+    where id = ${gigId}
+    limit 1
+  `;
+
+  return rows[0] ? mapGigRow(rows[0]) : null;
+}
+
+async function upsertDatabaseGig(gig: Gig) {
+  const sql = getPostgresClient();
+
+  if (!sql) {
+    return gig;
+  }
+
+  await ensureProductionStorageSchema();
+  await sql`
+    insert into gigs (id, artist, date, country, status, gig_json, created_at, updated_at)
+    values (
+      ${gig.id},
+      ${gig.artist},
+      ${gig.date},
+      ${gig.country},
+      ${gig.status},
+      ${serializeJson(gig)},
+      ${new Date().toISOString()},
+      ${new Date().toISOString()}
+    )
+    on conflict (id) do update set
+      artist = excluded.artist,
+      date = excluded.date,
+      country = excluded.country,
+      status = excluded.status,
+      gig_json = excluded.gig_json,
+      updated_at = excluded.updated_at
+  `;
+
+  return gig;
+}
+
+async function deleteDatabaseGig(gigId: string) {
+  const sql = getPostgresClient();
+
+  if (!sql) {
+    return null;
+  }
+
+  const existingGig = await getDatabaseGigById(gigId);
+
+  if (!existingGig) {
+    return null;
+  }
+
+  await ensureProductionStorageSchema();
+  await sql`
+    delete from gigs
+    where id = ${gigId}
+  `;
+
+  return existingGig;
+}
+
 async function readGigStore(): Promise<Gig[]> {
   await ensureGigStore();
   const raw = await fs.readFile(storePath, "utf8");
@@ -438,6 +581,66 @@ async function writeGigStore(gigs: Gig[]) {
   await fs.writeFile(storePath, JSON.stringify(gigs, null, 2), "utf8");
 }
 
+async function getMergedStoredGigs() {
+  const [databaseGigs, seedOrLocalGigs] = await Promise.all([
+    getDatabaseGigs(),
+    isDatabaseConfigured() ? Promise.resolve(getSeedStoredGigs()) : readGigStore(),
+  ]);
+  const seenIds = new Set<string>();
+
+  return [...databaseGigs, ...seedOrLocalGigs]
+    .filter((gig) => {
+      if (seenIds.has(gig.id)) {
+        return false;
+      }
+
+      seenIds.add(gig.id);
+      return true;
+    })
+    .sort((left, right) => left.date.localeCompare(right.date));
+}
+
+async function updateStoredGigRecord<T>(
+  gigId: string,
+  updater: (gig: Gig) => { gig: Gig; result: T } | null,
+) {
+  const sql = getPostgresClient();
+
+  if (sql) {
+    const currentGig = await getStoredGigById(gigId);
+
+    if (!currentGig) {
+      return null;
+    }
+
+    const updated = updater(currentGig);
+
+    if (!updated) {
+      return null;
+    }
+
+    await upsertDatabaseGig(updated.gig);
+    return updated.result;
+  }
+
+  const gigs = await readGigStore();
+  const gigIndex = gigs.findIndex((gig) => gig.id === gigId);
+
+  if (gigIndex === -1) {
+    return null;
+  }
+
+  const updated = updater(gigs[gigIndex]);
+
+  if (!updated) {
+    return null;
+  }
+
+  gigs[gigIndex] = updated.gig;
+  await writeGigStore(gigs);
+  return updated.result;
+}
+
 function normalizeEquipment(equipment: GigEquipmentItem[]) {
   return equipment.filter((item) => item.quantity > 0);
 }
@@ -451,12 +654,17 @@ function sanitizeFolderSlug(name: string) {
 }
 
 export async function getAllStoredGigs() {
-  const gigs = await readGigStore();
-  return gigs.sort((left, right) => left.date.localeCompare(right.date));
+  return getMergedStoredGigs();
 }
 
 export async function getStoredGigById(gigId: string) {
-  const gigs = await readGigStore();
+  const databaseGig = await getDatabaseGigById(gigId);
+
+  if (databaseGig) {
+    return databaseGig;
+  }
+
+  const gigs = isDatabaseConfigured() ? getSeedStoredGigs() : await readGigStore();
   return gigs.find((gig) => gig.id === gigId);
 }
 
@@ -464,29 +672,23 @@ export async function setStoredGigTimeReportFinalApproval(
   gigId: string,
   approvedAt: string | null,
 ) {
-  const gigs = await readGigStore();
-  const gigIndex = gigs.findIndex((gig) => gig.id === gigId);
+  return updateStoredGigRecord(gigId, (gig) => {
+    const normalizedApprovedAt =
+      typeof approvedAt === "string" && approvedAt.trim().length > 0
+        ? approvedAt.trim()
+        : undefined;
 
-  if (gigIndex === -1) {
-    return null;
-  }
+    if (gig.timeReportFinalApprovedAt === normalizedApprovedAt) {
+      return { gig, result: gig };
+    }
 
-  const normalizedApprovedAt =
-    typeof approvedAt === "string" && approvedAt.trim().length > 0
-      ? approvedAt.trim()
-      : undefined;
+    const updatedGig = {
+      ...gig,
+      timeReportFinalApprovedAt: normalizedApprovedAt,
+    };
 
-  if (gigs[gigIndex].timeReportFinalApprovedAt === normalizedApprovedAt) {
-    return gigs[gigIndex];
-  }
-
-  gigs[gigIndex] = {
-    ...gigs[gigIndex],
-    timeReportFinalApprovedAt: normalizedApprovedAt,
-  };
-
-  await writeGigStore(gigs);
-  return gigs[gigIndex];
+    return { gig: updatedGig, result: updatedGig };
+  });
 }
 
 export async function clearStoredGigTimeReportFinalApproval(gigId: string) {
@@ -504,39 +706,35 @@ export async function updateStoredGigEconomy(
     economyComment,
   }: { invoicesPaid?: boolean; economyComment?: string },
 ) {
-  const gigs = await readGigStore();
-  const gigIndex = gigs.findIndex((gig) => gig.id === gigId);
+  return updateStoredGigRecord(gigId, (gig) => {
+    const currentInvoicesPaidAt = gig.invoicesPaidAt;
+    const currentEconomyComment = gig.economyComment;
+    const nextInvoicesPaidAt =
+      invoicesPaid === undefined
+        ? currentInvoicesPaidAt
+        : invoicesPaid
+          ? currentInvoicesPaidAt ?? new Date().toISOString()
+          : undefined;
+    const nextEconomyComment =
+      economyComment === undefined
+        ? currentEconomyComment
+        : normalizeOptionalText(economyComment);
 
-  if (gigIndex === -1) {
-    return null;
-  }
+    if (
+      currentInvoicesPaidAt === nextInvoicesPaidAt &&
+      currentEconomyComment === nextEconomyComment
+    ) {
+      return { gig, result: gig };
+    }
 
-  const currentInvoicesPaidAt = gigs[gigIndex].invoicesPaidAt;
-  const currentEconomyComment = gigs[gigIndex].economyComment;
-  const nextInvoicesPaidAt =
-    invoicesPaid === undefined
-      ? currentInvoicesPaidAt
-      : invoicesPaid
-        ? currentInvoicesPaidAt ?? new Date().toISOString()
-        : undefined;
-  const nextEconomyComment =
-    economyComment === undefined ? currentEconomyComment : normalizeOptionalText(economyComment);
+    const updatedGig = {
+      ...gig,
+      invoicesPaidAt: nextInvoicesPaidAt,
+      economyComment: nextEconomyComment,
+    };
 
-  if (
-    currentInvoicesPaidAt === nextInvoicesPaidAt &&
-    currentEconomyComment === nextEconomyComment
-  ) {
-    return gigs[gigIndex];
-  }
-
-  gigs[gigIndex] = {
-    ...gigs[gigIndex],
-    invoicesPaidAt: nextInvoicesPaidAt,
-    economyComment: nextEconomyComment,
-  };
-
-  await writeGigStore(gigs);
-  return gigs[gigIndex];
+    return { gig: updatedGig, result: updatedGig };
+  });
 }
 
 export async function closeStoredGig(
@@ -551,77 +749,60 @@ export async function closeStoredGig(
     closedByName?: string;
   } = {},
 ) {
-  const gigs = await readGigStore();
-  const gigIndex = gigs.findIndex((gig) => gig.id === gigId);
+  return updateStoredGigRecord(gigId, (gig) => {
+    if (gig.status === "Closed" && gig.closeOverrideUsed === overrideUsed && gig.closedAt) {
+      return { gig, result: gig };
+    }
 
-  if (gigIndex === -1) {
-    return null;
-  }
+    const updatedGig = {
+      ...gig,
+      status: "Closed" as const,
+      progress: 100,
+      closedAt: gig.closedAt ?? new Date().toISOString(),
+      closedByProfileId: normalizeOptionalText(closedByProfileId),
+      closedByName: normalizeOptionalText(closedByName),
+      closeOverrideUsed: overrideUsed || undefined,
+      statusBeforeClose: gig.status === "Closed" ? gig.statusBeforeClose : gig.status,
+      progressBeforeClose:
+        gig.status === "Closed" ? gig.progressBeforeClose : gig.progress,
+    };
 
-  if (
-    gigs[gigIndex].status === "Closed" &&
-    gigs[gigIndex].closeOverrideUsed === overrideUsed &&
-    gigs[gigIndex].closedAt
-  ) {
-    return gigs[gigIndex];
-  }
-
-  gigs[gigIndex] = {
-    ...gigs[gigIndex],
-    status: "Closed",
-    progress: 100,
-    closedAt: gigs[gigIndex].closedAt ?? new Date().toISOString(),
-    closedByProfileId: normalizeOptionalText(closedByProfileId),
-    closedByName: normalizeOptionalText(closedByName),
-    closeOverrideUsed: overrideUsed || undefined,
-    statusBeforeClose:
-      gigs[gigIndex].status === "Closed"
-        ? gigs[gigIndex].statusBeforeClose
-        : gigs[gigIndex].status,
-    progressBeforeClose:
-      gigs[gigIndex].status === "Closed"
-        ? gigs[gigIndex].progressBeforeClose
-        : gigs[gigIndex].progress,
-  };
-
-  await writeGigStore(gigs);
-  return gigs[gigIndex];
+    return { gig: updatedGig, result: updatedGig };
+  });
 }
 
 export async function reopenStoredGig(gigId: string) {
-  const gigs = await readGigStore();
-  const gigIndex = gigs.findIndex((gig) => gig.id === gigId);
+  return updateStoredGigRecord(gigId, (gig) => {
+    if (gig.status !== "Closed") {
+      return { gig, result: gig };
+    }
 
-  if (gigIndex === -1) {
-    return null;
-  }
+    const updatedGig = {
+      ...gig,
+      status: resolveReopenedGigStatus(gig.statusBeforeClose),
+      progress: resolveReopenedGigProgress(
+        gig.statusBeforeClose,
+        gig.progressBeforeClose,
+      ),
+      closedAt: undefined,
+      closedByProfileId: undefined,
+      closedByName: undefined,
+      closeOverrideUsed: undefined,
+      statusBeforeClose: undefined,
+      progressBeforeClose: undefined,
+    };
 
-  const currentGig = gigs[gigIndex];
-
-  if (currentGig.status !== "Closed") {
-    return currentGig;
-  }
-
-  gigs[gigIndex] = {
-    ...currentGig,
-    status: resolveReopenedGigStatus(currentGig.statusBeforeClose),
-    progress: resolveReopenedGigProgress(
-      currentGig.statusBeforeClose,
-      currentGig.progressBeforeClose,
-    ),
-    closedAt: undefined,
-    closedByProfileId: undefined,
-    closedByName: undefined,
-    closeOverrideUsed: undefined,
-    statusBeforeClose: undefined,
-    progressBeforeClose: undefined,
-  };
-
-  await writeGigStore(gigs);
-  return gigs[gigIndex];
+    return { gig: updatedGig, result: updatedGig };
+  });
 }
 
 export async function deleteStoredGig(gigId: string) {
+  const sql = getPostgresClient();
+
+  if (sql) {
+    return deleteDatabaseGig(gigId);
+  }
+
   const gigs = await readGigStore();
   const gigIndex = gigs.findIndex((gig) => gig.id === gigId);
 
@@ -637,8 +818,6 @@ export async function deleteStoredGig(gigId: string) {
 }
 
 export async function createStoredGig(input: NewGigInput) {
-  const gigs = await readGigStore();
-
   const notes = [input.arenaNotes, input.securitySetup, input.generalComments]
     .filter(Boolean)
     .join("\n\n");
@@ -677,114 +856,98 @@ export async function createStoredGig(input: NewGigInput) {
     temporaryGigManagers: [],
   };
 
+  const sql = getPostgresClient();
+
+  if (sql) {
+    await upsertDatabaseGig(createdGig);
+    return createdGig;
+  }
+
+  const gigs = await readGigStore();
   gigs.push(createdGig);
   await writeGigStore(gigs);
   return createdGig;
 }
 
 export async function updateStoredGigEquipment(gigId: string, equipment: GigEquipmentItem[]) {
-  const gigs = await readGigStore();
-  const gigIndex = gigs.findIndex((gig) => gig.id === gigId);
+  return updateStoredGigRecord(gigId, (gig) => {
+    const updatedGig = {
+      ...gig,
+      equipment: normalizeEquipment(equipment),
+    };
 
-  if (gigIndex === -1) {
-    return null;
-  }
-
-  gigs[gigIndex] = {
-    ...gigs[gigIndex],
-    equipment: normalizeEquipment(equipment),
-  };
-
-  await writeGigStore(gigs);
-  return gigs[gigIndex];
+    return { gig: updatedGig, result: updatedGig };
+  });
 }
 
 export async function updateStoredGigOverview(gigId: string, input: UpdateGigOverviewInput) {
-  const gigs = await readGigStore();
-  const gigIndex = gigs.findIndex((gig) => gig.id === gigId);
+  return updateStoredGigRecord(gigId, (gig) => {
+    const updatedGig = {
+      ...gig,
+      artist: input.artist.trim(),
+      arena: input.arena.trim(),
+      city: input.city.trim(),
+      country: input.country.trim(),
+      region: input.city.trim(),
+      date: input.date,
+      startTime: input.startTime,
+      endTime: input.endTime,
+      promoter: input.promoter.trim(),
+      merchCompany: input.merchCompany.trim(),
+      merchRepresentative: input.merchRepresentative.trim(),
+      scmRepresentative: input.scmRepresentative.trim(),
+      projectManager: input.projectManager.trim(),
+      notes: input.notes.trim(),
+      ticketsSold: Math.max(0, input.ticketsSold),
+      estimatedSpendPerVisitor: Math.max(0, input.estimatedSpendPerVisitor),
+      arenaNotes: input.arenaNotes.trim(),
+      securitySetup: input.securitySetup.trim(),
+      generalComments: input.generalComments.trim(),
+      customNoteFields: input.customNoteFields
+        .map((item) => {
+          const title = item.title.trim();
+          const body = item.body.trim();
 
-  if (gigIndex === -1) {
-    return null;
-  }
+          return {
+            field: {
+              id: item.id.trim(),
+              title: title || "Custom heading",
+              body,
+            },
+            hasContent: Boolean(title || body),
+          };
+        })
+        .filter((item) => item.field.id && item.hasContent)
+        .map((item) => item.field),
+      salesEstimateOverride:
+        Math.max(0, input.ticketsSold) * Math.max(0, input.estimatedSpendPerVisitor),
+      overviewIndicator: input.overviewIndicator,
+    };
 
-  gigs[gigIndex] = {
-    ...gigs[gigIndex],
-    artist: input.artist.trim(),
-    arena: input.arena.trim(),
-    city: input.city.trim(),
-    country: input.country.trim(),
-    region: input.city.trim(),
-    date: input.date,
-    startTime: input.startTime,
-    endTime: input.endTime,
-    promoter: input.promoter.trim(),
-    merchCompany: input.merchCompany.trim(),
-    merchRepresentative: input.merchRepresentative.trim(),
-    scmRepresentative: input.scmRepresentative.trim(),
-    projectManager: input.projectManager.trim(),
-    notes: input.notes.trim(),
-    ticketsSold: Math.max(0, input.ticketsSold),
-    estimatedSpendPerVisitor: Math.max(0, input.estimatedSpendPerVisitor),
-    arenaNotes: input.arenaNotes.trim(),
-    securitySetup: input.securitySetup.trim(),
-    generalComments: input.generalComments.trim(),
-    customNoteFields: input.customNoteFields
-      .map((item) => {
-        const title = item.title.trim();
-        const body = item.body.trim();
-
-        return {
-          field: {
-            id: item.id.trim(),
-            title: title || "Custom heading",
-            body,
-          },
-          hasContent: Boolean(title || body),
-        };
-      })
-      .filter((item) => item.field.id && item.hasContent)
-      .map((item) => item.field),
-    salesEstimateOverride:
-      Math.max(0, input.ticketsSold) * Math.max(0, input.estimatedSpendPerVisitor),
-    overviewIndicator: input.overviewIndicator,
-  };
-
-  await writeGigStore(gigs);
-  return gigs[gigIndex];
+    return { gig: updatedGig, result: updatedGig };
+  });
 }
 
 export async function updateStoredGigProjectManager(gigId: string, projectManager: string) {
-  const gigs = await readGigStore();
-  const gigIndex = gigs.findIndex((gig) => gig.id === gigId);
+  return updateStoredGigRecord(gigId, (gig) => {
+    const updatedGig = {
+      ...gig,
+      projectManager: projectManager.trim(),
+    };
 
-  if (gigIndex === -1) {
-    return null;
-  }
-
-  gigs[gigIndex] = {
-    ...gigs[gigIndex],
-    projectManager: projectManager.trim(),
-  };
-
-  await writeGigStore(gigs);
-  return gigs[gigIndex];
+    return { gig: updatedGig, result: updatedGig };
+  });
 }
 
 export async function updateStoredGigImage(gigId: string, profileImageUrl: string) {
-  const gigs = await readGigStore();
-  const gigIndex = gigs.findIndex((gig) => gig.id === gigId);
+  return updateStoredGigRecord(gigId, (gig) => {
+    const updatedGig = {
+      ...gig,
+      profileImageUrl,
+    };
 
-  if (gigIndex === -1) {
-    return null;
-  }
-
-  gigs[gigIndex] = {
-    ...gigs[gigIndex],
-    profileImageUrl,
-  };
-
-  await writeGigStore(gigs);
-  return gigs[gigIndex];
+    return { gig: updatedGig, result: updatedGig };
+  });
 }
 
 export async function addStoredGigFile(gigId: string, file: GigFileItem) {
@@ -792,52 +955,42 @@ export async function addStoredGigFile(gigId: string, file: GigFileItem) {
 }
 
 export async function addStoredGigFiles(gigId: string, filesToAdd: GigFileItem[]) {
-  const gigs = await readGigStore();
-  const gigIndex = gigs.findIndex((gig) => gig.id === gigId);
+  return updateStoredGigRecord(gigId, (gig) => {
+    if (filesToAdd.length === 0) {
+      return { gig, result: gig };
+    }
 
-  if (gigIndex === -1) {
-    return null;
-  }
+    const updatedGig = {
+      ...gig,
+      files: [...filesToAdd, ...(gig.files ?? [])],
+    };
 
-  if (filesToAdd.length === 0) {
-    return gigs[gigIndex];
-  }
-
-  gigs[gigIndex] = {
-    ...gigs[gigIndex],
-    files: [...filesToAdd, ...(gigs[gigIndex].files ?? [])],
-  };
-
-  await writeGigStore(gigs);
-  return gigs[gigIndex];
+    return { gig: updatedGig, result: updatedGig };
+  });
 }
 
 export async function removeStoredGigFile(gigId: string, fileId: string) {
-  const gigs = await readGigStore();
-  const gigIndex = gigs.findIndex((gig) => gig.id === gigId);
+  return updateStoredGigRecord(gigId, (gig) => {
+    const currentFiles = gig.files ?? [];
+    const removedFile = currentFiles.find((file) => file.id === fileId);
 
-  if (gigIndex === -1) {
-    return null;
-  }
+    if (!removedFile) {
+      return null;
+    }
 
-  const currentFiles = gigs[gigIndex].files ?? [];
-  const removedFile = currentFiles.find((file) => file.id === fileId);
+    const updatedGig = {
+      ...gig,
+      files: currentFiles.filter((file) => file.id !== fileId),
+    };
 
-  if (!removedFile) {
-    return null;
-  }
-
-  gigs[gigIndex] = {
-    ...gigs[gigIndex],
-    files: currentFiles.filter((file) => file.id !== fileId),
-  };
-
-  await writeGigStore(gigs);
-
-  return {
-    gig: gigs[gigIndex],
-    removedFile,
-  };
+    return {
+      gig: updatedGig,
+      result: {
+        gig: updatedGig,
+        removedFile,
+      },
+    };
+  });
 }
 
 export async function createStoredGigFolder(
@@ -845,175 +998,160 @@ export async function createStoredGigFolder(
   folderName: string,
   section: GigDocumentSection,
 ) {
-  const gigs = await readGigStore();
-  const gigIndex = gigs.findIndex((gig) => gig.id === gigId);
+  return updateStoredGigRecord(gigId, (gig) => {
+    const trimmedName = folderName.trim();
+    const slug = sanitizeFolderSlug(trimmedName);
 
-  if (gigIndex === -1) {
-    return null;
-  }
+    if (!trimmedName || !slug) {
+      return null;
+    }
 
-  const trimmedName = folderName.trim();
-  const slug = sanitizeFolderSlug(trimmedName);
+    const existingFolder = (gig.fileFolders ?? []).find(
+      (folder) => folder.slug === slug && folder.section === section,
+    );
 
-  if (!trimmedName || !slug) {
-    return null;
-  }
+    if (existingFolder) {
+      return {
+        gig,
+        result: {
+          gig,
+          folder: existingFolder,
+          alreadyExists: true,
+        },
+      };
+    }
 
-  const existingFolder = (gigs[gigIndex].fileFolders ?? []).find(
-    (folder) => folder.slug === slug && folder.section === section,
-  );
-
-  if (existingFolder) {
-    return {
-      gig: gigs[gigIndex],
-      folder: existingFolder,
-      alreadyExists: true,
+    const createdFolder: GigFileFolder = {
+      id: `folder-${randomUUID().slice(0, 8)}`,
+      name: trimmedName,
+      slug,
+      createdAt: new Date().toISOString(),
+      section,
     };
-  }
+    const updatedGig = {
+      ...gig,
+      fileFolders: [...(gig.fileFolders ?? []), createdFolder],
+    };
 
-  const createdFolder: GigFileFolder = {
-    id: `folder-${randomUUID().slice(0, 8)}`,
-    name: trimmedName,
-    slug,
-    createdAt: new Date().toISOString(),
-    section,
-  };
-
-  gigs[gigIndex] = {
-    ...gigs[gigIndex],
-    fileFolders: [...(gigs[gigIndex].fileFolders ?? []), createdFolder],
-  };
-
-  await writeGigStore(gigs);
-
-  return {
-    gig: gigs[gigIndex],
-    folder: createdFolder,
-    alreadyExists: false,
-  };
+    return {
+      gig: updatedGig,
+      result: {
+        gig: updatedGig,
+        folder: createdFolder,
+        alreadyExists: false,
+      },
+    };
+  });
 }
 
 export async function removeStoredGigFolder(gigId: string, folderId: string) {
-  const gigs = await readGigStore();
-  const gigIndex = gigs.findIndex((gig) => gig.id === gigId);
+  return updateStoredGigRecord(gigId, (gig) => {
+    const currentFolders = gig.fileFolders ?? [];
+    const folderToRemove = currentFolders.find((folder) => folder.id === folderId);
 
-  if (gigIndex === -1) {
-    return null;
-  }
-
-  const currentFolders = gigs[gigIndex].fileFolders ?? [];
-  const folderToRemove = currentFolders.find((folder) => folder.id === folderId);
-
-  if (!folderToRemove) {
-    return null;
-  }
-
-  const normalizedFolderName = normalizeGigDocumentBoxName(folderToRemove.name);
-  const hasLinkedFiles = (gigs[gigIndex].files ?? []).some((file) => {
-    const folderName = file.folderName?.trim();
-
-    if (!folderName) {
-      return false;
+    if (!folderToRemove) {
+      return null;
     }
 
-    return (
-      (file.section ?? "files") === folderToRemove.section &&
-      normalizeGigDocumentBoxName(folderName) === normalizedFolderName
-    );
-  });
+    const normalizedFolderName = normalizeGigDocumentBoxName(folderToRemove.name);
+    const hasLinkedFiles = (gig.files ?? []).some((file) => {
+      const folderName = file.folderName?.trim();
 
-  if (hasLinkedFiles) {
-    return {
-      gig: gigs[gigIndex],
-      folder: folderToRemove,
-      hasFiles: true,
+      if (!folderName) {
+        return false;
+      }
+
+      return (
+        (file.section ?? "files") === folderToRemove.section &&
+        normalizeGigDocumentBoxName(folderName) === normalizedFolderName
+      );
+    });
+
+    if (hasLinkedFiles) {
+      return {
+        gig,
+        result: {
+          gig,
+          folder: folderToRemove,
+          hasFiles: true,
+        },
+      };
+    }
+
+    const updatedGig = {
+      ...gig,
+      fileFolders: currentFolders.filter((folder) => folder.id !== folderId),
     };
-  }
 
-  gigs[gigIndex] = {
-    ...gigs[gigIndex],
-    fileFolders: currentFolders.filter((folder) => folder.id !== folderId),
-  };
-
-  await writeGigStore(gigs);
-
-  return {
-    gig: gigs[gigIndex],
-    folder: folderToRemove,
-    hasFiles: false,
-  };
+    return {
+      gig: updatedGig,
+      result: {
+        gig: updatedGig,
+        folder: folderToRemove,
+        hasFiles: false,
+      },
+    };
+  });
 }
 
 export async function assignStoredGigTemporaryManager(
   gigId: string,
   staffProfileId: string,
 ) {
-  const gigs = await readGigStore();
-  const gigIndex = gigs.findIndex((gig) => gig.id === gigId);
+  return updateStoredGigRecord(gigId, (gig) => {
+    const normalizedStaffProfileId = staffProfileId.trim();
 
-  if (gigIndex === -1) {
-    return null;
-  }
+    if (!normalizedStaffProfileId) {
+      return null;
+    }
 
-  const normalizedStaffProfileId = staffProfileId.trim();
+    const existingAssignments = gig.temporaryGigManagers ?? [];
+    const alreadyAssigned = existingAssignments.some(
+      (assignment) => assignment.staffProfileId === normalizedStaffProfileId,
+    );
 
-  if (!normalizedStaffProfileId) {
-    return null;
-  }
+    if (alreadyAssigned) {
+      return { gig, result: gig };
+    }
 
-  const existingAssignments = gigs[gigIndex].temporaryGigManagers ?? [];
-  const alreadyAssigned = existingAssignments.some(
-    (assignment) => assignment.staffProfileId === normalizedStaffProfileId,
-  );
+    const updatedGig = {
+      ...gig,
+      temporaryGigManagers: [
+        ...existingAssignments,
+        {
+          id: `temp-gig-manager-${randomUUID().slice(0, 8)}`,
+          staffProfileId: normalizedStaffProfileId,
+          assignedAt: new Date().toISOString(),
+        },
+      ],
+    };
 
-  if (alreadyAssigned) {
-    return gigs[gigIndex];
-  }
-
-  gigs[gigIndex] = {
-    ...gigs[gigIndex],
-    temporaryGigManagers: [
-      ...existingAssignments,
-      {
-        id: `temp-gig-manager-${randomUUID().slice(0, 8)}`,
-        staffProfileId: normalizedStaffProfileId,
-        assignedAt: new Date().toISOString(),
-      },
-    ],
-  };
-
-  await writeGigStore(gigs);
-  return gigs[gigIndex];
+    return { gig: updatedGig, result: updatedGig };
+  });
 }
 
 export async function removeStoredGigTemporaryManager(
   gigId: string,
   staffProfileId: string,
 ) {
-  const gigs = await readGigStore();
-  const gigIndex = gigs.findIndex((gig) => gig.id === gigId);
+  return updateStoredGigRecord(gigId, (gig) => {
+    const normalizedStaffProfileId = staffProfileId.trim();
+    const currentAssignments = gig.temporaryGigManagers ?? [];
+    const nextAssignments = currentAssignments.filter(
+      (assignment) => assignment.staffProfileId !== normalizedStaffProfileId,
+    );
 
-  if (gigIndex === -1) {
-    return null;
-  }
+    if (nextAssignments.length === currentAssignments.length) {
+      return { gig, result: gig };
+    }
 
-  const normalizedStaffProfileId = staffProfileId.trim();
-  const currentAssignments = gigs[gigIndex].temporaryGigManagers ?? [];
-  const nextAssignments = currentAssignments.filter(
-    (assignment) => assignment.staffProfileId !== normalizedStaffProfileId,
-  );
+    const updatedGig = {
+      ...gig,
+      temporaryGigManagers: nextAssignments,
+    };
 
-  if (nextAssignments.length === currentAssignments.length) {
-    return gigs[gigIndex];
-  }
-
-  gigs[gigIndex] = {
-    ...gigs[gigIndex],
-    temporaryGigManagers: nextAssignments,
-  };
-
-  await writeGigStore(gigs);
-  return gigs[gigIndex];
+    return { gig: updatedGig, result: updatedGig };
+  });
 }
 
 export async function getPlatformAccessibleGigIdsForGigIds(gigIds: string[]) {
@@ -1023,7 +1161,7 @@ export async function getPlatformAccessibleGigIdsForGigIds(gigIds: string[]) {
     return [] as string[];
   }
 
-  const gigs = await readGigStore();
+  const gigs = await getAllStoredGigs();
 
   return gigs
     .filter((gig) => normalizedGigIds.has(gig.id))
@@ -1038,7 +1176,7 @@ export async function getVisibleGigIdsForGigIds(gigIds: string[]) {
     return [] as string[];
   }
 
-  const gigs = await readGigStore();
+  const gigs = await getAllStoredGigs();
 
   return gigs
     .filter((gig) => normalizedGigIds.has(gig.id))
@@ -1055,7 +1193,7 @@ export async function getPlatformAccessibleGigIdsForTemporaryManagerStaffProfile
     return [] as string[];
   }
 
-  const gigs = await readGigStore();
+  const gigs = await getAllStoredGigs();
 
   return gigs
     .filter((gig) =>
@@ -1076,7 +1214,7 @@ export async function getVisibleTemporaryGigManagerGigsForStaffProfile(
     return [] as Gig[];
   }
 
-  const gigs = await readGigStore();
+  const gigs = await getAllStoredGigs();
 
   return gigs
     .filter((gig) =>

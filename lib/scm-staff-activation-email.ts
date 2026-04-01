@@ -19,6 +19,17 @@ function formatTimestampForEmail(isoString: string) {
   });
 }
 
+function getPublicAppBaseUrl(createPasswordUrl: string) {
+  try {
+    return new URL(createPasswordUrl).origin.replace(/\/$/, "");
+  } catch {
+    return (process.env.SCM_APP_BASE_URL?.trim() || "http://localhost:3000").replace(
+      /\/$/,
+      "",
+    );
+  }
+}
+
 export async function sendScmStaffActivationEmail(input: {
   profile: StoredScmStaffProfile;
   createPasswordUrl: string;
@@ -31,6 +42,8 @@ export async function sendScmStaffActivationEmail(input: {
   const expiryLabel = formatTimestampForEmail(input.expiresAt);
   const subject = `Your SCM Staff account is ready`;
   const preheader = `Create your password and activate your SCM Staff access within 24 hours.`;
+  const appBaseUrl = getPublicAppBaseUrl(input.createPasswordUrl);
+  const logoUrl = `${appBaseUrl}/brand/uploads/scmlogobl-medtext-381f5bdd.png`;
   const htmlBody = `
     <html lang="en">
       <body style="margin:0;padding:0;background:#eef3f8;font-family:Aptos,'Segoe UI',Arial,sans-serif;color:#14233d;">
@@ -40,17 +53,18 @@ export async function sendScmStaffActivationEmail(input: {
             <td align="center">
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:620px;background:#ffffff;border-radius:24px;overflow:hidden;box-shadow:0 24px 48px rgba(20,35,61,0.12);">
                 <tr>
-                  <td style="padding:32px 36px;background:linear-gradient(135deg,#10203a,#27446f);color:#f7fbff;">
-                    <p style="margin:0 0 12px;font-size:12px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;opacity:0.82;">SCM STAFF</p>
-                    <h1 style="margin:0;font-size:32px;line-height:1.08;">${escapeHtml(headline)}</h1>
+                  <td bgcolor="#10203a" style="padding:32px 36px;background-color:#10203a;background-image:linear-gradient(135deg,#10203a,#27446f);color:#f7fbff;">
+                    <img src="${logoUrl}" alt="SCM" width="168" style="display:block;width:168px;max-width:100%;height:auto;margin:0 0 22px;border:0;outline:none;text-decoration:none;" />
+                    <p style="margin:0 0 12px;font-size:12px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:#d8e7fa;">SCM STAFF</p>
+                    <h1 style="margin:0;font-size:32px;line-height:1.08;color:#f7fbff;">${escapeHtml(headline)}</h1>
                   </td>
                 </tr>
                 <tr>
                   <td style="padding:36px;">
-                    <p style="margin:0 0 16px;font-size:16px;line-height:1.7;color:#324764;">
+                    <p style="margin:0 0 16px;font-size:16px;line-height:1.7;color:#243752;">
                       A new SCM Staff account has been created for you with the role <strong>${escapeHtml(roleLabel)}</strong>.
                     </p>
-                    <p style="margin:0 0 16px;font-size:16px;line-height:1.7;color:#324764;">
+                    <p style="margin:0 0 16px;font-size:16px;line-height:1.7;color:#243752;">
                       Click the button below to create your own password and activate your SCM access. For security reasons, SCM never sends passwords by email.
                     </p>
                     <table role="presentation" cellspacing="0" cellpadding="0" style="margin:28px 0;">

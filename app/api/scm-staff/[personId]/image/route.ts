@@ -4,6 +4,10 @@ import path from "path";
 import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 
+import {
+  getCurrentAuthenticatedScmStaffProfile,
+  isSuperAdminRole,
+} from "@/lib/auth-session";
 import { deleteStoredPublicUpload, storePublicUpload } from "@/lib/public-file-storage";
 import {
   getStoredScmStaffProfileById,
@@ -38,6 +42,19 @@ async function deletePreviousImage(currentImageUrl: string | undefined) {
 
 export async function POST(request: Request, context: RouteContext) {
   const { personId } = await context.params;
+  const currentProfile = await getCurrentAuthenticatedScmStaffProfile();
+
+  if (!currentProfile) {
+    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+  }
+
+  if (!isSuperAdminRole(currentProfile.roleKey) && currentProfile.id !== personId) {
+    return NextResponse.json(
+      { error: "You can only update your own SCM Staff profile image." },
+      { status: 403 },
+    );
+  }
+
   const profile = await getStoredScmStaffProfileById(personId);
 
   if (!profile) {

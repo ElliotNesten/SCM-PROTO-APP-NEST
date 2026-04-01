@@ -524,6 +524,15 @@ export async function getStoredScmStaffProfileByEmail(email: string) {
   }
 }
 
+export function redactScmStaffPasswordPlaintext(
+  profile: StoredScmStaffProfile,
+): StoredScmStaffProfile {
+  return {
+    ...profile,
+    passwordPlaintext: "",
+  };
+}
+
 export async function getCurrentStoredScmStaffProfile(baseSummary: {
   id: string;
   email: string;

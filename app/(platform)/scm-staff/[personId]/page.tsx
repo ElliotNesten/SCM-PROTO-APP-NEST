@@ -6,7 +6,10 @@ import {
   isSuperAdminRole,
   requireScmStaffAdministrationProfile,
 } from "@/lib/auth-session";
-import { getStoredScmStaffProfileById } from "@/lib/scm-staff-store";
+import {
+  getStoredScmStaffProfileById,
+  redactScmStaffPasswordPlaintext,
+} from "@/lib/scm-staff-store";
 
 type ScmStaffProfilePageProps = {
   params: Promise<{ personId: string }>;
@@ -47,12 +50,22 @@ export default async function ScmStaffProfilePage({
     notFound();
   }
 
+  const canRevealStoredPassword = isSuperAdminRole(currentScmStaffProfile.roleKey);
+  const editableProfile = canRevealStoredPassword
+    ? profile
+    : redactScmStaffPasswordPlaintext(profile);
+
   return (
     <ScmStaffProfileEditor
-      initialProfile={profile}
+      initialProfile={editableProfile}
       allowDelete
       canManageAdministrativeFields
+      canEditProfileImage={
+        isSuperAdminRole(currentScmStaffProfile.roleKey) ||
+        currentScmStaffProfile.id === profile.id
+      }
       canEditRole={isSuperAdminRole(currentScmStaffProfile.roleKey)}
+      canRevealStoredPassword={canRevealStoredPassword}
       initialStatusMessage={getInviteStatusMessage(
         pickQueryValue(resolvedSearchParams?.invite),
       )}

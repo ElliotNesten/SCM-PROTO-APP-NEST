@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { createPasswordHash } from "@/lib/password-utils";
 import {
+  canAccessScmStaffAdministration,
   getCurrentAuthenticatedScmStaffProfile,
   isSuperAdminRole,
 } from "@/lib/auth-session";
@@ -9,6 +10,7 @@ import {
 import {
   deleteStoredScmStaffProfile,
   getStoredScmStaffProfileById,
+  redactScmStaffPasswordPlaintext,
   updateStoredScmStaffProfile,
 } from "@/lib/scm-staff-store";
 import { isManuallyManagedScmStaffRole, type ScmStaffRoleKey } from "@/types/scm-rbac";
@@ -56,6 +58,9 @@ export async function PATCH(request: Request, context: RouteContext) {
   if (!existingProfile) {
     return NextResponse.json({ error: "SCM staff profile not found." }, { status: 404 });
   }
+
+  const isOwnProfile = currentProfile.id === existingProfile.id;
+  const canRevealStoredPassword = isSuperAdminRole(currentProfile.roleKey);
 
   const nextRoleKey = payload.roleKey ?? existingProfile.roleKey;
 
@@ -107,11 +112,27 @@ export async function PATCH(request: Request, context: RouteContext) {
   revalidatePath("/profile");
   revalidatePath("/dashboard");
 
-  return NextResponse.json({ ok: true, profile: updatedProfile });
+  return NextResponse.json({
+    ok: true,
+    profile: canRevealStoredPassword
+      ? updatedProfile
+      : redactScmStaffPasswordPlaintext(updatedProfile),
+    isOwnProfile,
+  });
 }
 
 export async function DELETE(_request: Request, context: RouteContext) {
   const { personId } = await context.params;
+  const currentProfile = await getCurrentAuthenticatedScmStaffProfile();
+
+  if (!currentProfile) {
+    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+  }
+
+  if (!canAccessScmStaffAdministration(currentProfile.roleKey)) {
+    return NextResponse.json({ error: "Forbidden." }, { status: 403 });
+  }
+
   const deletedProfile = await deleteStoredScmStaffProfile(personId);
 
   if (!deletedProfile) {

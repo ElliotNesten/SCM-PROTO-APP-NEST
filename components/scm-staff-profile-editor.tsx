@@ -91,6 +91,8 @@ export function ScmStaffProfileEditor({
   allowDelete = false,
   canManageAdministrativeFields = true,
   canEditRole = true,
+  canEditProfileImage = true,
+  canRevealStoredPassword = false,
   initialStatusMessage = "",
 }: {
   initialProfile: StoredScmStaffProfile;
@@ -99,6 +101,8 @@ export function ScmStaffProfileEditor({
   allowDelete?: boolean;
   canManageAdministrativeFields?: boolean;
   canEditRole?: boolean;
+  canEditProfileImage?: boolean;
+  canRevealStoredPassword?: boolean;
   initialStatusMessage?: string;
 }) {
   const router = useRouter();
@@ -109,7 +113,7 @@ export function ScmStaffProfileEditor({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [saveMessage, setSaveMessage] = useState(initialStatusMessage);
   const [passwordDraft, setPasswordDraft] = useState(
-    initialProfile.passwordPlaintext ?? "",
+    canRevealStoredPassword ? (initialProfile.passwordPlaintext ?? "") : "",
   );
   const [showPasswordDraft, setShowPasswordDraft] = useState(false);
   const [regionDraft, setRegionDraft] = useState("");
@@ -119,6 +123,10 @@ export function ScmStaffProfileEditor({
   const isRegionalManager = profile.roleKey === "regionalManager";
   const usesScopedAccess = isRegionalManager;
   const showsSwedenRegions = isRegionalManager && profile.country === "Sweden";
+  const passwordFieldLabel = canRevealStoredPassword ? "Registered password" : "Password";
+  const passwordFieldPlaceholder = canRevealStoredPassword
+    ? "Leave blank to keep the current password"
+    : "Enter a new password to replace the current one";
 
   const availableRegionOptions = useMemo(
     () => dedupeStrings([...swedenRegionOptions, ...profile.regions]),
@@ -201,6 +209,13 @@ export function ScmStaffProfileEditor({
     const nextCountry =
       profile.roleKey === "regionalManager" ? profile.country : "Global";
     const nextRegions = profile.roleKey === "regionalManager" ? profile.regions : [];
+    const trimmedPasswordDraft = passwordDraft.trim();
+    const currentStoredPassword = profile.passwordPlaintext?.trim() ?? "";
+    const nextPassword =
+      trimmedPasswordDraft.length === 0 ||
+      (canRevealStoredPassword && trimmedPasswordDraft === currentStoredPassword)
+        ? ""
+        : passwordDraft;
 
     const response = await fetch(`/api/scm-staff/${profile.id}`, {
       method: "PATCH",
@@ -210,7 +225,7 @@ export function ScmStaffProfileEditor({
       body: JSON.stringify({
         displayName: profile.displayName.trim(),
         email: profile.email.trim(),
-        password: passwordDraft,
+        password: nextPassword,
         phone: profile.phone.trim(),
         roleKey: canEditRole ? profile.roleKey : undefined,
         country: nextCountry,
@@ -224,7 +239,9 @@ export function ScmStaffProfileEditor({
 
     if (response.ok && payload?.profile) {
       setProfile(payload.profile);
-      setPasswordDraft(payload.profile.passwordPlaintext ?? "");
+      setPasswordDraft(
+        canRevealStoredPassword ? (payload.profile.passwordPlaintext ?? "") : "",
+      );
       setSaveMessage("SCM staff profile saved.");
       router.refresh();
     } else {
@@ -235,6 +252,11 @@ export function ScmStaffProfileEditor({
   }
 
   async function uploadProfileImage() {
+    if (!canEditProfileImage) {
+      setSaveMessage("You can only change your own SCM Staff profile image.");
+      return;
+    }
+
     const selectedImage = imageInputRef.current?.files?.[0] ?? null;
 
     if (!selectedImage) {
@@ -323,22 +345,26 @@ export function ScmStaffProfileEditor({
                 getDisplayInitials(profile.displayName)
               )}
             </div>
-            <label
-              className="staff-profile-header-image-trigger"
-              htmlFor={`scm-staff-image-${profile.id}`}
-            >
-              {uploadingImage ? "Uploading..." : "Change image"}
-            </label>
-            <input
-              id={`scm-staff-image-${profile.id}`}
-              ref={imageInputRef}
-              className="gig-image-input"
-              type="file"
-              accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp"
-              onChange={() => {
-                void uploadProfileImage();
-              }}
-            />
+            {canEditProfileImage ? (
+              <>
+                <label
+                  className="staff-profile-header-image-trigger"
+                  htmlFor={`scm-staff-image-${profile.id}`}
+                >
+                  {uploadingImage ? "Uploading..." : "Change image"}
+                </label>
+                <input
+                  id={`scm-staff-image-${profile.id}`}
+                  ref={imageInputRef}
+                  className="gig-image-input"
+                  type="file"
+                  accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp"
+                  onChange={() => {
+                    void uploadProfileImage();
+                  }}
+                />
+              </>
+            ) : null}
           </div>
         }
         actions={
@@ -404,12 +430,12 @@ export function ScmStaffProfileEditor({
               </label>
 
               <label className="key-value-card key-value-card-editable">
-                <small>Login password</small>
+                <small>{passwordFieldLabel}</small>
                 <div className="password-field-row">
                   <input
                     type={showPasswordDraft ? "text" : "password"}
                     value={passwordDraft}
-                    placeholder="Leave blank to keep the current password"
+                    placeholder={passwordFieldPlaceholder}
                     onChange={(event) => setPasswordDraft(event.currentTarget.value)}
                   />
                   <button
@@ -420,6 +446,12 @@ export function ScmStaffProfileEditor({
                     {showPasswordDraft ? "Hide" : "Show"}
                   </button>
                 </div>
+                {!canRevealStoredPassword ? (
+                  <p className="muted small-text">
+                    The current registered password is hidden for your role. Enter a new one to
+                    replace it.
+                  </p>
+                ) : null}
               </label>
 
               <label className="key-value-card key-value-card-editable">

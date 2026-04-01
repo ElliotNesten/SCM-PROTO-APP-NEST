@@ -9,6 +9,7 @@ import {
   requireCurrentAuthenticatedScmStaffProfile,
 } from "@/lib/auth-session";
 import { getAllStoredGigs } from "@/lib/gig-store";
+import { redactScmStaffPasswordPlaintext } from "@/lib/scm-staff-store";
 import { filterPlatformGigsForProfile, isTemporaryGigManagerProfile } from "@/lib/platform-access";
 
 export default async function ProfilePage() {
@@ -99,16 +100,23 @@ export default async function ProfilePage() {
     );
   }
 
+  const canRevealStoredPassword = isSuperAdminRole(currentScmStaffProfile.roleKey);
+  const editableProfile = canRevealStoredPassword
+    ? currentScmStaffProfile
+    : redactScmStaffPasswordPlaintext(currentScmStaffProfile);
+
   return (
     <>
       <ScmStaffProfileEditor
-        initialProfile={currentScmStaffProfile}
+        initialProfile={editableProfile}
         backHref="/dashboard"
         backLabel="Back to dashboard"
         canManageAdministrativeFields={canAccessScmStaffAdministration(
           currentScmStaffProfile.roleKey,
         )}
+        canEditProfileImage
         canEditRole={isSuperAdminRole(currentScmStaffProfile.roleKey)}
+        canRevealStoredPassword={canRevealStoredPassword}
       />
     </>
   );

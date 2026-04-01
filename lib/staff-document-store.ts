@@ -203,13 +203,15 @@ async function replaceDatabaseStaffDocumentsForGig(
 
   await ensureProductionStorageSchema();
   await sql.begin(async (transaction) => {
-    await transaction`
+    const transactionSql = transaction as unknown as typeof sql;
+
+    await transactionSql`
       delete from staff_documents
       where gig_id = ${gigId}
     `;
 
     for (const document of nextGigDocuments) {
-      await transaction`
+      await transactionSql`
         insert into staff_documents (
           id,
           user_id,

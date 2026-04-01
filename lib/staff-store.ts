@@ -119,6 +119,10 @@ type StaffProfileDatabaseLookupResult =
   | { status: "deleted" }
   | { status: "found"; profile: StoredStaffProfile };
 
+function logStaffStoreFallback(action: string, error: unknown) {
+  console.error(`[staff-store] ${action} failed. Falling back to bundled staff data.`, error);
+}
+
 function getRegistrationLabel(status: RegistrationStatus) {
   switch (status) {
     case "APPROVED":
@@ -611,34 +615,43 @@ async function writeArchivedDocumentsStore(records: ArchivedStaffDocumentRecord[
   await writeJsonFile(archivedDocumentsStorePath, records);
 }
 
+async function getFallbackStoredStaffProfiles() {
+  return isDatabaseConfigured() ? createSeedStaffProfiles() : readStaffStore();
+}
+
 export async function getAllStoredStaffProfiles() {
-  const seedProfilesSource = isDatabaseConfigured()
-    ? createSeedStaffProfiles()
-    : await readStaffStore();
-  const [seedProfiles, databaseRows] = await Promise.all([
-    Promise.resolve(seedProfilesSource),
-    getDatabaseStaffProfileRows(),
-  ]);
+  try {
+    const seedProfilesSource = isDatabaseConfigured()
+      ? createSeedStaffProfiles()
+      : await readStaffStore();
+    const [seedProfiles, databaseRows] = await Promise.all([
+      Promise.resolve(seedProfilesSource),
+      getDatabaseStaffProfileRows(),
+    ]);
 
-  if (databaseRows.length === 0) {
-    return seedProfiles;
+    if (databaseRows.length === 0) {
+      return seedProfiles;
+    }
+
+    const blockedIds = new Set(databaseRows.map((row) => row.id));
+    const blockedEmails = new Set(
+      databaseRows.map((row) => row.email.trim().toLowerCase()),
+    );
+    const databaseProfiles = databaseRows
+      .filter((row) => !row.is_deleted)
+      .map(mapStaffProfileRow);
+
+    return [
+      ...databaseProfiles,
+      ...seedProfiles.filter((profile) => {
+        const normalizedEmail = profile.email.toLowerCase();
+        return !blockedIds.has(profile.id) && !blockedEmails.has(normalizedEmail);
+      }),
+    ];
+  } catch (error) {
+    logStaffStoreFallback("getAllStoredStaffProfiles", error);
+    return getFallbackStoredStaffProfiles();
   }
-
-  const blockedIds = new Set(databaseRows.map((row) => row.id));
-  const blockedEmails = new Set(
-    databaseRows.map((row) => row.email.trim().toLowerCase()),
-  );
-  const databaseProfiles = databaseRows
-    .filter((row) => !row.is_deleted)
-    .map(mapStaffProfileRow);
-
-  return [
-    ...databaseProfiles,
-    ...seedProfiles.filter((profile) => {
-      const normalizedEmail = profile.email.toLowerCase();
-      return !blockedIds.has(profile.id) && !blockedEmails.has(normalizedEmail);
-    }),
-  ];
 }
 
 export async function getArchivedStaffDocuments() {
@@ -646,37 +659,49 @@ export async function getArchivedStaffDocuments() {
 }
 
 export async function getStoredStaffProfileById(personId: string) {
-  const databaseLookup = await getDatabaseStaffProfileByIdLookup(personId);
+  try {
+    const databaseLookup = await getDatabaseStaffProfileByIdLookup(personId);
 
-  if (databaseLookup.status === "found") {
-    return databaseLookup.profile;
+    if (databaseLookup.status === "found") {
+      return databaseLookup.profile;
+    }
+
+    if (databaseLookup.status === "deleted") {
+      return null;
+    }
+
+    const profiles = await getFallbackStoredStaffProfiles();
+    return profiles.find((profile) => profile.id === personId);
+  } catch (error) {
+    logStaffStoreFallback(`getStoredStaffProfileById(${personId})`, error);
+    const profiles = await getFallbackStoredStaffProfiles();
+    return profiles.find((profile) => profile.id === personId) ?? null;
   }
-
-  if (databaseLookup.status === "deleted") {
-    return null;
-  }
-
-  const profiles = isDatabaseConfigured()
-    ? createSeedStaffProfiles()
-    : await readStaffStore();
-  return profiles.find((profile) => profile.id === personId);
 }
 
 export async function getStoredStaffProfileByEmail(email: string) {
-  const databaseLookup = await getDatabaseStaffProfileByEmailLookup(email);
+  try {
+    const databaseLookup = await getDatabaseStaffProfileByEmailLookup(email);
 
-  if (databaseLookup.status === "found") {
-    return databaseLookup.profile;
+    if (databaseLookup.status === "found") {
+      return databaseLookup.profile;
+    }
+
+    if (databaseLookup.status === "deleted") {
+      return null;
+    }
+
+    const profiles = await getFallbackStoredStaffProfiles();
+    return (
+      profiles.find((profile) => profile.email.toLowerCase() === email.toLowerCase()) ?? null
+    );
+  } catch (error) {
+    logStaffStoreFallback(`getStoredStaffProfileByEmail(${email})`, error);
+    const profiles = await getFallbackStoredStaffProfiles();
+    return (
+      profiles.find((profile) => profile.email.toLowerCase() === email.toLowerCase()) ?? null
+    );
   }
-
-  if (databaseLookup.status === "deleted") {
-    return null;
-  }
-
-  const profiles = isDatabaseConfigured()
-    ? createSeedStaffProfiles()
-    : await readStaffStore();
-  return profiles.find((profile) => profile.email.toLowerCase() === email.toLowerCase()) ?? null;
 }
 
 type NewStaffProfileInput = {

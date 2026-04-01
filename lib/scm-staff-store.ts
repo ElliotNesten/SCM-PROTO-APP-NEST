@@ -48,6 +48,13 @@ type ScmStaffDatabaseLookupResult =
   | { status: "deleted" }
   | { status: "found"; profile: StoredScmStaffProfile };
 
+function logScmStaffStoreFallback(action: string, error: unknown) {
+  console.error(
+    `[scm-staff-store] ${action} failed. Falling back to bundled SCM staff data.`,
+    error,
+  );
+}
+
 function shouldIgnoreReadOnlyStoreWriteError(error: unknown) {
   const errorCode =
     typeof error === "object" && error && "code" in error
@@ -441,61 +448,80 @@ async function writeScmStaffStore(profiles: StoredScmStaffProfile[]) {
 }
 
 export async function getAllStoredScmStaffProfiles() {
-  const [seedProfiles, databaseRows] = await Promise.all([
-    readScmStaffStore(),
-    getDatabaseScmStaffRows(),
-  ]);
+  try {
+    const [seedProfiles, databaseRows] = await Promise.all([
+      readScmStaffStore(),
+      getDatabaseScmStaffRows(),
+    ]);
 
-  if (databaseRows.length === 0) {
-    return seedProfiles;
+    if (databaseRows.length === 0) {
+      return seedProfiles;
+    }
+
+    const blockedIds = new Set(databaseRows.map((row) => row.id));
+    const blockedEmails = new Set(databaseRows.map((row) => row.email_lower));
+    const databaseProfiles = databaseRows
+      .filter((row) => !row.is_deleted)
+      .map(mapScmStaffProfileRow)
+      .filter((profile): profile is StoredScmStaffProfile => Boolean(profile));
+
+    return [
+      ...databaseProfiles,
+      ...seedProfiles.filter((profile) => {
+        const normalizedEmail = profile.email.toLowerCase();
+        return !blockedIds.has(profile.id) && !blockedEmails.has(normalizedEmail);
+      }),
+    ];
+  } catch (error) {
+    logScmStaffStoreFallback("getAllStoredScmStaffProfiles", error);
+    return readScmStaffStore();
   }
-
-  const blockedIds = new Set(databaseRows.map((row) => row.id));
-  const blockedEmails = new Set(databaseRows.map((row) => row.email_lower));
-  const databaseProfiles = databaseRows
-    .filter((row) => !row.is_deleted)
-    .map(mapScmStaffProfileRow)
-    .filter((profile): profile is StoredScmStaffProfile => Boolean(profile));
-
-  return [
-    ...databaseProfiles,
-    ...seedProfiles.filter((profile) => {
-      const normalizedEmail = profile.email.toLowerCase();
-      return !blockedIds.has(profile.id) && !blockedEmails.has(normalizedEmail);
-    }),
-  ];
 }
 
 export async function getStoredScmStaffProfileById(personId: string) {
-  const databaseLookup = await getDatabaseScmStaffProfileByIdLookup(personId);
+  try {
+    const databaseLookup = await getDatabaseScmStaffProfileByIdLookup(personId);
 
-  if (databaseLookup.status === "found") {
-    return databaseLookup.profile;
+    if (databaseLookup.status === "found") {
+      return databaseLookup.profile;
+    }
+
+    if (databaseLookup.status === "deleted") {
+      return null;
+    }
+
+    const profiles = await readScmStaffStore();
+    return profiles.find((profile) => profile.id === personId) ?? null;
+  } catch (error) {
+    logScmStaffStoreFallback(`getStoredScmStaffProfileById(${personId})`, error);
+    const profiles = await readScmStaffStore();
+    return profiles.find((profile) => profile.id === personId) ?? null;
   }
-
-  if (databaseLookup.status === "deleted") {
-    return null;
-  }
-
-  const profiles = await readScmStaffStore();
-  return profiles.find((profile) => profile.id === personId) ?? null;
 }
 
 export async function getStoredScmStaffProfileByEmail(email: string) {
-  const databaseLookup = await getDatabaseScmStaffProfileByEmailLookup(email);
+  try {
+    const databaseLookup = await getDatabaseScmStaffProfileByEmailLookup(email);
 
-  if (databaseLookup.status === "found") {
-    return databaseLookup.profile;
+    if (databaseLookup.status === "found") {
+      return databaseLookup.profile;
+    }
+
+    if (databaseLookup.status === "deleted") {
+      return null;
+    }
+
+    const profiles = await readScmStaffStore();
+    return (
+      profiles.find((profile) => profile.email.toLowerCase() === email.toLowerCase()) ?? null
+    );
+  } catch (error) {
+    logScmStaffStoreFallback(`getStoredScmStaffProfileByEmail(${email})`, error);
+    const profiles = await readScmStaffStore();
+    return (
+      profiles.find((profile) => profile.email.toLowerCase() === email.toLowerCase()) ?? null
+    );
   }
-
-  if (databaseLookup.status === "deleted") {
-    return null;
-  }
-
-  const profiles = await readScmStaffStore();
-  return (
-    profiles.find((profile) => profile.email.toLowerCase() === email.toLowerCase()) ?? null
-  );
 }
 
 export async function getCurrentStoredScmStaffProfile(baseSummary: {

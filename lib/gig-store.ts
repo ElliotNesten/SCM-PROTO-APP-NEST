@@ -45,6 +45,10 @@ type GigRow = {
   gig_json: string;
 };
 
+function logGigStoreFallback(action: string, error: unknown) {
+  console.error(`[gig-store] ${action} failed. Falling back to bundled gig data.`, error);
+}
+
 function shouldIgnoreReadOnlyStoreWriteError(error: unknown) {
   const errorCode =
     typeof error === "object" && error && "code" in error
@@ -724,25 +728,36 @@ function sanitizeFolderSlug(name: string) {
 }
 
 export async function getAllStoredGigs() {
-  return getMergedStoredGigs();
+  try {
+    return await getMergedStoredGigs();
+  } catch (error) {
+    logGigStoreFallback("getAllStoredGigs", error);
+    return getFallbackStoredGigs();
+  }
 }
 
 export async function getStoredGigById(gigId: string) {
-  if (!isDatabaseConfigured()) {
-    const gigs = await readGigStore();
-    return gigs.find((gig) => gig.id === gigId);
+  try {
+    if (!isDatabaseConfigured()) {
+      const gigs = await readGigStore();
+      return gigs.find((gig) => gig.id === gigId);
+    }
+
+    const fallbackGigs = await getFallbackStoredGigs();
+    await bootstrapDatabaseGigsFromFallback(fallbackGigs);
+
+    const databaseGig = await getDatabaseGigById(gigId);
+
+    if (databaseGig) {
+      return databaseGig;
+    }
+
+    return fallbackGigs.find((gig) => gig.id === gigId);
+  } catch (error) {
+    logGigStoreFallback(`getStoredGigById(${gigId})`, error);
+    const fallbackGigs = await getFallbackStoredGigs();
+    return fallbackGigs.find((gig) => gig.id === gigId) ?? null;
   }
-
-  const fallbackGigs = await getFallbackStoredGigs();
-  await bootstrapDatabaseGigsFromFallback(fallbackGigs);
-
-  const databaseGig = await getDatabaseGigById(gigId);
-
-  if (databaseGig) {
-    return databaseGig;
-  }
-
-  return fallbackGigs.find((gig) => gig.id === gigId);
 }
 
 export async function setStoredGigTimeReportFinalApproval(

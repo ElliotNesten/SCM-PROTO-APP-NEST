@@ -5,6 +5,7 @@ type SqlClient = ReturnType<typeof postgres>;
 const globalForPostgres = globalThis as typeof globalThis & {
   __scmPostgresClient?: SqlClient;
   __scmPostgresSchemaPromise?: Promise<void>;
+  __scmPostgresSchemaFailed?: boolean;
 };
 
 function getDatabaseUrl() {
@@ -38,7 +39,7 @@ export function getPostgresClient() {
 export async function ensureProductionStorageSchema() {
   const sql = getPostgresClient();
 
-  if (!sql) {
+  if (!sql || globalForPostgres.__scmPostgresSchemaFailed) {
     return;
   }
 
@@ -227,7 +228,14 @@ export async function ensureProductionStorageSchema() {
       create index if not exists idx_gigs_date
         on gigs (date);
     `)
-      .then(() => undefined);
+      .then(() => undefined)
+      .catch((error) => {
+        globalForPostgres.__scmPostgresSchemaFailed = true;
+        console.error(
+          "Failed to ensure the SCM Postgres schema. Falling back to existing tables and bundled data where possible.",
+          error,
+        );
+      });
   }
 
   await globalForPostgres.__scmPostgresSchemaPromise;

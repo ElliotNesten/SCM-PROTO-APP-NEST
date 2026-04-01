@@ -40,6 +40,13 @@ type StaffAppAccountRow = {
   last_login_at: string | null;
 };
 
+function logStaffAppStoreFallback(action: string, error: unknown) {
+  console.error(
+    `[staff-app-store] ${action} failed. Falling back to bundled staff app data.`,
+    error,
+  );
+}
+
 function shouldIgnoreReadOnlyStoreWriteError(error: unknown) {
   const errorCode =
     typeof error === "object" && error && "code" in error
@@ -333,24 +340,36 @@ async function writeStaffAppAccountStore(accounts: StaffAppAccount[]) {
   await writeJsonFile(storePath, accounts);
 }
 
+async function getFallbackStaffAppAccounts() {
+  return readStaffAppAccountStore();
+}
+
 export async function getAllStaffAppAccounts() {
   const sql = getPostgresClient();
 
   if (sql) {
-    return getDatabaseStaffAppAccounts();
+    try {
+      return await getDatabaseStaffAppAccounts();
+    } catch (error) {
+      logStaffAppStoreFallback("getAllStaffAppAccounts", error);
+    }
   }
 
-  return readStaffAppAccountStore();
+  return getFallbackStaffAppAccounts();
 }
 
 export async function getStaffAppAccountById(accountId: string) {
   const sql = getPostgresClient();
 
   if (sql) {
-    return getDatabaseStaffAppAccountById(accountId);
+    try {
+      return await getDatabaseStaffAppAccountById(accountId);
+    } catch (error) {
+      logStaffAppStoreFallback(`getStaffAppAccountById(${accountId})`, error);
+    }
   }
 
-  const accounts = await readStaffAppAccountStore();
+  const accounts = await getFallbackStaffAppAccounts();
   return accounts.find((account) => account.id === accountId) ?? null;
 }
 
@@ -358,10 +377,14 @@ export async function getStaffAppAccountByEmail(email: string) {
   const sql = getPostgresClient();
 
   if (sql) {
-    return getDatabaseStaffAppAccountByEmail(email);
+    try {
+      return await getDatabaseStaffAppAccountByEmail(email);
+    } catch (error) {
+      logStaffAppStoreFallback(`getStaffAppAccountByEmail(${email})`, error);
+    }
   }
 
-  const accounts = await readStaffAppAccountStore();
+  const accounts = await getFallbackStaffAppAccounts();
   return (
     accounts.find((account) => account.email.toLowerCase() === email.toLowerCase()) ?? null
   );
@@ -371,10 +394,17 @@ export async function getStaffAppAccountByLinkedStaffProfileId(staffProfileId: s
   const sql = getPostgresClient();
 
   if (sql) {
-    return getDatabaseStaffAppAccountByLinkedStaffProfileId(staffProfileId);
+    try {
+      return await getDatabaseStaffAppAccountByLinkedStaffProfileId(staffProfileId);
+    } catch (error) {
+      logStaffAppStoreFallback(
+        `getStaffAppAccountByLinkedStaffProfileId(${staffProfileId})`,
+        error,
+      );
+    }
   }
 
-  const accounts = await readStaffAppAccountStore();
+  const accounts = await getFallbackStaffAppAccounts();
   return (
     accounts.find((account) => account.linkedStaffProfileId === staffProfileId) ?? null
   );
@@ -486,24 +516,31 @@ export async function syncStaffAppAccountFromLinkedStaffProfile(profile: {
   const sql = getPostgresClient();
 
   if (sql) {
-    const ensuredAccount = await ensureStaffAppAccountForLinkedStaffProfile(profile);
-    const syncedAccount: StaffAppAccount = {
-      ...ensuredAccount,
-      displayName: profile.displayName,
-      email: profile.email,
-      phone: profile.phone,
-      country: profile.country,
-      region: profile.region,
-      roleScopes: deriveStaffAppRoleScopesFromRoleProfiles(
-        profile.roleProfiles,
-        profile.roles,
-        profile.priority,
-      ),
-      profileImageUrl: profile.profileImageUrl,
-    };
+    try {
+      const ensuredAccount = await ensureStaffAppAccountForLinkedStaffProfile(profile);
+      const syncedAccount: StaffAppAccount = {
+        ...ensuredAccount,
+        displayName: profile.displayName,
+        email: profile.email,
+        phone: profile.phone,
+        country: profile.country,
+        region: profile.region,
+        roleScopes: deriveStaffAppRoleScopesFromRoleProfiles(
+          profile.roleProfiles,
+          profile.roles,
+          profile.priority,
+        ),
+        profileImageUrl: profile.profileImageUrl,
+      };
 
-    await upsertDatabaseStaffAppAccount(syncedAccount);
-    return syncedAccount;
+      await upsertDatabaseStaffAppAccount(syncedAccount);
+      return syncedAccount;
+    } catch (error) {
+      logStaffAppStoreFallback(
+        `syncStaffAppAccountFromLinkedStaffProfile(${profile.id})`,
+        error,
+      );
+    }
   }
 
   const ensuredAccount = await ensureStaffAppAccountForLinkedStaffProfile(profile);
@@ -546,28 +583,35 @@ export async function ensureStaffAppAccountForLinkedStaffProfile(profile: {
   const sql = getPostgresClient();
 
   if (sql) {
-    const linkedAccount = await getDatabaseStaffAppAccountByLinkedStaffProfileId(profile.id);
-    const emailMatchedAccount = await getDatabaseStaffAppAccountByEmail(profile.email);
-    const currentAccount = linkedAccount ?? emailMatchedAccount;
-    const createdAccount = createStaffAppAccountFromLinkedStaffProfile(profile, {
-      passwordHash: currentAccount?.passwordHash,
-      isActive: currentAccount?.isActive ?? true,
-      mustCompleteOnboarding: currentAccount?.mustCompleteOnboarding ?? false,
-      passwordSetAt: currentAccount?.passwordSetAt ?? null,
-      activatedAt: currentAccount?.activatedAt ?? null,
-      createdFromApplicationId: currentAccount?.createdFromApplicationId ?? null,
-    });
-    const nextAccount: StaffAppAccount = currentAccount
-      ? {
-          ...currentAccount,
-          ...createdAccount,
-          id: currentAccount.id,
-          lastLoginAt: currentAccount.lastLoginAt ?? null,
-        }
-      : createdAccount;
+    try {
+      const linkedAccount = await getDatabaseStaffAppAccountByLinkedStaffProfileId(profile.id);
+      const emailMatchedAccount = await getDatabaseStaffAppAccountByEmail(profile.email);
+      const currentAccount = linkedAccount ?? emailMatchedAccount;
+      const createdAccount = createStaffAppAccountFromLinkedStaffProfile(profile, {
+        passwordHash: currentAccount?.passwordHash,
+        isActive: currentAccount?.isActive ?? true,
+        mustCompleteOnboarding: currentAccount?.mustCompleteOnboarding ?? false,
+        passwordSetAt: currentAccount?.passwordSetAt ?? null,
+        activatedAt: currentAccount?.activatedAt ?? null,
+        createdFromApplicationId: currentAccount?.createdFromApplicationId ?? null,
+      });
+      const nextAccount: StaffAppAccount = currentAccount
+        ? {
+            ...currentAccount,
+            ...createdAccount,
+            id: currentAccount.id,
+            lastLoginAt: currentAccount.lastLoginAt ?? null,
+          }
+        : createdAccount;
 
-    await upsertDatabaseStaffAppAccount(nextAccount);
-    return nextAccount;
+      await upsertDatabaseStaffAppAccount(nextAccount);
+      return nextAccount;
+    } catch (error) {
+      logStaffAppStoreFallback(
+        `ensureStaffAppAccountForLinkedStaffProfile(${profile.id})`,
+        error,
+      );
+    }
   }
 
   const accounts = await readStaffAppAccountStore();
@@ -783,22 +827,26 @@ export async function touchStaffAppAccountLastLogin(accountId: string) {
   const sql = getPostgresClient();
 
   if (sql) {
-    const currentAccount = await getStaffAppAccountById(accountId);
+    try {
+      const currentAccount = await getStaffAppAccountById(accountId);
 
-    if (!currentAccount) {
-      return null;
+      if (!currentAccount) {
+        return null;
+      }
+
+      const updatedAccount = {
+        ...currentAccount,
+        lastLoginAt: new Date().toISOString(),
+      };
+
+      await upsertDatabaseStaffAppAccount(updatedAccount);
+      return updatedAccount;
+    } catch (error) {
+      logStaffAppStoreFallback(`touchStaffAppAccountLastLogin(${accountId})`, error);
     }
-
-    const updatedAccount = {
-      ...currentAccount,
-      lastLoginAt: new Date().toISOString(),
-    };
-
-    await upsertDatabaseStaffAppAccount(updatedAccount);
-    return updatedAccount;
   }
 
-  const accounts = await readStaffAppAccountStore();
+  const accounts = await getFallbackStaffAppAccounts();
   const accountIndex = accounts.findIndex((account) => account.id === accountId);
 
   if (accountIndex === -1) {

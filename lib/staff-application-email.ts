@@ -30,9 +30,10 @@ function paragraphize(text: string) {
 }
 
 function formatTimestampForEmail(isoString: string) {
-  return new Date(isoString).toLocaleString("sv-SE", {
+  return new Date(isoString).toLocaleString("en-GB", {
     dateStyle: "medium",
     timeStyle: "short",
+    timeZone: "Europe/Stockholm",
   });
 }
 
@@ -66,7 +67,7 @@ export async function sendApprovedStaffApplicationEmail(input: {
     .map((line) => line.trim())
     .filter(Boolean);
   const htmlBody = `
-    <html lang="sv">
+    <html lang="en">
       <body style="margin:0;padding:0;background:#eef3f8;font-family:Aptos,'Segoe UI',Arial,sans-serif;color:#14233d;">
         <div style="display:none;max-height:0;overflow:hidden;opacity:0;">${escapeHtml(preheader)}</div>
         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#eef3f8;padding:32px 16px;">

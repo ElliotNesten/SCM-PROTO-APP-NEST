@@ -4,6 +4,14 @@ import { useState } from "react";
 
 type VerificationState = "valid" | "expired" | "consumed" | "invalidated" | "missing";
 
+function formatExpiryTimestamp(value: string) {
+  return new Date(value).toLocaleString("en-GB", {
+    dateStyle: "medium",
+    timeStyle: "short",
+    timeZone: "Europe/Stockholm",
+  });
+}
+
 export function CreatePasswordForm({
   token,
   verificationState,
@@ -25,17 +33,17 @@ export function CreatePasswordForm({
     setErrorMessage("");
 
     if (!password.trim() || !confirmPassword.trim()) {
-      setErrorMessage("Fyll i losenordet i bada falten.");
+      setErrorMessage("Enter your password in both fields.");
       return;
     }
 
     if (password.trim().length < 8) {
-      setErrorMessage("Losenordet maste vara minst 8 tecken.");
+      setErrorMessage("Password must be at least 8 characters long.");
       return;
     }
 
     if (password !== confirmPassword) {
-      setErrorMessage("Losenorden matchar inte.");
+      setErrorMessage("Passwords do not match.");
       return;
     }
 
@@ -60,7 +68,7 @@ export function CreatePasswordForm({
       | null;
 
     if (!response.ok) {
-      setErrorMessage(payload?.error ?? "Kunde inte skapa losenordet just nu.");
+      setErrorMessage(payload?.error ?? "Your password could not be created right now.");
       setIsSubmitting(false);
       return;
     }
@@ -72,10 +80,12 @@ export function CreatePasswordForm({
     return (
       <div className="staff-app-create-password-card">
         <p className="staff-app-kicker">SCM activation</p>
-        <h1>Linken ar inte giltig langre</h1>
+        <h1>This link is no longer valid</h1>
         <p>
-          Den har losenordslanken ar {verificationState === "expired" ? "utgangen" : "inte giltig"}.
-          Maila INFO@scm.se eller kontakta din narmaste chef for att fa en ny lank.
+          This password link is{" "}
+          {verificationState === "expired" ? "expired" : "no longer valid"}. Email
+          {" "}
+          INFO@scm.se or contact your nearest manager to receive a new link.
         </p>
       </div>
     );
@@ -85,13 +95,14 @@ export function CreatePasswordForm({
     <div className="staff-app-create-password-card">
       <div className="staff-app-create-password-copy">
         <p className="staff-app-kicker">SCM activation</p>
-        <h1>Skapa ditt losenord</h1>
+        <h1>Create your password</h1>
         <p>
-          Kontot for <strong>{email}</strong> aktiveras direkt nar du sparar ett nytt losenord.
+          The account for <strong>{email}</strong> will be activated as soon as you save a new
+          password.
           {expiresAt ? (
             <>
               {" "}
-              Lanken galler till <strong>{new Date(expiresAt).toLocaleString("sv-SE")}</strong>.
+              This link is valid until <strong>{formatExpiryTimestamp(expiresAt)}</strong>.
             </>
           ) : null}
         </p>
@@ -99,7 +110,7 @@ export function CreatePasswordForm({
 
       <form className="staff-app-create-password-form" onSubmit={handleSubmit}>
         <label className="staff-app-form-field">
-          <span>Nytt losenord</span>
+          <span>New password</span>
           <input
             type="password"
             value={password}
@@ -109,7 +120,7 @@ export function CreatePasswordForm({
         </label>
 
         <label className="staff-app-form-field">
-          <span>Bekrafta losenord</span>
+          <span>Confirm password</span>
           <input
             type="password"
             value={confirmPassword}
@@ -121,7 +132,7 @@ export function CreatePasswordForm({
         {errorMessage ? <p className="staff-app-inline-alert danger">{errorMessage}</p> : null}
 
         <button type="submit" className="staff-app-button" disabled={isSubmitting}>
-          {isSubmitting ? "Aktiverar..." : "Skapa mitt losenord"}
+          {isSubmitting ? "Activating..." : "Create my password"}
         </button>
       </form>
     </div>

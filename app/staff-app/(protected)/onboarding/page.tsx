@@ -19,11 +19,11 @@ function pickValue(value: string | string[] | undefined) {
 
 function getStatusMessage(status: string | undefined) {
   if (status === "missing") {
-    return "Fyll i personnummer, bank och bankkonto innan du fortsatter.";
+    return "Enter your personal identity number, bank, and bank account before continuing.";
   }
 
   if (status === "unavailable") {
-    return "Onboarding kunde inte kopplas till din personalprofil.";
+    return "We could not connect onboarding to your staff profile.";
   }
 
   return "";
@@ -52,9 +52,7 @@ export default async function StaffAppOnboardingPage({
             <div className="staff-app-create-password-copy">
               <p className="staff-app-kicker">First login</p>
               <h1>Onboarding</h1>
-              <p>
-                Innan du kan anvanda appen behover vi dina personuppgifter och lonedata.
-              </p>
+              <p>Before you can use the app, we need your personal details and payroll information.</p>
             </div>
 
             {statusMessage ? (
@@ -64,14 +62,14 @@ export default async function StaffAppOnboardingPage({
             {isReadyForWelcome ? (
               <div className="staff-app-onboarding-ready">
                 <div className="staff-app-inline-alert success">
-                  Dina onboardinguppgifter ar sparade. Klicka vidare for att oppna appen.
+                  Your onboarding details have been saved. Continue to open the app.
                 </div>
 
                 <div className="staff-app-detail-grid">
                   {readyRecord ? (
                     <>
                       <div className="staff-app-detail-cell">
-                        <span>Personnummer</span>
+                        <span>Personal identity number</span>
                         <strong>{readyRecord.personalNumber}</strong>
                       </div>
                       <div className="staff-app-detail-cell">
@@ -79,7 +77,7 @@ export default async function StaffAppOnboardingPage({
                         <strong>{readyRecord.bankName}</strong>
                       </div>
                       <div className="staff-app-detail-cell full">
-                        <span>Bankkonto</span>
+                        <span>Bank account</span>
                         <strong>{readyRecord.bankAccount}</strong>
                       </div>
                     </>
@@ -88,14 +86,14 @@ export default async function StaffAppOnboardingPage({
 
                 <form action={finishStaffAppOnboarding}>
                   <button type="submit" className="staff-app-button">
-                    Valkommen till SCM
+                    Welcome to SCM
                   </button>
                 </form>
               </div>
             ) : (
               <form action={submitStaffAppOnboarding} className="staff-app-create-password-form">
                 <label className="staff-app-form-field">
-                  <span>Personnummer</span>
+                  <span>Personal identity number</span>
                   <input
                     name="personalNumber"
                     defaultValue={onboardingRecord?.personalNumber ?? ""}
@@ -113,7 +111,7 @@ export default async function StaffAppOnboardingPage({
                 </label>
 
                 <label className="staff-app-form-field">
-                  <span>Bankkonto</span>
+                  <span>Bank account</span>
                   <input
                     name="bankAccount"
                     defaultValue={onboardingRecord?.bankAccount ?? ""}
@@ -122,7 +120,7 @@ export default async function StaffAppOnboardingPage({
                 </label>
 
                 <label className="staff-app-form-field">
-                  <span>Eventuella allergier</span>
+                  <span>Any allergies (optional)</span>
                   <textarea
                     name="allergies"
                     rows={3}
@@ -137,7 +135,7 @@ export default async function StaffAppOnboardingPage({
                       type="checkbox"
                       defaultChecked={onboardingRecord?.driverLicenseManual ?? false}
                     />
-                    <span>Manuellt korkort</span>
+                    <span>Driver's license (manual)</span>
                   </label>
                   <label className="staff-app-checkbox">
                     <input
@@ -145,12 +143,12 @@ export default async function StaffAppOnboardingPage({
                       type="checkbox"
                       defaultChecked={onboardingRecord?.driverLicenseAutomatic ?? false}
                     />
-                    <span>Automat korkort</span>
+                    <span>Driver's license (automatic)</span>
                   </label>
                 </div>
 
                 <button type="submit" className="staff-app-button">
-                  Spara onboarding
+                  Save onboarding
                 </button>
               </form>
             )}

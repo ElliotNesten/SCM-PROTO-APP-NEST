@@ -11,7 +11,7 @@ import {
 type SubmissionState = "idle" | "submitting" | "success";
 
 const thankYouMessage =
-  "Tack for din ansokan, vi kommer att kolla sa snart som mojligt. Mer info kommer via mail.";
+  "Thank you for your application. We will review it as soon as possible. More information will be sent by email.";
 
 function createInitialFormState() {
   return {
@@ -45,7 +45,7 @@ export function WorkAtScmModal() {
     setErrorMessage("");
 
     if (!formState.profileImage) {
-      setErrorMessage("Profilbild ar obligatorisk.");
+      setErrorMessage("Profile image is required.");
       return;
     }
 
@@ -69,7 +69,7 @@ export function WorkAtScmModal() {
       | null;
 
     if (!response.ok) {
-      setErrorMessage(data?.error ?? "Ansokan kunde inte skickas just nu.");
+      setErrorMessage(data?.error ?? "Your application could not be submitted right now.");
       setSubmissionState("idle");
       return;
     }
@@ -108,14 +108,14 @@ export function WorkAtScmModal() {
                   <div>
                     <p className="staff-app-kicker">SCM recruitment</p>
                     <h2 id="work-at-scm-title">Work at SCM</h2>
-                    <p>Skicka in din ansokan direkt har. Alla falt ar obligatoriska.</p>
+                    <p>Submit your application here. All fields are required.</p>
                   </div>
 
                   <button
                     type="button"
                     className="staff-app-modal-close"
                     onClick={closeModal}
-                    aria-label="Stang"
+                    aria-label="Close"
                   >
                     X
                   </button>
@@ -125,93 +125,93 @@ export function WorkAtScmModal() {
                   <div className="staff-app-modal-success">
                     <p>{thankYouMessage}</p>
                     <button type="button" className="staff-app-button" onClick={closeModal}>
-                      Stang
+                      Close
                     </button>
                   </div>
                 ) : (
                   <form className="staff-app-modal-form" onSubmit={handleSubmit}>
                     <label className="staff-app-form-field">
-                      <span>Profilbild</span>
+                      <span>Profile image</span>
                       <div className="staff-app-upload-field">
-                    <input
-                      type="file"
-                      accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp"
-                      onChange={(event) => {
-                        const nextProfileImage = event.currentTarget.files?.[0] ?? null;
-                        setFormState((current) => ({
-                          ...current,
-                          profileImage: nextProfileImage,
-                        }));
-                      }}
-                      required
-                    />
+                        <input
+                          type="file"
+                          accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp"
+                          onChange={(event) => {
+                            const nextProfileImage = event.currentTarget.files?.[0] ?? null;
+                            setFormState((current) => ({
+                              ...current,
+                              profileImage: nextProfileImage,
+                            }));
+                          }}
+                          required
+                        />
                         <strong>{selectedFileLabel}</strong>
-                        <small>PNG, JPG eller WEBP, max 5 MB</small>
+                        <small>PNG, JPG or WEBP, max 5 MB</small>
                       </div>
                     </label>
 
                     <label className="staff-app-form-field">
-                      <span>Namn</span>
-                  <input
-                    type="text"
-                    value={formState.displayName}
-                    onChange={(event) => {
-                      const nextDisplayName = event.currentTarget.value;
-                      setFormState((current) => ({
-                        ...current,
-                        displayName: nextDisplayName,
-                      }));
-                    }}
-                    required
-                  />
-                </label>
+                      <span>Full name</span>
+                      <input
+                        type="text"
+                        value={formState.displayName}
+                        onChange={(event) => {
+                          const nextDisplayName = event.currentTarget.value;
+                          setFormState((current) => ({
+                            ...current,
+                            displayName: nextDisplayName,
+                          }));
+                        }}
+                        required
+                      />
+                    </label>
 
                     <label className="staff-app-form-field">
                       <span>Email</span>
-                  <input
-                    type="email"
-                    value={formState.email}
-                    onChange={(event) => {
-                      const nextEmail = event.currentTarget.value;
-                      setFormState((current) => ({
-                        ...current,
-                        email: nextEmail,
-                      }));
-                    }}
-                    required
-                  />
-                </label>
+                      <input
+                        type="email"
+                        value={formState.email}
+                        onChange={(event) => {
+                          const nextEmail = event.currentTarget.value;
+                          setFormState((current) => ({
+                            ...current,
+                            email: nextEmail,
+                          }));
+                        }}
+                        required
+                      />
+                    </label>
 
                     <label className="staff-app-form-field">
-                      <span>Telefonnummer</span>
-                  <input
-                    type="tel"
-                    value={formState.phone}
-                    onChange={(event) => {
-                      const nextPhone = event.currentTarget.value;
-                      setFormState((current) => ({
-                        ...current,
-                        phone: nextPhone,
-                      }));
-                    }}
-                    required
-                  />
-                </label>
+                      <span>Phone number</span>
+                      <input
+                        type="tel"
+                        value={formState.phone}
+                        onChange={(event) => {
+                          const nextPhone = event.currentTarget.value;
+                          setFormState((current) => ({
+                            ...current,
+                            phone: nextPhone,
+                          }));
+                        }}
+                        required
+                      />
+                    </label>
 
                     <label className="staff-app-form-field">
-                      <span>Land</span>
-                  <select
-                    value={formState.country}
-                    onChange={(event) => {
-                      const nextCountry = event.currentTarget.value;
-                      setFormState((current) => ({
-                        ...current,
-                        country: nextCountry,
-                        region: nextCountry === "Sweden" ? "Stockholm" : "",
-                      }));
-                    }}
-                    required
-                  >
+                      <span>Country</span>
+                      <select
+                        value={formState.country}
+                        onChange={(event) => {
+                          const nextCountry = event.currentTarget.value;
+                          setFormState((current) => ({
+                            ...current,
+                            country: nextCountry,
+                            region: nextCountry === "Sweden" ? "Stockholm" : "",
+                          }));
+                        }}
+                        required
+                      >
                         {staffApplicationCountryOptions.map((country) => (
                           <option key={country} value={country}>
                             {country}
@@ -243,7 +243,7 @@ export function WorkAtScmModal() {
                       </label>
                     ) : (
                       <label className="staff-app-form-field">
-                        <span>Region / stad</span>
+                        <span>Region / city</span>
                         <input
                           type="text"
                           value={formState.region}
@@ -270,7 +270,7 @@ export function WorkAtScmModal() {
                         onClick={closeModal}
                         disabled={submissionState === "submitting"}
                       >
-                        Avbryt
+                        Cancel
                       </button>
                       <button
                         type="submit"

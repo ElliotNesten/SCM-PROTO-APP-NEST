@@ -742,7 +742,19 @@ export function isStaffEligibleForShift(
   gig: Gig,
   shift: Shift,
 ) {
-  if (profile.approvalStatus === "Archived") {
+  if (!isStaffEligibleForManualBooking(profile, gig, shift)) {
+    return false;
+  }
+
+  return getShiftRolePriority(profile, shift.role) <= shift.priorityLevel;
+}
+
+export function isStaffEligibleForManualBooking(
+  profile: StoredStaffProfile,
+  gig: Gig,
+  shift: Shift,
+) {
+  if (profile.approvalStatus !== "Approved") {
     return false;
   }
 
@@ -750,11 +762,7 @@ export function isStaffEligibleForShift(
     return false;
   }
 
-  if (!hasShiftRoleAccess(profile, shift.role)) {
-    return false;
-  }
-
-  return getShiftRolePriority(profile, shift.role) <= shift.priorityLevel;
+  return hasShiftRoleAccess(profile, shift.role);
 }
 
 export async function getAvailableStaffProfilesForShift(

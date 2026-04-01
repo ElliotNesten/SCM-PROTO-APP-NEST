@@ -16,7 +16,8 @@ type ShiftCandidate = {
   roles: string[];
   approvalStatus: string;
   appliedAt?: string;
-  manualOverrideRequired?: boolean;
+  manualBookingEligible?: boolean;
+  priorityLevelIgnored?: boolean;
 };
 
 type ShiftOverviewEditorProps = {
@@ -224,7 +225,11 @@ export function ShiftOverviewEditor({
   const manualCandidates = useMemo(
     () =>
       [...candidates]
-        .filter((candidate) => !candidate.appliedAt)
+        .filter(
+          (candidate) =>
+            !candidate.appliedAt &&
+            (candidate.manualBookingEligible || assignmentMap.has(candidate.id)),
+        )
         .sort((left, right) => {
           const statusDifference =
             getStatusWeight(assignmentMap.get(left.id)) -
@@ -511,14 +516,16 @@ export function ShiftOverviewEditor({
               <div className="new-shift-panel-header">
                 <strong>Manual booking</strong>
                 <p className="helper-caption">
-                  Select a person from the approved staff pool and place them
-                  directly on the shift without waiting for a pass application.
+                  Select approved staff who match this shift's country, region,
+                  and role permission. Priority level is ignored in manual
+                  booking.
                 </p>
               </div>
 
               {manualCandidates.length === 0 ? (
                 <div className="empty-panel">
-                  No approved staff are available for manual booking right now.
+                  No approved staff match this shift's country, region, and role
+                  permission right now.
                 </div>
               ) : (
                 <>
@@ -562,11 +569,16 @@ export function ShiftOverviewEditor({
                         {selectedManualCandidate.roles.join(", ")}
                       </p>
 
-                      {selectedManualCandidate.manualOverrideRequired ? (
+                      {selectedManualCandidate.manualBookingEligible === false ? (
                         <p className="small-text">
-                          This person does not currently match the shift role,
-                          country, region, or priority filter. Manual booking
-                          will override those checks.
+                          This person no longer matches the manual booking rules
+                          for this shift. You can remove the assignment, but
+                          they cannot be booked again from this list.
+                        </p>
+                      ) : selectedManualCandidate.priorityLevelIgnored ? (
+                        <p className="small-text">
+                          Eligible for manual booking. Priority level is ignored
+                          here.
                         </p>
                       ) : (
                         <p className="small-text">Eligible for direct booking.</p>
@@ -577,7 +589,10 @@ export function ShiftOverviewEditor({
                           <button
                             type="button"
                             className="button ghost"
-                            disabled={pendingStaffId === selectedManualCandidate.id}
+                            disabled={
+                              pendingStaffId === selectedManualCandidate.id ||
+                              selectedManualCandidate.manualBookingEligible === false
+                            }
                             onClick={() => {
                               void updateAssignment(
                                 selectedManualCandidate.id,

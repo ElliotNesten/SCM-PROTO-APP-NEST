@@ -605,6 +605,7 @@ export function GigOverviewEditor({
                   label="SCM representative"
                   className="overview-stack-subfield"
                   value={form.scmRepresentative}
+                  persistedValue={gig.scmRepresentative}
                   placeholder="Anton"
                   disabled={
                     !canEditCoreField("scmRepresentative") ||

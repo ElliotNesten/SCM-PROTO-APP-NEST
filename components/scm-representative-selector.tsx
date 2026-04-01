@@ -15,6 +15,7 @@ type ScmRepresentativeSelectorProps = {
   name?: string;
   value?: string;
   defaultValue?: string;
+  persistedValue?: string;
   placeholder?: string;
   required?: boolean;
   disabled?: boolean;
@@ -118,6 +119,7 @@ export function ScmRepresentativeSelector({
   name,
   value,
   defaultValue = "",
+  persistedValue = "",
   placeholder,
   required = false,
   disabled = false,
@@ -151,8 +153,9 @@ export function ScmRepresentativeSelector({
   const isAllowedRepresentativeValue = useMemo(
     () => (candidate: string) =>
       hasRepresentativeOptionDisplayName(scmStaffOptions, candidate) ||
-      hasRepresentativeOptionDisplayName(temporaryGigManagerOptions, candidate),
-    [scmStaffOptions, temporaryGigManagerOptions],
+      hasRepresentativeOptionDisplayName(temporaryGigManagerOptions, candidate) ||
+      normalizeSearchValue(candidate) === normalizeSearchValue(persistedValue),
+    [persistedValue, scmStaffOptions, temporaryGigManagerOptions],
   );
 
   function getScmStaffSuggestions(query: string, maxResults = 6) {

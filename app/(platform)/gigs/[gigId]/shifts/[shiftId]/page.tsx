@@ -9,8 +9,8 @@ import { formatDateLabel } from "@/data/scm-data";
 import { getStoredGigById } from "@/lib/gig-store";
 import { canAccessPlatformGig } from "@/lib/platform-access";
 import {
-  getAvailableStaffProfilesForShift,
   getStoredShiftById,
+  isStaffEligibleForManualBooking,
   isStaffEligibleForShift,
 } from "@/lib/shift-store";
 import { getAllStaffAppAccounts } from "@/lib/staff-app-store";
@@ -52,9 +52,6 @@ export default async function ShiftDetailPage({
     applications,
     staffAppAccounts,
   );
-  const availableCandidates = await getAvailableStaffProfilesForShift(gig, shift, {
-    includeStaffIds: [...applicantAppliedAtByStaffId.keys()],
-  });
   const includedCandidateIds = new Set([
     ...applicantAppliedAtByStaffId.keys(),
     ...shift.assignments.map((assignment) => assignment.staffId),
@@ -63,29 +60,35 @@ export default async function ShiftDetailPage({
     [...staffProfiles]
       .filter(
         (profile) =>
-          profile.approvalStatus === "Approved" || includedCandidateIds.has(profile.id),
+          includedCandidateIds.has(profile.id) ||
+          isStaffEligibleForManualBooking(profile, gig, shift),
       )
       .map((profile) => [profile.id, profile]),
-  );
-  const availableCandidateIds = new Set(
-    availableCandidates.map((candidate) => candidate.id),
   );
 
   const editorCandidateById = new Map(
     [...candidateById.values()].map((candidate) => [
       candidate.id,
-      {
-        id: candidate.id,
-        displayName: candidate.displayName,
-        region: candidate.region,
-        country: candidate.country,
-        roles: candidate.roles,
-        approvalStatus: candidate.approvalStatus,
-        appliedAt: applicantAppliedAtByStaffId.get(candidate.id),
-        manualOverrideRequired:
-          !availableCandidateIds.has(candidate.id) &&
-          !isStaffEligibleForShift(candidate, gig, shift),
-      },
+      (() => {
+        const manualBookingEligible = isStaffEligibleForManualBooking(
+          candidate,
+          gig,
+          shift,
+        );
+        const matchesShiftRequirements = isStaffEligibleForShift(candidate, gig, shift);
+
+        return {
+          id: candidate.id,
+          displayName: candidate.displayName,
+          region: candidate.region,
+          country: candidate.country,
+          roles: candidate.roles,
+          approvalStatus: candidate.approvalStatus,
+          appliedAt: applicantAppliedAtByStaffId.get(candidate.id),
+          manualBookingEligible,
+          priorityLevelIgnored: manualBookingEligible && !matchesShiftRequirements,
+        };
+      })(),
     ]),
   );
 

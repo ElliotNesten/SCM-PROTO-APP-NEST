@@ -9,6 +9,7 @@ import {
   deleteStoredShift,
   getStoredShiftById,
   getStoredGigShifts,
+  isStaffEligibleForManualBooking,
   isStaffEligibleForShift,
   setStoredShiftTimeReportsApprovalState,
   updateStoredShift,
@@ -292,16 +293,26 @@ export async function PATCH(request: Request, context: RouteContext) {
 
       const allowManualOverride = payload.allowManualOverride === true;
 
-      const [matchesShiftRequirements, hasDirectApplication] = await Promise.all([
+      const [
+        matchesShiftRequirements,
+        matchesManualBookingRequirements,
+        hasDirectApplication,
+      ] = await Promise.all([
         Promise.resolve(isStaffEligibleForShift(staffProfile, gig, currentShift)),
+        Promise.resolve(
+          isStaffEligibleForManualBooking(staffProfile, gig, currentShift),
+        ),
         hasStaffAppGigApplicationForShiftAndStaffProfile(shiftId, staffProfile.id),
       ]);
 
       if (!matchesShiftRequirements && !hasDirectApplication) {
         if (allowManualOverride) {
-          if (staffProfile.approvalStatus !== "Approved") {
+          if (!matchesManualBookingRequirements) {
             return NextResponse.json(
-              { error: "Only approved staff can be manually booked on a shift." },
+              {
+                error:
+                  "Manual booking only allows approved staff with the right country, region, and role permission for this shift. Priority level is ignored.",
+              },
               { status: 400 },
             );
           }
@@ -319,12 +330,12 @@ export async function PATCH(request: Request, context: RouteContext) {
       if (
         allowManualOverride &&
         !hasDirectApplication &&
-        staffProfile.approvalStatus !== "Approved"
+        !matchesManualBookingRequirements
       ) {
         return NextResponse.json(
           {
             error:
-              "Only approved staff can be manually booked on a shift.",
+              "Manual booking only allows approved staff with the right country, region, and role permission for this shift. Priority level is ignored.",
           },
           { status: 400 },
         );

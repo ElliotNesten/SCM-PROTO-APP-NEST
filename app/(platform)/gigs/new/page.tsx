@@ -7,6 +7,7 @@ import { PageHeader } from "@/components/page-header";
 import { EquipmentSection } from "@/components/equipment-section";
 import { NotesPlanningSection } from "@/components/notes-planning-section";
 import { MerchCompanyAutocompleteField } from "@/components/merch-company-autocomplete-field";
+import { PromoterAutocompleteField } from "@/components/promoter-autocomplete-field";
 import { ScmRepresentativeSelector } from "@/components/scm-representative-selector";
 import { getProjectManagerOptions } from "@/data/backend-user-data";
 import { requireCurrentAuthenticatedScmStaffProfile } from "@/lib/auth-session";
@@ -82,10 +83,11 @@ export default async function NewGigPage({ searchParams }: NewGigPageProps) {
                 <span>Date</span>
                 <input name="date" type="date" required />
               </label>
-              <label className="field">
-                <span>Promoter</span>
-                <input name="promoter" placeholder="Live Nation" />
-              </label>
+              <PromoterAutocompleteField
+                name="promoter"
+                label="Promoter"
+                placeholder="LIVE NATION"
+              />
             </div>
           </section>
 

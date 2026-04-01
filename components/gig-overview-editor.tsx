@@ -8,6 +8,7 @@ import { getArenaLocationByName, type ArenaCatalogEntry } from "@/data/predefine
 import { resolveGigOverviewIndicator } from "@/data/scm-data";
 import { GigEquipmentEditor } from "@/components/gig-equipment-editor";
 import { MerchCompanyAutocompleteField } from "@/components/merch-company-autocomplete-field";
+import { PromoterAutocompleteField } from "@/components/promoter-autocomplete-field";
 import { ScmRepresentativeSelector } from "@/components/scm-representative-selector";
 import type { ScmRepresentativeOption } from "@/lib/scm-representative-options";
 import { scandinavianCountryOptions } from "@/lib/scandinavian-countries";
@@ -566,15 +567,15 @@ export function GigOverviewEditor({
               />
             </label>
 
-            <label className="key-value-card key-value-card-editable">
+            <div className="key-value-card key-value-card-editable">
               <small>Promoter</small>
-              <input
-                type="text"
+              <PromoterAutocompleteField
                 value={form.promoter}
+                placeholder="LIVE NATION"
                 disabled={!canEditCoreField("promoter")}
-                onChange={(event) => updateField("promoter", event.currentTarget.value)}
+                onValueChange={(nextValue) => updateField("promoter", nextValue)}
               />
-            </label>
+            </div>
 
             <div className="key-value-card key-value-card-editable">
               <small>Merch details</small>

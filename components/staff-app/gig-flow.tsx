@@ -1,7 +1,11 @@
 import Link from "next/link";
 
 import { formatStaffAppCompactDate } from "@/lib/staff-app-data";
-import type { StaffAppManagedGig, StaffAppOpenPass } from "@/types/staff-app";
+import type {
+  StaffAppManagedGig,
+  StaffAppOpenPass,
+  StaffAppScheduledShift,
+} from "@/types/staff-app";
 
 export function StaffAppGigMetaIcon({ kind }: { kind: "calendar" | "pin" | "clock" }) {
   if (kind === "calendar") {
@@ -106,6 +110,10 @@ export function formatStaffAppGigLine(pass: StaffAppOpenPass) {
   return `${formatStaffAppCompactDate(pass.date)} | ${pass.startTime} - ${pass.endTime}`;
 }
 
+export function formatStaffAppScheduledShiftLine(shift: StaffAppScheduledShift) {
+  return `${formatStaffAppCompactDate(shift.date)} | ${shift.startTime} - ${shift.endTime}`;
+}
+
 export function StaffAppGigOverviewCard({
   href,
   title,
@@ -180,6 +188,58 @@ export function StaffAppGigFeedCard({
         {pass.feed === "open" ? null : (
           <p className="staff-app-gig-feed-status">{pass.statusMessage}</p>
         )}
+      </div>
+
+      {actionHref && actionLabel ? (
+        <Link href={actionHref} className="staff-app-gig-feed-action">
+          {actionLabel}
+        </Link>
+      ) : badgeLabel ? (
+        <span className="staff-app-gig-feed-badge">{badgeLabel}</span>
+      ) : null}
+    </article>
+  );
+}
+
+export function StaffAppScheduledShiftCard({
+  shift,
+  actionLabel,
+  actionHref,
+  badgeLabel,
+  statusLabel = "Booked shift",
+}: {
+  shift: StaffAppScheduledShift;
+  actionLabel?: string;
+  actionHref?: string;
+  badgeLabel?: string;
+  statusLabel?: string;
+}) {
+  return (
+    <article
+      className="staff-app-card staff-app-gig-feed-card"
+      data-text-edit-exclude="true"
+    >
+      <StaffAppGigArtwork imageUrl={shift.imageUrl} title={shift.artist} />
+
+      <div className="staff-app-gig-feed-copy">
+        <strong>{shift.artist}</strong>
+        <p>{shift.arena}</p>
+        <div className="staff-app-gig-feed-tags">
+          <p className="staff-app-gig-feed-role">{shift.role} shift</p>
+        </div>
+
+        <div className="staff-app-gig-feed-meta">
+          <span>
+            <StaffAppGigMetaIcon kind="calendar" />
+            {formatStaffAppScheduledShiftLine(shift)}
+          </span>
+          <span>
+            <StaffAppGigMetaIcon kind="pin" />
+            {shift.city}
+          </span>
+        </div>
+
+        <p className="staff-app-gig-feed-status">{statusLabel}</p>
       </div>
 
       {actionHref && actionLabel ? (

@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { StaffAppGigFeedCard } from "@/components/staff-app/gig-flow";
+import { StaffAppGigFeedCard, StaffAppScheduledShiftCard } from "@/components/staff-app/gig-flow";
 import { getStaffAppAttendanceState } from "@/lib/staff-app-attendance-store";
 import { getStaffAppHomeOverview } from "@/lib/staff-app-data";
 import { requireCurrentStaffAppAccount } from "@/lib/staff-app-session";
@@ -314,16 +314,18 @@ export default async function StaffAppHomePage() {
   const colleagueSummary = `Only teammates in ${account.country} and ${account.region} are shown.`;
   const featuredOpenPasses = overview.openPasses.slice(0, 2);
   const remainingOpenPassCount = Math.max(0, overview.openPasses.length - featuredOpenPasses.length);
+  const nextBookedShift = overview.nextShift;
+  const hasHeroContent = Boolean(nextBookedShift) || featuredOpenPasses.length > 0;
 
   return (
     <section className="staff-app-screen staff-app-home-screen">
       <div className="staff-app-card emphasis staff-app-home-hero">
         <div className="staff-app-home-hero-copy">
           <h1>Upcoming Gigs</h1>
-          <p>Open shifts that match your profile are shown here so you can apply directly.</p>
+          <p>Your next booked shift and matching open gigs are shown here.</p>
         </div>
 
-        {featuredOpenPasses.length === 0 ? (
+        {!hasHeroContent ? (
           <div className="staff-app-home-empty-note">
             <p>No open gigs currently match your staff eligibility.</p>
             <Link href="/staff-app/gigs" className="staff-app-inline-link">
@@ -332,6 +334,14 @@ export default async function StaffAppHomePage() {
           </div>
         ) : (
           <div className="staff-app-home-open-pass-list">
+            {nextBookedShift ? (
+              <StaffAppScheduledShiftCard
+                shift={nextBookedShift}
+                actionLabel="View shift"
+                actionHref={`/staff-app/shifts/${nextBookedShift.id}`}
+              />
+            ) : null}
+
             {featuredOpenPasses.map((pass) => (
               <StaffAppGigFeedCard
                 key={pass.id}
@@ -340,6 +350,12 @@ export default async function StaffAppHomePage() {
                 actionHref={`/staff-app/gigs/${pass.id}`}
               />
             ))}
+
+            {nextBookedShift && featuredOpenPasses.length === 0 ? (
+              <Link href="/staff-app/schedule" className="staff-app-inline-link staff-app-home-hero-link">
+                Open my schedule
+              </Link>
+            ) : null}
 
             {remainingOpenPassCount > 0 ? (
               <Link href="/staff-app/gigs" className="staff-app-inline-link staff-app-home-hero-link">

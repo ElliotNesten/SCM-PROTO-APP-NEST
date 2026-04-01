@@ -7,6 +7,13 @@ import {
   clearStoredGigTimeReportFinalApproval,
   getAllStoredGigs,
 } from "@/lib/gig-store";
+import {
+  ensureProductionStorageSchema,
+  getPostgresClient,
+  isDatabaseConfigured,
+  parseJsonValue,
+  serializeJson,
+} from "@/lib/postgres";
 import { removeStoredStaffDocumentsForGig } from "@/lib/staff-document-store";
 import {
   getAllStoredStaffProfiles,
@@ -19,6 +26,9 @@ import type { StaffRoleKey } from "@/types/staff-role";
 
 const storeDirectory = path.join(process.cwd(), "data");
 const storePath = path.join(storeDirectory, "shift-store.json");
+const globalForShiftStore = globalThis as typeof globalThis & {
+  __scmShiftBootstrapPromise?: Promise<void>;
+};
 
 function shouldIgnoreReadOnlyStoreWriteError(error: unknown) {
   const errorCode =
@@ -38,6 +48,12 @@ const roleOrder = ["Stand Leader", "Seller", "Runner"] as const;
 
 type StoredShiftRecord = Omit<Shift, "priorityLevel"> & {
   priorityLevel?: number;
+};
+
+type ShiftRow = {
+  id: string;
+  gig_id: string;
+  shift_json: string;
 };
 
 type UpdateStoredShiftAssignmentInput = {
@@ -247,6 +263,93 @@ function normalizeStoredShift(shift: StoredShiftRecord): Shift {
   };
 }
 
+function getSeedStoredShifts() {
+  return seedShifts.map((shift) => normalizeStoredShift(shift));
+}
+
+function mergeUniqueShifts(...collections: Shift[][]) {
+  const seenIds = new Set<string>();
+
+  return collections.flat().filter((shift) => {
+    if (seenIds.has(shift.id)) {
+      return false;
+    }
+
+    seenIds.add(shift.id);
+    return true;
+  });
+}
+
+function mapShiftRow(row: ShiftRow) {
+  const parsedShift = parseJsonValue<Shift>(row.shift_json, {
+    id: row.id,
+    gigId: row.gig_id,
+    role: "Other",
+    priorityLevel: 5,
+    startTime: "16:00",
+    endTime: "23:00",
+    requiredStaff: 1,
+    notes: getShiftNotes("Other"),
+    priorityTag: "Medium",
+    assignments: [],
+  });
+
+  return normalizeStoredShift({
+    ...parsedShift,
+    id: row.id,
+    gigId: parsedShift.gigId || row.gig_id,
+  });
+}
+
+async function getDatabaseShifts() {
+  const sql = getPostgresClient();
+
+  if (!sql) {
+    return [] as Shift[];
+  }
+
+  await ensureProductionStorageSchema();
+  const rows = await sql<ShiftRow[]>`
+    select id, gig_id, shift_json
+    from shifts
+    order by gig_id asc, id asc
+  `;
+
+  return rows.map(mapShiftRow);
+}
+
+async function writeDatabaseShiftCollection(shifts: Shift[]) {
+  const sql = getPostgresClient();
+
+  if (!sql) {
+    return;
+  }
+
+  const normalizedShifts = sortShiftList(shifts.map((shift) => normalizeStoredShift(shift)));
+  const now = new Date().toISOString();
+  await ensureProductionStorageSchema();
+  await sql.begin(async (transaction) => {
+    const transactionSql = transaction as unknown as typeof sql;
+
+    await transactionSql`
+      delete from shifts
+    `;
+
+    for (const shift of normalizedShifts) {
+      await transactionSql`
+        insert into shifts (id, gig_id, shift_json, created_at, updated_at)
+        values (
+          ${shift.id},
+          ${shift.gigId},
+          ${serializeJson(shift)},
+          ${now},
+          ${now}
+        )
+      `;
+    }
+  });
+}
+
 async function ensureShiftStore() {
   try {
     await fs.access(storePath);
@@ -259,11 +362,94 @@ async function ensureShiftStore() {
 async function readShiftStore() {
   await ensureShiftStore();
   const raw = await fs.readFile(storePath, "utf8");
-  return JSON.parse(raw) as StoredShiftRecord[];
+  const parsed = JSON.parse(raw) as StoredShiftRecord[];
+  const normalizedShifts = parsed.map((shift) => normalizeStoredShift(shift));
+
+  if (parsed.some((shift, index) => serializeJson(shift) !== serializeJson(normalizedShifts[index]))) {
+    try {
+      await writeShiftStore(normalizedShifts);
+    } catch (error) {
+      if (!shouldIgnoreReadOnlyStoreWriteError(error)) {
+        throw error;
+      }
+    }
+  }
+
+  return normalizedShifts;
 }
 
 async function writeShiftStore(shifts: Shift[]) {
   await fs.writeFile(storePath, JSON.stringify(shifts, null, 2), "utf8");
+}
+
+async function getFallbackStoredShifts() {
+  try {
+    const fileBackedShifts = await readShiftStore();
+    return sortShiftList(mergeUniqueShifts(fileBackedShifts, getSeedStoredShifts()));
+  } catch {
+    return sortShiftList(getSeedStoredShifts());
+  }
+}
+
+async function bootstrapDatabaseShiftsFromFallback(fallbackShifts: Shift[]) {
+  const sql = getPostgresClient();
+
+  if (!sql || fallbackShifts.length === 0) {
+    return;
+  }
+
+  if (!globalForShiftStore.__scmShiftBootstrapPromise) {
+    globalForShiftStore.__scmShiftBootstrapPromise = (async () => {
+      await ensureProductionStorageSchema();
+      const existingRows = await sql<{ id: string }[]>`
+        select id
+        from shifts
+      `;
+      const existingIds = new Set(existingRows.map((row) => row.id));
+      const missingShifts = fallbackShifts.filter((shift) => !existingIds.has(shift.id));
+      const now = new Date().toISOString();
+
+      for (const shift of missingShifts) {
+        await sql`
+          insert into shifts (id, gig_id, shift_json, created_at, updated_at)
+          values (
+            ${shift.id},
+            ${shift.gigId},
+            ${serializeJson(shift)},
+            ${now},
+            ${now}
+          )
+          on conflict (id) do nothing
+        `;
+      }
+    })();
+  }
+
+  await globalForShiftStore.__scmShiftBootstrapPromise;
+}
+
+async function getMergedStoredShifts() {
+  const fallbackShifts = await getFallbackStoredShifts();
+
+  if (!isDatabaseConfigured()) {
+    return fallbackShifts;
+  }
+
+  await bootstrapDatabaseShiftsFromFallback(fallbackShifts);
+  const databaseShifts = await getDatabaseShifts();
+
+  return databaseShifts.length > 0 ? sortShiftList(databaseShifts) : fallbackShifts;
+}
+
+async function persistStoredShifts(shifts: Shift[]) {
+  const normalizedShifts = sortShiftList(shifts.map((shift) => normalizeStoredShift(shift)));
+
+  if (isDatabaseConfigured()) {
+    await writeDatabaseShiftCollection(normalizedShifts);
+    return;
+  }
+
+  await writeShiftStore(normalizedShifts);
 }
 
 async function invalidateStoredGigTimeReportArtifacts(gigId: string) {
@@ -274,10 +460,10 @@ async function invalidateStoredGigTimeReportArtifacts(gigId: string) {
 }
 
 async function syncShiftsWithGigs() {
-  const [storedShifts, gigs] = await Promise.all([readShiftStore(), getAllStoredGigs()]);
+  const [storedShifts, gigs] = await Promise.all([getMergedStoredShifts(), getAllStoredGigs()]);
   const syncedShifts = storedShifts.map((shift) => normalizeStoredShift(shift));
   let didChange = storedShifts.some(
-    (shift, index) => shift.priorityLevel !== syncedShifts[index]?.priorityLevel,
+    (shift, index) => serializeJson(shift) !== serializeJson(syncedShifts[index]),
   );
   const gigIdsWithClearedAssignments = new Set<string>();
 
@@ -300,7 +486,7 @@ async function syncShiftsWithGigs() {
 
   if (didChange) {
     try {
-      await writeShiftStore(syncedShifts);
+      await persistStoredShifts(syncedShifts);
       await Promise.all(
         [...gigIdsWithClearedAssignments].map((gigId) =>
           invalidateStoredGigTimeReportArtifacts(gigId),
@@ -313,7 +499,7 @@ async function syncShiftsWithGigs() {
     }
   }
 
-  return syncedShifts;
+  return sortShiftList(syncedShifts);
 }
 
 export function getConfirmedCount(shift: Shift) {
@@ -373,7 +559,7 @@ export async function createStoredShift(gigId: string, input: CreateStoredShiftI
   };
 
   const nextShifts = sortShiftList([...shifts, createdShift]);
-  await writeShiftStore(nextShifts);
+  await persistStoredShifts(nextShifts);
 
   return createdShift;
 }
@@ -407,7 +593,7 @@ export async function updateStoredShift(
   };
 
   const nextShifts = sortShiftList(shifts);
-  await writeShiftStore(nextShifts);
+  await persistStoredShifts(nextShifts);
   await invalidateStoredGigTimeReportArtifacts(gigId);
 
   return nextShifts.find((shift) => shift.id === shiftId && shift.gigId === gigId) ?? null;
@@ -421,7 +607,7 @@ export async function deleteStoredShift(gigId: string, shiftId: string) {
     return false;
   }
 
-  await writeShiftStore(nextShifts);
+  await persistStoredShifts(nextShifts);
   await invalidateStoredGigTimeReportArtifacts(gigId);
   return true;
 }
@@ -434,7 +620,7 @@ export async function deleteStoredGigShifts(gigId: string) {
     return 0;
   }
 
-  await writeShiftStore(nextShifts);
+  await persistStoredShifts(nextShifts);
   await invalidateStoredGigTimeReportArtifacts(gigId);
   return shifts.length - nextShifts.length;
 }
@@ -751,7 +937,7 @@ export async function updateStoredShiftAssignment(
     assignments: nextAssignments,
   };
 
-  await writeShiftStore(shifts);
+  await persistStoredShifts(shifts);
   await invalidateStoredGigTimeReportArtifacts(gigId);
   return shifts[shiftIndex];
 }
@@ -795,7 +981,7 @@ export async function setStoredShiftTimeReportsApprovalState(
     }),
   };
 
-  await writeShiftStore(shifts);
+  await persistStoredShifts(shifts);
   await invalidateStoredGigTimeReportArtifacts(gigId);
   return shifts[shiftIndex];
 }

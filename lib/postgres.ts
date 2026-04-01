@@ -244,6 +244,17 @@ export async function ensureProductionStorageSchema() {
 
       create index if not exists idx_gigs_date
         on gigs (date);
+
+      create table if not exists shifts (
+        id text primary key,
+        gig_id text not null,
+        shift_json text not null,
+        created_at text not null,
+        updated_at text not null
+      );
+
+      create index if not exists idx_shifts_gig_id
+        on shifts (gig_id);
     `)
       .then(() => undefined)
       .catch((error) => {

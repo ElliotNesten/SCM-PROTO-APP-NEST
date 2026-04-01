@@ -6,7 +6,11 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useState, useTransition } from "react";
 
 import { resolveGigOverviewIndicator } from "@/data/scm-data";
-import { getGigDate, resolveGigRegisterSection } from "@/lib/gig-archive";
+import {
+  getGigDate,
+  isGigArchivedOnlyForRegister,
+  resolveGigRegisterSection,
+} from "@/lib/gig-archive";
 import type { Gig } from "@/types/scm";
 
 const timeframeFilters = [
@@ -413,7 +417,7 @@ export function DashboardClient({
   const filteredGigs = gigs.filter((gig) => {
     const gigSection = resolveGigRegisterSection(gig);
 
-    if (gigSection === "closed") {
+    if (gigSection === "closed" || isGigArchivedOnlyForRegister(gig)) {
       return false;
     }
 
@@ -469,7 +473,9 @@ export function DashboardClient({
   const calendarMonth = addMonths(baseCalendarMonth, monthOffset);
   const calendarRows = buildCalendarRows(calendarMonth, filteredGigs);
   const openGigs = gigs.filter(
-    (gig) => resolveGigRegisterSection(gig) !== "closed",
+    (gig) =>
+      resolveGigRegisterSection(gig) !== "closed" &&
+      !isGigArchivedOnlyForRegister(gig),
   ).length;
 
   function pushFilterRoute(nextFilters: DashboardFilters) {

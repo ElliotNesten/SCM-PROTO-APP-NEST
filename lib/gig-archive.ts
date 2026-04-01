@@ -16,18 +16,27 @@ function getTodayGigDate() {
 }
 
 export function isGigStatusClosed(status: GigStatus) {
-  return ["Completed", "Reported", "Closed"].includes(status);
+  return status === "Closed";
 }
 
 export function isGigClosedForRegister(
-  gig: Pick<Gig, "status" | "overviewIndicator">,
+  gig: Pick<Gig, "status">,
 ) {
-  const overviewIndicator = resolveGigOverviewIndicator(gig);
-  return isGigStatusClosed(gig.status) || overviewIndicator === "noMerch";
+  return isGigStatusClosed(gig.status);
 }
 
 export function isGigArchivedForRegister(gig: Pick<Gig, "date">) {
   return getGigDate(gig.date) < getTodayGigDate();
+}
+
+export function isGigArchivedOnlyForRegister(
+  gig: Pick<Gig, "date" | "status" | "overviewIndicator">,
+) {
+  return (
+    isGigArchivedForRegister(gig) &&
+    !isGigStatusClosed(gig.status) &&
+    resolveGigOverviewIndicator(gig) === "noMerch"
+  );
 }
 
 export type GigRegisterSection = "active" | "toBeClosed" | "closed";

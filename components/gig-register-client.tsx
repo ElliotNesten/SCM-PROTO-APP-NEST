@@ -11,6 +11,7 @@ import {
 import { resolveGigOverviewIndicator } from "@/data/scm-data";
 import {
   isGigArchivedForRegister,
+  isGigArchivedOnlyForRegister,
   resolveGigRegisterSection,
 } from "@/lib/gig-archive";
 import type { Gig, GigOverviewIndicator } from "@/types/scm";
@@ -510,7 +511,9 @@ export function GigRegisterClient({
   const [resizingColumn, setResizingColumn] = useState<RegisterGridColumnKey | null>(null);
 
   const activeGigs = registerGigs.filter(
-    (gig) => resolveGigRegisterSection(gig) === "active",
+    (gig) =>
+      resolveGigRegisterSection(gig) === "active" &&
+      !isGigArchivedOnlyForRegister(gig),
   );
   const toBeClosedGigs = registerGigs.filter(
     (gig) => resolveGigRegisterSection(gig) === "toBeClosed",

@@ -58,7 +58,7 @@ export async function activateStaffAccountWithPassword(input: {
 
     const updatedProfile = await updateStoredScmStaffProfile(profile.id, {
       passwordHash: createPasswordHash(normalizedPassword),
-      passwordPlaintext: "",
+      passwordPlaintext: normalizedPassword,
     });
 
     if (!updatedProfile) {

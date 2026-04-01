@@ -18,6 +18,7 @@ import {
 import {
   getStoredScmStaffProfileByEmail,
   getStoredScmStaffProfileById,
+  updateStoredScmStaffProfile,
 } from "@/lib/scm-staff-store";
 
 function readString(formData: FormData, key: string) {
@@ -28,6 +29,7 @@ function readString(formData: FormData, key: string) {
 export async function loginWithScmStaff(formData: FormData) {
   const email = readString(formData, "email").toLowerCase();
   const password = readString(formData, "password");
+  const normalizedPassword = password.trim();
 
   if (!email || !password) {
     redirect(`/login?error=missing&email=${encodeURIComponent(email)}`);
@@ -39,10 +41,16 @@ export async function loginWithScmStaff(formData: FormData) {
   if (
     profile &&
     profile.roleKey !== "temporaryGigManager" &&
-    verifyPasswordHash(password, profile.passwordHash)
+    verifyPasswordHash(normalizedPassword, profile.passwordHash)
   ) {
-      await createAuthSession(profile.id);
-      redirect("/dashboard");
+    if (profile.passwordPlaintext?.trim() !== normalizedPassword) {
+      await updateStoredScmStaffProfile(profile.id, {
+        passwordPlaintext: normalizedPassword,
+      });
+    }
+
+    await createAuthSession(profile.id);
+    redirect("/dashboard");
   }
 
   const existingStaffAppAccount = await getStaffAppAccountByEmail(email);

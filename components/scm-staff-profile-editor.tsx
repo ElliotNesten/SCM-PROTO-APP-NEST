@@ -1,11 +1,11 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useRef, useState } from "react";
 
 import { PageHeader } from "@/components/page-header";
+import { ProfileImage } from "@/components/profile-image";
 import { StatusBadge } from "@/components/status-badge";
 import {
   getRegionalManagerRegionSummary,
@@ -332,38 +332,35 @@ export function ScmStaffProfileEditor({
         subtitle={getScopeSubtitle(profile)}
         leading={
           <div className="staff-profile-header-image">
-            <div className="staff-profile-header-image-preview" aria-hidden="true">
-              {profile.profileImageUrl ? (
-                <Image
-                  src={profile.profileImageUrl}
-                  alt={`${profile.displayName} profile`}
-                  className="staff-profile-header-image-media"
-                  width={108}
-                  height={108}
-                />
-              ) : (
-                getDisplayInitials(profile.displayName)
-              )}
-            </div>
-            {canEditProfileImage ? (
-              <>
+            <div className="staff-profile-header-image-preview">
+              <ProfileImage
+                displayName={profile.displayName}
+                imageUrl={profile.profileImageUrl}
+                alt={`${profile.displayName} profile`}
+                className="staff-profile-header-image-media"
+                fallbackText={getDisplayInitials(profile.displayName)}
+                loading="eager"
+              />
+              {canEditProfileImage ? (
                 <label
                   className="staff-profile-header-image-trigger"
                   htmlFor={`scm-staff-image-${profile.id}`}
                 >
-                  {uploadingImage ? "Uploading..." : "Change image"}
+                  {uploadingImage ? "UPLOADING" : "EDIT"}
                 </label>
-                <input
-                  id={`scm-staff-image-${profile.id}`}
-                  ref={imageInputRef}
-                  className="gig-image-input"
-                  type="file"
-                  accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp"
-                  onChange={() => {
-                    void uploadProfileImage();
-                  }}
-                />
-              </>
+              ) : null}
+            </div>
+            {canEditProfileImage ? (
+              <input
+                id={`scm-staff-image-${profile.id}`}
+                ref={imageInputRef}
+                className="gig-image-input"
+                type="file"
+                accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp"
+                onChange={() => {
+                  void uploadProfileImage();
+                }}
+              />
             ) : null}
           </div>
         }
@@ -446,6 +443,12 @@ export function ScmStaffProfileEditor({
                     {showPasswordDraft ? "Hide" : "Show"}
                   </button>
                 </div>
+                {canRevealStoredPassword && !profile.passwordPlaintext?.trim() ? (
+                  <p className="muted small-text">
+                    The current password is not stored yet. Save a new password here, or have
+                    the user log in once to register it.
+                  </p>
+                ) : null}
                 {!canRevealStoredPassword ? (
                   <p className="muted small-text">
                     The current registered password is hidden for your role. Enter a new one to

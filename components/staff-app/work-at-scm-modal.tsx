@@ -133,17 +133,18 @@ export function WorkAtScmModal() {
                     <label className="staff-app-form-field">
                       <span>Profilbild</span>
                       <div className="staff-app-upload-field">
-                        <input
-                          type="file"
-                          accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp"
-                          onChange={(event) =>
-                            setFormState((current) => ({
-                              ...current,
-                              profileImage: event.currentTarget.files?.[0] ?? null,
-                            }))
-                          }
-                          required
-                        />
+                    <input
+                      type="file"
+                      accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp"
+                      onChange={(event) => {
+                        const nextProfileImage = event.currentTarget.files?.[0] ?? null;
+                        setFormState((current) => ({
+                          ...current,
+                          profileImage: nextProfileImage,
+                        }));
+                      }}
+                      required
+                    />
                         <strong>{selectedFileLabel}</strong>
                         <small>PNG, JPG eller WEBP, max 5 MB</small>
                       </div>
@@ -151,62 +152,66 @@ export function WorkAtScmModal() {
 
                     <label className="staff-app-form-field">
                       <span>Namn</span>
-                      <input
-                        type="text"
-                        value={formState.displayName}
-                        onChange={(event) =>
-                          setFormState((current) => ({
-                            ...current,
-                            displayName: event.currentTarget.value,
-                          }))
-                        }
-                        required
-                      />
-                    </label>
+                  <input
+                    type="text"
+                    value={formState.displayName}
+                    onChange={(event) => {
+                      const nextDisplayName = event.currentTarget.value;
+                      setFormState((current) => ({
+                        ...current,
+                        displayName: nextDisplayName,
+                      }));
+                    }}
+                    required
+                  />
+                </label>
 
                     <label className="staff-app-form-field">
                       <span>Email</span>
-                      <input
-                        type="email"
-                        value={formState.email}
-                        onChange={(event) =>
-                          setFormState((current) => ({
-                            ...current,
-                            email: event.currentTarget.value,
-                          }))
-                        }
-                        required
-                      />
-                    </label>
+                  <input
+                    type="email"
+                    value={formState.email}
+                    onChange={(event) => {
+                      const nextEmail = event.currentTarget.value;
+                      setFormState((current) => ({
+                        ...current,
+                        email: nextEmail,
+                      }));
+                    }}
+                    required
+                  />
+                </label>
 
                     <label className="staff-app-form-field">
                       <span>Telefonnummer</span>
-                      <input
-                        type="tel"
-                        value={formState.phone}
-                        onChange={(event) =>
-                          setFormState((current) => ({
-                            ...current,
-                            phone: event.currentTarget.value,
-                          }))
-                        }
-                        required
-                      />
-                    </label>
+                  <input
+                    type="tel"
+                    value={formState.phone}
+                    onChange={(event) => {
+                      const nextPhone = event.currentTarget.value;
+                      setFormState((current) => ({
+                        ...current,
+                        phone: nextPhone,
+                      }));
+                    }}
+                    required
+                  />
+                </label>
 
                     <label className="staff-app-form-field">
                       <span>Land</span>
-                      <select
-                        value={formState.country}
-                        onChange={(event) =>
-                          setFormState((current) => ({
-                            ...current,
-                            country: event.currentTarget.value,
-                            region: event.currentTarget.value === "Sweden" ? "Stockholm" : "",
-                          }))
-                        }
-                        required
-                      >
+                  <select
+                    value={formState.country}
+                    onChange={(event) => {
+                      const nextCountry = event.currentTarget.value;
+                      setFormState((current) => ({
+                        ...current,
+                        country: nextCountry,
+                        region: nextCountry === "Sweden" ? "Stockholm" : "",
+                      }));
+                    }}
+                    required
+                  >
                         {staffApplicationCountryOptions.map((country) => (
                           <option key={country} value={country}>
                             {country}
@@ -220,12 +225,13 @@ export function WorkAtScmModal() {
                         <span>Region</span>
                         <select
                           value={formState.region}
-                          onChange={(event) =>
+                          onChange={(event) => {
+                            const nextRegion = event.currentTarget.value;
                             setFormState((current) => ({
                               ...current,
-                              region: event.currentTarget.value,
-                            }))
-                          }
+                              region: nextRegion,
+                            }));
+                          }}
                           required
                         >
                           {swedenStaffApplicationRegionOptions.map((region) => (
@@ -241,12 +247,13 @@ export function WorkAtScmModal() {
                         <input
                           type="text"
                           value={formState.region}
-                          onChange={(event) =>
+                          onChange={(event) => {
+                            const nextRegion = event.currentTarget.value;
                             setFormState((current) => ({
                               ...current,
-                              region: event.currentTarget.value,
-                            }))
-                          }
+                              region: nextRegion,
+                            }));
+                          }}
                           required
                         />
                       </label>

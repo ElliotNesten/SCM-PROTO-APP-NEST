@@ -11,8 +11,10 @@ import { canAccessPlatformGig } from "@/lib/platform-access";
 import {
   getAvailableStaffProfilesForShift,
   getStoredShiftById,
+  isStaffEligibleForShift,
 } from "@/lib/shift-store";
 import { getAllStaffAppAccounts } from "@/lib/staff-app-store";
+import { getAllStoredStaffProfiles } from "@/lib/staff-store";
 import {
   getAllStaffAppGigApplications,
   getShiftApplicantAppliedAtByStaffProfileId,
@@ -29,11 +31,12 @@ export default async function ShiftDetailPage({
   const { gigId, shiftId } = await params;
   const currentProfile = await requireCurrentAuthenticatedScmStaffProfile();
 
-  const [gig, shift, staffAppAccounts, applications] = await Promise.all([
+  const [gig, shift, staffAppAccounts, applications, staffProfiles] = await Promise.all([
     getStoredGigById(gigId),
     getStoredShiftById(shiftId),
     getAllStaffAppAccounts(),
     getAllStaffAppGigApplications(),
+    getAllStoredStaffProfiles(),
   ]);
 
   if (!gig || !shift || shift.gigId !== gig.id) {
@@ -49,12 +52,27 @@ export default async function ShiftDetailPage({
     applications,
     staffAppAccounts,
   );
-  const candidates = await getAvailableStaffProfilesForShift(gig, shift, {
+  const availableCandidates = await getAvailableStaffProfilesForShift(gig, shift, {
     includeStaffIds: [...applicantAppliedAtByStaffId.keys()],
   });
+  const includedCandidateIds = new Set([
+    ...applicantAppliedAtByStaffId.keys(),
+    ...shift.assignments.map((assignment) => assignment.staffId),
+  ]);
+  const candidateById = new Map(
+    [...staffProfiles]
+      .filter(
+        (profile) =>
+          profile.approvalStatus === "Approved" || includedCandidateIds.has(profile.id),
+      )
+      .map((profile) => [profile.id, profile]),
+  );
+  const availableCandidateIds = new Set(
+    availableCandidates.map((candidate) => candidate.id),
+  );
 
   const editorCandidateById = new Map(
-    candidates.map((candidate) => [
+    [...candidateById.values()].map((candidate) => [
       candidate.id,
       {
         id: candidate.id,
@@ -64,6 +82,9 @@ export default async function ShiftDetailPage({
         roles: candidate.roles,
         approvalStatus: candidate.approvalStatus,
         appliedAt: applicantAppliedAtByStaffId.get(candidate.id),
+        manualOverrideRequired:
+          !availableCandidateIds.has(candidate.id) &&
+          !isStaffEligibleForShift(candidate, gig, shift),
       },
     ]),
   );

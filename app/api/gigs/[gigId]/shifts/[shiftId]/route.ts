@@ -27,6 +27,7 @@ type RouteContext = {
 type ShiftAssignmentPayload = {
   staffId?: string;
   bookingStatus?: BookingStatus | null;
+  allowManualOverride?: boolean;
   checkedIn?: string | null;
   checkedOut?: string | null;
   lunchProvided?: boolean;
@@ -253,6 +254,8 @@ export async function PATCH(request: Request, context: RouteContext) {
         typeof payload.lunchProvided !== "boolean") ||
       (payload.dinnerProvided !== undefined &&
         typeof payload.dinnerProvided !== "boolean") ||
+      (payload.allowManualOverride !== undefined &&
+        typeof payload.allowManualOverride !== "boolean") ||
       (payload.timeReportApproved !== undefined &&
         typeof payload.timeReportApproved !== "boolean")
     ) {
@@ -287,16 +290,41 @@ export async function PATCH(request: Request, context: RouteContext) {
         return NextResponse.json({ error: "Staff member not found." }, { status: 404 });
       }
 
+      const allowManualOverride = payload.allowManualOverride === true;
+
       const [matchesShiftRequirements, hasDirectApplication] = await Promise.all([
         Promise.resolve(isStaffEligibleForShift(staffProfile, gig, currentShift)),
         hasStaffAppGigApplicationForShiftAndStaffProfile(shiftId, staffProfile.id),
       ]);
 
       if (!matchesShiftRequirements && !hasDirectApplication) {
+        if (allowManualOverride) {
+          if (staffProfile.approvalStatus !== "Approved") {
+            return NextResponse.json(
+              { error: "Only approved staff can be manually booked on a shift." },
+              { status: 400 },
+            );
+          }
+        } else {
+          return NextResponse.json(
+            {
+              error:
+                "This staff member has not applied for this shift and does not match the shift role, country, region, or priority level.",
+            },
+            { status: 400 },
+          );
+        }
+      }
+
+      if (
+        allowManualOverride &&
+        !hasDirectApplication &&
+        staffProfile.approvalStatus !== "Approved"
+      ) {
         return NextResponse.json(
           {
             error:
-              "This staff member has not applied for this shift and does not match the shift role, country, region, or priority level.",
+              "Only approved staff can be manually booked on a shift.",
           },
           { status: 400 },
         );

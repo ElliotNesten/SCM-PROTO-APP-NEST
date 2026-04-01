@@ -16,6 +16,7 @@ type ShiftCandidate = {
   roles: string[];
   approvalStatus: string;
   appliedAt?: string;
+  manualOverrideRequired?: boolean;
 };
 
 type ShiftOverviewEditorProps = {
@@ -309,6 +310,9 @@ export function ShiftOverviewEditor({
   async function updateAssignment(
     staffId: string,
     bookingStatus: BookingStatus | null,
+    options?: {
+      allowManualOverride?: boolean;
+    },
   ) {
     setPendingStaffId(staffId);
     setBookingMessage(null);
@@ -319,7 +323,11 @@ export function ShiftOverviewEditor({
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ staffId, bookingStatus }),
+        body: JSON.stringify({
+          staffId,
+          bookingStatus,
+          allowManualOverride: options?.allowManualOverride === true,
+        }),
       });
 
       const payload = (await response.json().catch(() => null)) as
@@ -478,7 +486,6 @@ export function ShiftOverviewEditor({
               <button
                 type="button"
                 className="button ghost"
-                disabled={manualCandidates.length === 0}
                 onClick={() => {
                   setIsManualBookingOpen((current) => !current);
                 }}
@@ -504,19 +511,19 @@ export function ShiftOverviewEditor({
               <div className="new-shift-panel-header">
                 <strong>Manual booking</strong>
                 <p className="helper-caption">
-                  Select an eligible person and book them directly without waiting
-                  for a pass application or using the waitlist.
+                  Select a person from the approved staff pool and place them
+                  directly on the shift without waiting for a pass application.
                 </p>
               </div>
 
               {manualCandidates.length === 0 ? (
                 <div className="empty-panel">
-                  No additional eligible staff are available for manual booking right now.
+                  No approved staff are available for manual booking right now.
                 </div>
               ) : (
                 <>
                   <label className="field">
-                    <span>Eligible staff</span>
+                    <span>Approved staff</span>
                     <select
                       value={selectedManualCandidate?.id ?? ""}
                       onChange={(event) => {
@@ -555,6 +562,16 @@ export function ShiftOverviewEditor({
                         {selectedManualCandidate.roles.join(", ")}
                       </p>
 
+                      {selectedManualCandidate.manualOverrideRequired ? (
+                        <p className="small-text">
+                          This person does not currently match the shift role,
+                          country, region, or priority filter. Manual booking
+                          will override those checks.
+                        </p>
+                      ) : (
+                        <p className="small-text">Eligible for direct booking.</p>
+                      )}
+
                       <div className="shift-booking-actions">
                         {assignmentMap.get(selectedManualCandidate.id) !== "Confirmed" ? (
                           <button
@@ -565,6 +582,7 @@ export function ShiftOverviewEditor({
                               void updateAssignment(
                                 selectedManualCandidate.id,
                                 "Confirmed",
+                                { allowManualOverride: true },
                               );
                             }}
                           >

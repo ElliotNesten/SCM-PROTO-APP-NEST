@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
+  useEffect,
   useState,
   type CSSProperties,
   type PointerEvent as ReactPointerEvent,
@@ -509,6 +510,10 @@ export function GigRegisterClient({
   const [columnWidthOverrides, setColumnWidthOverrides] =
     useState<RegisterColumnWidthOverrides>({});
   const [resizingColumn, setResizingColumn] = useState<RegisterGridColumnKey | null>(null);
+
+  useEffect(() => {
+    setRegisterGigs(gigs);
+  }, [gigs]);
 
   const activeGigs = registerGigs.filter(
     (gig) =>

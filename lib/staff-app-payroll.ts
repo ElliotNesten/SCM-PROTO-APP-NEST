@@ -128,7 +128,7 @@ function resolvePayrollPeriod(value: string): PayrollPeriod | null {
     periodStart,
     periodEnd,
     periodLabel: `${formatDate(periodStart)} to ${formatDate(periodEnd)}`,
-    monthLabel: formatMonthLabel(periodStart),
+    monthLabel: formatMonthLabel(periodEnd),
   };
 }
 

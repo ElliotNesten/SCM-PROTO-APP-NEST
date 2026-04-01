@@ -136,6 +136,15 @@ export async function getSystemScmInfoPdfSettings() {
   });
 }
 
+async function persistSystemScmInfoPdfSettings(settings: SystemScmInfoPdfSettings) {
+  return writeSingletonSystemSetting({
+    settingKey: systemSettingKey,
+    value: settings,
+    normalize: normalizeSystemScmInfoPdfSettings,
+    writeFallback: writeSystemScmInfoPdfStore,
+  });
+}
+
 export async function updateSystemScmInfoSectionPdf(
   sectionId: StaffAppScmInfoSectionKey,
   slotIndex: number,
@@ -154,8 +163,7 @@ export async function updateSystemScmInfoSectionPdf(
     },
   };
 
-  await writeSystemScmInfoPdfStore(nextSettings);
-  return nextSettings;
+  return persistSystemScmInfoPdfSettings(nextSettings);
 }
 
 export async function updateSystemScmInfoItemPdf(
@@ -178,19 +186,15 @@ export async function updateSystemScmInfoItemPdf(
     },
   };
 
-  await writeSystemScmInfoPdfStore(nextSettings);
-  return nextSettings;
+  return persistSystemScmInfoPdfSettings(nextSettings);
 }
 
 export async function updateSystemScmInfoPdfSettings(
   settings: Partial<SystemScmInfoPdfSettings>,
 ) {
-  return writeSingletonSystemSetting({
-    settingKey: systemSettingKey,
-    value: settings,
-    normalize: normalizeSystemScmInfoPdfSettings,
-    writeFallback: writeSystemScmInfoPdfStore,
-  });
+  return persistSystemScmInfoPdfSettings(
+    normalizeSystemScmInfoPdfSettings(settings),
+  );
 }
 
 export function getEmptySystemScmInfoPdfAsset() {

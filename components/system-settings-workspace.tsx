@@ -212,6 +212,33 @@ export function SystemSettingsWorkspace({
 
   return (
     <div className="system-settings-workspace">
+      <section className="system-settings-header-search-row" aria-label="System settings search">
+        <label className="system-settings-header-search-field">
+          <span className="system-settings-header-search-label">Search settings</span>
+          <span className="system-settings-search-shell system-settings-search-shell-compact">
+            <span className="system-settings-search-icon">
+              <SearchIcon />
+            </span>
+            <input
+              type="search"
+              value={query}
+              placeholder="Search settings"
+              aria-label="Search system settings"
+              onChange={(event) => setQuery(event.currentTarget.value)}
+            />
+          </span>
+        </label>
+
+        <button
+          type="button"
+          className="button ghost"
+          onClick={() => setQuery("")}
+          disabled={query.trim().length === 0}
+        >
+          Clear search
+        </button>
+      </section>
+
       <section className="card system-settings-command-card">
         <div className="system-settings-command-copy">
           <p className="eyebrow">SETTINGS OVERVIEW</p>
@@ -222,38 +249,15 @@ export function SystemSettingsWorkspace({
           </p>
         </div>
 
-        <div className="system-settings-command-row">
-          <label className="system-settings-search-shell">
-            <span className="system-settings-search-icon">
-              <SearchIcon />
-            </span>
-            <input
-              type="search"
-              value={query}
-              placeholder="Search settings: wage, policy, email, arena, template..."
-              aria-label="Search system settings"
-              onChange={(event) => setQuery(event.currentTarget.value)}
-            />
-          </label>
-
-          <div className="system-settings-command-actions">
-            <button
-              type="button"
-              className="button ghost"
-              onClick={() => setQuery("")}
-              disabled={query.trim().length === 0}
-            >
-              Clear search
-            </button>
-            <button
-              type="button"
-              className="button"
-              onClick={openFirstVisibleSection}
-              disabled={visibleSections.length === 0}
-            >
-              {hasQuery ? "Open first match" : "Open first card"}
-            </button>
-          </div>
+        <div className="system-settings-command-actions">
+          <button
+            type="button"
+            className="button"
+            onClick={openFirstVisibleSection}
+            disabled={visibleSections.length === 0}
+          >
+            {hasQuery ? "Open first match" : "Open first card"}
+          </button>
         </div>
 
         <div className="system-settings-command-foot">
@@ -314,15 +318,6 @@ export function SystemSettingsWorkspace({
                 </div>
                 <div className="system-settings-overview-card-foot">
                   <span className="system-settings-hub-summary-pill">Opens in popup</span>
-                  <span
-                    className={
-                      isActive
-                        ? "system-settings-open-button active"
-                        : "system-settings-open-button"
-                    }
-                  >
-                    Open settings
-                  </span>
                 </div>
               </article>
             );

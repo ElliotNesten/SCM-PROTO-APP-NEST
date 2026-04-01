@@ -123,18 +123,22 @@ export function StaffAppDocumentsBrowser({
                 {visibleDocuments.map((document) => (
                   <div key={document.id} className="staff-app-documents-row">
                     <div className="staff-app-documents-cell">
+                      <span className="staff-app-documents-mobile-label">Gig</span>
                       <strong>{document.title}</strong>
                       <p>{document.kind}</p>
                     </div>
                     <div className="staff-app-documents-cell">
+                      <span className="staff-app-documents-mobile-label">Date</span>
                       <strong>{formatDocumentDate(document.date)}</strong>
                       <p>{document.date}</p>
                     </div>
                     <div className="staff-app-documents-cell">
+                      <span className="staff-app-documents-mobile-label">Shift</span>
                       <strong>{document.role}</strong>
                       <p>PDF ready</p>
                     </div>
                     <div className="staff-app-documents-cell staff-app-documents-download-cell">
+                      <span className="staff-app-documents-mobile-label">Download</span>
                       <a href={document.href} className="staff-app-documents-download">
                         Download PDF
                       </a>

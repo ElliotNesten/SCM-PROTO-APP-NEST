@@ -1559,6 +1559,16 @@
   min-width: 0;
 }
 
+.staff-app-documents-mobile-label {
+  display: none;
+  margin-bottom: 0.1rem;
+  color: #6f7d9f;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
 .staff-app-documents-cell strong {
   display: block;
   color: #10203a;
@@ -1588,6 +1598,44 @@
   font-weight: 700;
   text-decoration: none;
   white-space: nowrap;
+}
+
+@media (max-width: 560px) {
+  .staff-app-documents-table {
+    overflow: hidden;
+  }
+
+  .staff-app-documents-table-inner {
+    min-width: 0;
+  }
+
+  .staff-app-documents-table-head {
+    display: none;
+  }
+
+  .staff-app-documents-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.85rem 1rem;
+    align-items: flex-start;
+  }
+
+  .staff-app-documents-cell {
+    display: grid;
+    gap: 0.2rem;
+  }
+
+  .staff-app-documents-mobile-label {
+    display: block;
+  }
+
+  .staff-app-documents-download-cell {
+    grid-column: 1 / -1;
+    justify-content: flex-start;
+  }
+
+  .staff-app-documents-download {
+    width: 100%;
+  }
 }
 
 .staff-app-colleagues-screen {

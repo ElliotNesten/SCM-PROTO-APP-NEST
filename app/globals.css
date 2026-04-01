@@ -8061,6 +8061,30 @@ a.queue-card:hover {
   gap: 1rem;
 }
 
+.system-settings-header-search-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.75rem 1rem;
+  flex-wrap: wrap;
+}
+
+.system-settings-header-search-field {
+  display: grid;
+  gap: 0.45rem;
+  max-width: 31rem;
+  width: 100%;
+}
+
+.system-settings-header-search-label {
+  margin: 0;
+  color: #6174a7;
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
 .system-settings-command-card {
   display: grid;
   gap: 1rem;
@@ -8101,6 +8125,12 @@ a.queue-card:hover {
   overflow: hidden;
 }
 
+.system-settings-search-shell-compact {
+  min-height: 2.95rem;
+  border-radius: 1rem;
+  max-width: 31rem;
+}
+
 .system-settings-search-shell input {
   width: 100%;
   min-height: 3.4rem;
@@ -8109,6 +8139,12 @@ a.queue-card:hover {
   padding: 0.85rem 1rem 0.85rem 3rem;
   color: #22304d;
   font: inherit;
+}
+
+.system-settings-search-shell-compact input {
+  min-height: 2.95rem;
+  padding: 0.72rem 0.95rem 0.72rem 2.8rem;
+  font-size: 0.96rem;
 }
 
 .system-settings-search-shell input:focus {
@@ -8222,7 +8258,7 @@ a.queue-card:hover {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: 0.75rem;
   margin-top: auto;
 }
@@ -8255,39 +8291,6 @@ a.queue-card:hover {
 .system-settings-overview-card.active .system-settings-hub-summary-pill {
   background: rgba(255, 255, 255, 0.14);
   color: #fff;
-}
-
-.system-settings-open-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 2.45rem;
-  padding: 0.45rem 0.9rem;
-  border: 1px solid rgba(193, 205, 241, 0.95);
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.96);
-  color: #31467c;
-  font: inherit;
-  font-weight: 800;
-  line-height: 1;
-  transition:
-    transform 160ms ease,
-    border-color 160ms ease,
-    box-shadow 160ms ease,
-    background 160ms ease,
-    color 160ms ease;
-}
-
-.system-settings-overview-card:hover .system-settings-open-button,
-.system-settings-overview-card:focus-visible .system-settings-open-button {
-  border-color: rgba(126, 145, 218, 0.95);
-  box-shadow: 0 12px 24px rgba(80, 94, 147, 0.14);
-}
-
-.system-settings-open-button.active {
-  border-color: rgba(255, 255, 255, 0.34);
-  background: rgba(255, 255, 255, 0.96);
-  color: #30457d;
 }
 
 .system-settings-modal-backdrop {
@@ -9433,15 +9436,16 @@ a.queue-card:hover {
     grid-template-columns: 1fr;
   }
 
-  .system-settings-overview-card-foot,
-  .system-settings-modal-header,
-  .system-settings-modal-actions {
+  .system-settings-header-search-row,
+  .system-settings-command-foot,
+  .system-settings-hub-section-toggle {
     flex-direction: column;
     align-items: stretch;
   }
 
-  .system-settings-command-foot,
-  .system-settings-hub-section-toggle {
+  .system-settings-overview-card-foot,
+  .system-settings-modal-header,
+  .system-settings-modal-actions {
     flex-direction: column;
     align-items: stretch;
   }

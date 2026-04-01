@@ -17,7 +17,7 @@ export async function GET(_request: Request, context: RouteContext) {
     return NextResponse.json({ error: "Document not found." }, { status: 404 });
   }
 
-  const pdfBuffer = buildStaffDocumentPdf(document);
+  const pdfBuffer = await buildStaffDocumentPdf(document);
 
   return new NextResponse(pdfBuffer, {
     status: 200,

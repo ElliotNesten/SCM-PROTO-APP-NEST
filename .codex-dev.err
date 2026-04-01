@@ -1,0 +1,208 @@
+⚠ Missing `origin` header from a forwarded Server Actions request.
+⚠ Missing `origin` header from a forwarded Server Actions request.
+⚠ Missing `origin` header from a forwarded Server Actions request.
+⨯ SyntaxError: Unexpected token '﻿', "﻿[
+    {"... is not valid JSON
+    at JSON.parse (<anonymous>)
+    at readStaffAppAccountStore (lib\staff-app-store.ts:335:16)
+    at async ensureStaffAppAccountForLinkedStaffProfile (lib\staff-app-store.ts:579:20)
+    at async loginToStaffApp (app\staff-app\actions.ts:72:7)
+  333 |   await ensureStaffAppAccountStore();
+  334 |   const raw = await fs.readFile(storePath, "utf8");
+> 335 |   return (JSON.parse(raw) as LegacyStaffAppAccount[]).map(normalizeStaffAppAccount);
+      |                ^
+  336 | }
+  337 |
+  338 | async function writeStaffAppAccountStore(accounts: StaffAppAccount[]) {
+⨯ SyntaxError: Unexpected token '﻿', "﻿[
+    {"... is not valid JSON
+    at JSON.parse (<anonymous>)
+    at readStaffAppAccountStore (lib\staff-app-store.ts:335:16)
+    at async ensureStaffAppAccountForLinkedStaffProfile (lib\staff-app-store.ts:579:20)
+    at async loginToStaffApp (app\staff-app\actions.ts:72:7)
+  333 |   await ensureStaffAppAccountStore();
+  334 |   const raw = await fs.readFile(storePath, "utf8");
+> 335 |   return (JSON.parse(raw) as LegacyStaffAppAccount[]).map(normalizeStaffAppAccount);
+      |                ^
+  336 | }
+  337 |
+  338 | async function writeStaffAppAccountStore(accounts: StaffAppAccount[]) { {
+  page: '/staff-app/login'
+}
+⚠ Missing `origin` header from a forwarded Server Actions request.
+⨯ SyntaxError: Unexpected token '﻿', "﻿[
+    {"... is not valid JSON
+    at JSON.parse (<anonymous>)
+    at readStaffAppAccountStore (lib\staff-app-store.ts:335:16)
+    at async ensureStaffAppAccountForLinkedStaffProfile (lib\staff-app-store.ts:579:20)
+    at async loginToStaffApp (app\staff-app\actions.ts:72:7)
+  333 |   await ensureStaffAppAccountStore();
+  334 |   const raw = await fs.readFile(storePath, "utf8");
+> 335 |   return (JSON.parse(raw) as LegacyStaffAppAccount[]).map(normalizeStaffAppAccount);
+      |                ^
+  336 | }
+  337 |
+  338 | async function writeStaffAppAccountStore(accounts: StaffAppAccount[]) {
+⨯ SyntaxError: Unexpected token '﻿', "﻿[
+    {"... is not valid JSON
+    at JSON.parse (<anonymous>)
+    at readStaffAppAccountStore (lib\staff-app-store.ts:335:16)
+    at async ensureStaffAppAccountForLinkedStaffProfile (lib\staff-app-store.ts:579:20)
+    at async loginToStaffApp (app\staff-app\actions.ts:72:7)
+  333 |   await ensureStaffAppAccountStore();
+  334 |   const raw = await fs.readFile(storePath, "utf8");
+> 335 |   return (JSON.parse(raw) as LegacyStaffAppAccount[]).map(normalizeStaffAppAccount);
+      |                ^
+  336 | }
+  337 |
+  338 | async function writeStaffAppAccountStore(accounts: StaffAppAccount[]) { {
+  page: '/staff-app/login'
+}
+⚠ Missing `origin` header from a forwarded Server Actions request.
+⚠ Missing `origin` header from a forwarded Server Actions request.
+⚠ Missing `origin` header from a forwarded Server Actions request.
+⚠ Missing `origin` header from a forwarded Server Actions request.
+⨯ SyntaxError: Unexpected end of JSON input
+    at JSON.parse (<anonymous>)
+    at readStaffAppAccountStore (lib\staff-app-store.ts:335:16)
+    at async syncStaffAppAccountFromLinkedStaffProfile (lib\staff-app-store.ts:516:20)
+    at async requireCurrentStaffAppAccount (lib\staff-app-session.ts:222:19)
+    at async StaffAppOnboardingPage (app\staff-app\(protected)\onboarding\page.tsx:35:19)
+  333 |   await ensureStaffAppAccountStore();
+  334 |   const raw = await fs.readFile(storePath, "utf8");
+> 335 |   return (JSON.parse(raw) as LegacyStaffAppAccount[]).map(normalizeStaffAppAccount);
+      |                ^
+  336 | }
+  337 |
+  338 | async function writeStaffAppAccountStore(accounts: StaffAppAccount[]) { {
+  digest: '4255051144'
+}
+⨯ SyntaxError: Unexpected end of JSON input
+    at JSON.parse (<anonymous>)
+    at readStaffAppAccountStore (lib\staff-app-store.ts:335:16)
+    at async ensureStaffAppAccountForLinkedStaffProfile (lib\staff-app-store.ts:579:20)
+    at async syncStaffAppAccountFromLinkedStaffProfile (lib\staff-app-store.ts:515:26)
+    at async requireCurrentStaffAppAccount (lib\staff-app-session.ts:222:19)
+    at async StaffAppProtectedLayout (app\staff-app\(protected)\layout.tsx:10:3)
+  333 |   await ensureStaffAppAccountStore();
+  334 |   const raw = await fs.readFile(storePath, "utf8");
+> 335 |   return (JSON.parse(raw) as LegacyStaffAppAccount[]).map(normalizeStaffAppAccount);
+      |                ^
+  336 | }
+  337 |
+  338 | async function writeStaffAppAccountStore(accounts: StaffAppAccount[]) { {
+  digest: '2680726775'
+}
+⨯ SyntaxError: Unexpected end of JSON input
+    at JSON.parse (<anonymous>)
+    at readStaffAppAccountStore (lib\staff-app-store.ts:335:16)
+    at async ensureStaffAppAccountForLinkedStaffProfile (lib\staff-app-store.ts:579:20)
+    at async syncStaffAppAccountFromLinkedStaffProfile (lib\staff-app-store.ts:515:26)
+    at async requireCurrentStaffAppAccount (lib\staff-app-session.ts:222:19)
+    at async StaffAppOnboardingPage (app\staff-app\(protected)\onboarding\page.tsx:35:19)
+  333 |   await ensureStaffAppAccountStore();
+  334 |   const raw = await fs.readFile(storePath, "utf8");
+> 335 |   return (JSON.parse(raw) as LegacyStaffAppAccount[]).map(normalizeStaffAppAccount);
+      |                ^
+  336 | }
+  337 |
+  338 | async function writeStaffAppAccountStore(accounts: StaffAppAccount[]) { {
+  digest: '3882337292'
+}
+⨯ SyntaxError: Unexpected end of JSON input
+    at JSON.parse (<anonymous>)
+    at readStaffAppAccountStore (lib\staff-app-store.ts:335:16)
+    at async ensureStaffAppAccountForLinkedStaffProfile (lib\staff-app-store.ts:579:20)
+    at async syncStaffAppAccountFromLinkedStaffProfile (lib\staff-app-store.ts:515:26)
+    at async requireCurrentStaffAppAccount (lib\staff-app-session.ts:222:19)
+    at async StaffAppProtectedLayout (app\staff-app\(protected)\layout.tsx:10:3)
+  333 |   await ensureStaffAppAccountStore();
+  334 |   const raw = await fs.readFile(storePath, "utf8");
+> 335 |   return (JSON.parse(raw) as LegacyStaffAppAccount[]).map(normalizeStaffAppAccount);
+      |                ^
+  336 | }
+  337 |
+  338 | async function writeStaffAppAccountStore(accounts: StaffAppAccount[]) { {
+  digest: '2680726775'
+}
+⨯ SyntaxError: Unexpected end of JSON input
+    at JSON.parse (<anonymous>)
+    at readStaffAppAccountStore (lib\staff-app-store.ts:335:16)
+    at async ensureStaffAppAccountForLinkedStaffProfile (lib\staff-app-store.ts:579:20)
+    at async syncStaffAppAccountFromLinkedStaffProfile (lib\staff-app-store.ts:515:26)
+    at async requireCurrentStaffAppAccount (lib\staff-app-session.ts:222:19)
+    at async StaffAppOnboardingPage (app\staff-app\(protected)\onboarding\page.tsx:35:19)
+  333 |   await ensureStaffAppAccountStore();
+  334 |   const raw = await fs.readFile(storePath, "utf8");
+> 335 |   return (JSON.parse(raw) as LegacyStaffAppAccount[]).map(normalizeStaffAppAccount);
+      |                ^
+  336 | }
+  337 |
+  338 | async function writeStaffAppAccountStore(accounts: StaffAppAccount[]) { {
+  digest: '3882337292'
+}
+⨯ SyntaxError: Unexpected end of JSON input
+    at JSON.parse (<anonymous>)
+    at readStaffAppAccountStore (lib\staff-app-store.ts:335:16)
+    at async ensureStaffAppAccountForLinkedStaffProfile (lib\staff-app-store.ts:579:20)
+    at async syncStaffAppAccountFromLinkedStaffProfile (lib\staff-app-store.ts:515:26)
+    at async requireCurrentStaffAppAccount (lib\staff-app-session.ts:222:19)
+    at async StaffAppProtectedLayout (app\staff-app\(protected)\layout.tsx:10:3)
+  333 |   await ensureStaffAppAccountStore();
+  334 |   const raw = await fs.readFile(storePath, "utf8");
+> 335 |   return (JSON.parse(raw) as LegacyStaffAppAccount[]).map(normalizeStaffAppAccount);
+      |                ^
+  336 | }
+  337 |
+  338 | async function writeStaffAppAccountStore(accounts: StaffAppAccount[]) { {
+  digest: '2680726775'
+}
+⨯ SyntaxError: Unexpected end of JSON input
+    at JSON.parse (<anonymous>)
+    at readStaffAppAccountStore (lib\staff-app-store.ts:335:16)
+    at async ensureStaffAppAccountForLinkedStaffProfile (lib\staff-app-store.ts:579:20)
+    at async syncStaffAppAccountFromLinkedStaffProfile (lib\staff-app-store.ts:515:26)
+    at async requireCurrentStaffAppAccount (lib\staff-app-session.ts:222:19)
+    at async StaffAppOnboardingPage (app\staff-app\(protected)\onboarding\page.tsx:35:19)
+  333 |   await ensureStaffAppAccountStore();
+  334 |   const raw = await fs.readFile(storePath, "utf8");
+> 335 |   return (JSON.parse(raw) as LegacyStaffAppAccount[]).map(normalizeStaffAppAccount);
+      |                ^
+  336 | }
+  337 |
+  338 | async function writeStaffAppAccountStore(accounts: StaffAppAccount[]) { {
+  digest: '3882337292'
+}
+⨯ SyntaxError: Unexpected end of JSON input
+    at JSON.parse (<anonymous>)
+    at readStaffAppAccountStore (lib\staff-app-store.ts:335:16)
+    at async getStaffAppAccountById (lib\staff-app-store.ts:359:20)
+    at async getCurrentStaffAppAccount (lib\staff-app-session.ts:125:19)
+    at async requireCurrentStaffAppAccount (lib\staff-app-session.ts:222:19)
+    at async StaffAppProtectedLayout (app\staff-app\(protected)\layout.tsx:10:3)
+  333 |   await ensureStaffAppAccountStore();
+  334 |   const raw = await fs.readFile(storePath, "utf8");
+> 335 |   return (JSON.parse(raw) as LegacyStaffAppAccount[]).map(normalizeStaffAppAccount);
+      |                ^
+  336 | }
+  337 |
+  338 | async function writeStaffAppAccountStore(accounts: StaffAppAccount[]) { {
+  digest: '696131031'
+}
+⨯ SyntaxError: Unexpected end of JSON input
+    at JSON.parse (<anonymous>)
+    at readStaffAppAccountStore (lib\staff-app-store.ts:335:16)
+    at async getStaffAppAccountById (lib\staff-app-store.ts:359:20)
+    at async getCurrentStaffAppAccount (lib\staff-app-session.ts:125:19)
+    at async requireCurrentStaffAppAccount (lib\staff-app-session.ts:222:19)
+    at async StaffAppOnboardingPage (app\staff-app\(protected)\onboarding\page.tsx:35:19)
+  333 |   await ensureStaffAppAccountStore();
+  334 |   const raw = await fs.readFile(storePath, "utf8");
+> 335 |   return (JSON.parse(raw) as LegacyStaffAppAccount[]).map(normalizeStaffAppAccount);
+      |                ^
+  336 | }
+  337 |
+  338 | async function writeStaffAppAccountStore(accounts: StaffAppAccount[]) { {
+  digest: '3439609004'
+}
+⚠ Missing `origin` header from a forwarded Server Actions request.

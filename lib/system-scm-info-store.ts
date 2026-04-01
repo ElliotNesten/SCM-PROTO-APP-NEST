@@ -4,6 +4,10 @@ import path from "node:path";
 import { defaultArenaCatalog, type ArenaCatalogEntry } from "@/data/predefined-arenas";
 import { equipmentOptions } from "@/data/equipment-options";
 import { normalizeScandinavianCountry } from "@/lib/scandinavian-countries";
+import {
+  readSingletonSystemSetting,
+  writeSingletonSystemSetting,
+} from "@/lib/system-singleton-store";
 import type { StaffAppGuideEntry } from "@/lib/staff-app-guides";
 
 export type StaffAppScmInfoSectionKey =
@@ -47,6 +51,7 @@ export interface StaffAppScmInfoSettings {
 const equipmentSummary = equipmentOptions.map((item) => item.label).join(", ");
 const storeDirectory = path.join(process.cwd(), "data");
 const storePath = path.join(storeDirectory, "system-scm-info-store.json");
+const systemSettingKey = "systemScmInfo";
 
 function createDefaultStaffAppScmInfoSettings(): StaffAppScmInfoSettings {
   return {
@@ -324,41 +329,45 @@ function normalizeStoredStaffAppScmInfoSettings(
   } satisfies StaffAppScmInfoSettings;
 }
 
-async function ensureSystemScmInfoStore() {
+async function readSystemScmInfoStoreSnapshot() {
   try {
-    await fs.access(storePath);
-  } catch {
-    await fs.mkdir(storeDirectory, { recursive: true });
-    await fs.writeFile(
-      storePath,
-      JSON.stringify(createDefaultStaffAppScmInfoSettings(), null, 2),
-      "utf8",
+    const raw = await fs.readFile(storePath, "utf8");
+    return normalizeStoredStaffAppScmInfoSettings(
+      JSON.parse(raw) as Partial<StaffAppScmInfoSettings>,
     );
+  } catch (error) {
+    const readError = error as NodeJS.ErrnoException;
+
+    if (readError.code === "ENOENT") {
+      return createDefaultStaffAppScmInfoSettings();
+    }
+
+    throw error;
   }
 }
 
-async function readSystemScmInfoStore() {
-  await ensureSystemScmInfoStore();
-  const raw = await fs.readFile(storePath, "utf8");
-  return normalizeStoredStaffAppScmInfoSettings(
-    JSON.parse(raw) as Partial<StaffAppScmInfoSettings>,
-  );
-}
-
 async function writeSystemScmInfoStore(settings: StaffAppScmInfoSettings) {
+  await fs.mkdir(storeDirectory, { recursive: true });
   await fs.writeFile(storePath, JSON.stringify(settings, null, 2), "utf8");
 }
 
 export async function getSystemScmInfoSettings() {
-  return readSystemScmInfoStore();
+  return readSingletonSystemSetting({
+    settingKey: systemSettingKey,
+    normalize: normalizeStoredStaffAppScmInfoSettings,
+    readFallback: readSystemScmInfoStoreSnapshot,
+  });
 }
 
 export async function updateSystemScmInfoSettings(
   settings: Partial<StaffAppScmInfoSettings>,
 ) {
-  const normalizedSettings = normalizeStoredStaffAppScmInfoSettings(settings);
-  await writeSystemScmInfoStore(normalizedSettings);
-  return normalizedSettings;
+  return writeSingletonSystemSetting({
+    settingKey: systemSettingKey,
+    value: settings,
+    normalize: normalizeStoredStaffAppScmInfoSettings,
+    writeFallback: writeSystemScmInfoStore,
+  });
 }
 
 export function renderArenaNoteTemplate(

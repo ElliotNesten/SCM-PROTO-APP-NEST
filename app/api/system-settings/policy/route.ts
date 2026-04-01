@@ -1,5 +1,4 @@
 import { randomUUID } from "node:crypto";
-import { promises as fs } from "node:fs";
 import path from "node:path";
 
 import { NextResponse } from "next/server";
@@ -8,6 +7,10 @@ import {
   getCurrentAuthenticatedScmStaffProfile,
   isSuperAdminRole,
 } from "@/lib/auth-session";
+import {
+  deleteStoredPublicUpload,
+  storePublicUpload,
+} from "@/lib/public-file-storage";
 import {
   getSystemPolicySettings,
   updateSystemPolicySettings,
@@ -24,30 +27,6 @@ function sanitizeFileBaseName(fileName: string) {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "")
     .slice(0, 48);
-}
-
-async function deletePreviousPolicy(currentPolicyUrl: string | undefined) {
-  if (!currentPolicyUrl || !currentPolicyUrl.startsWith("/system-policies/")) {
-    return;
-  }
-
-  const relativeSegments = currentPolicyUrl.split("/").filter(Boolean);
-  const filePath = path.join(publicRootDirectory, ...relativeSegments);
-  const normalizedPath = path.normalize(filePath);
-  const normalizedPublicRoot = path.normalize(publicRootDirectory);
-
-  if (!normalizedPath.startsWith(normalizedPublicRoot)) {
-    return;
-  }
-
-  try {
-    await fs.unlink(normalizedPath);
-  } catch (error) {
-    const unlinkError = error as NodeJS.ErrnoException;
-    if (unlinkError.code !== "ENOENT") {
-      throw error;
-    }
-  }
 }
 
 async function requireSuperAdminApiProfile() {
@@ -106,20 +85,24 @@ export async function POST(request: Request) {
   const baseName = sanitizeFileBaseName(path.parse(uploadedEntry.name).name) || "scm-policy";
   const uniqueSuffix = randomUUID().slice(0, 8);
   const storageFileName = `${baseName}-${uniqueSuffix}.pdf`;
-  const outputPath = path.join(policyRootDirectory, storageFileName);
-
-  await fs.mkdir(policyRootDirectory, { recursive: true });
-  const fileBuffer = Buffer.from(await uploadedEntry.arrayBuffer());
-  await fs.writeFile(outputPath, fileBuffer);
-
-  const policyUrl = `/system-policies/${storageFileName}`;
+  const policyUrl = await storePublicUpload({
+    blobPath: `system-policies/${storageFileName}`,
+    file: uploadedEntry,
+    localDirectory: policyRootDirectory,
+    localFileName: storageFileName,
+    localUrlPath: `/system-policies/${storageFileName}`,
+  });
   const updatedPolicy = await updateSystemPolicySettings({
     policyUrl,
     fileName: uploadedEntry.name,
     uploadedAt: new Date().toISOString(),
     uploadedBy: currentProfile.displayName,
   });
-  await deletePreviousPolicy(existingPolicy.policyUrl);
+  await deleteStoredPublicUpload({
+    fileUrl: existingPolicy.policyUrl,
+    localUrlPrefix: "/system-policies/",
+    localRootDirectory: policyRootDirectory,
+  });
 
   return NextResponse.json({
     ok: true,

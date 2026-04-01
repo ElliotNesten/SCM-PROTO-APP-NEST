@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
-import fs from "node:fs/promises";
 import path from "node:path";
 
+import { ensureJsonFile, readJsonFile, writeJsonFile } from "@/lib/json-file-store";
 import { normalizeHourlyRateOverride } from "@/lib/compensation";
 import {
   ensureProductionStorageSchema,
@@ -502,46 +502,33 @@ function createSeedStaffProfiles(): StoredStaffProfile[] {
 }
 
 async function ensureStaffStore() {
-  try {
-    await fs.access(storePath);
-  } catch {
-    await fs.mkdir(storeDirectory, { recursive: true });
-    await fs.writeFile(
-      storePath,
-      JSON.stringify(createSeedStaffProfiles(), null, 2),
-      "utf8",
-    );
-  }
+  await ensureJsonFile(storePath, createSeedStaffProfiles());
 }
 
 async function ensureArchivedDocumentsStore() {
-  try {
-    await fs.access(archivedDocumentsStorePath);
-  } catch {
-    await fs.mkdir(storeDirectory, { recursive: true });
-    await fs.writeFile(archivedDocumentsStorePath, JSON.stringify([], null, 2), "utf8");
-  }
+  await ensureJsonFile(archivedDocumentsStorePath, [] as ArchivedStaffDocumentRecord[]);
 }
 
 async function readStaffStore() {
   await ensureStaffStore();
-  const raw = await fs.readFile(storePath, "utf8");
-  const parsed = JSON.parse(raw) as StoredStaffProfile[];
+  const parsed = await readJsonFile<StoredStaffProfile[]>(
+    storePath,
+    createSeedStaffProfiles(),
+  );
   return parsed.map(normalizeStoredStaffProfile);
 }
 
 async function writeStaffStore(profiles: StoredStaffProfile[]) {
-  await fs.writeFile(storePath, JSON.stringify(profiles, null, 2), "utf8");
+  await writeJsonFile(storePath, profiles);
 }
 
 async function readArchivedDocumentsStore() {
   await ensureArchivedDocumentsStore();
-  const raw = await fs.readFile(archivedDocumentsStorePath, "utf8");
-  return JSON.parse(raw) as ArchivedStaffDocumentRecord[];
+  return readJsonFile<ArchivedStaffDocumentRecord[]>(archivedDocumentsStorePath, []);
 }
 
 async function writeArchivedDocumentsStore(records: ArchivedStaffDocumentRecord[]) {
-  await fs.writeFile(archivedDocumentsStorePath, JSON.stringify(records, null, 2), "utf8");
+  await writeJsonFile(archivedDocumentsStorePath, records);
 }
 
 export async function getAllStoredStaffProfiles() {

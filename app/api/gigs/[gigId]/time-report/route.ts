@@ -77,28 +77,30 @@ export async function POST(_request: Request, context: RouteContext) {
   }
 
   const approvedAt = new Date().toISOString();
-  const generatedDocuments = confirmedEntries.flatMap(({ shift, assignment }) => [
-    buildStoredStaffDocumentRecord({
-      userId: assignment.staffId,
-      gigId: gig.id,
-      shiftId: shift.id,
-      gigName: gig.artist,
-      gigDate: gig.date,
-      shiftRole: shift.role,
-      documentKind: "Employment Contract",
-      generatedAt: approvedAt,
-    }),
-    buildStoredStaffDocumentRecord({
-      userId: assignment.staffId,
-      gigId: gig.id,
-      shiftId: shift.id,
-      gigName: gig.artist,
-      gigDate: gig.date,
-      shiftRole: shift.role,
-      documentKind: "Time Report",
-      generatedAt: approvedAt,
-    }),
-  ]);
+  const generatedDocuments = await Promise.all(
+    confirmedEntries.flatMap(({ shift, assignment }) => [
+      buildStoredStaffDocumentRecord({
+        userId: assignment.staffId,
+        gigId: gig.id,
+        shiftId: shift.id,
+        gigName: gig.artist,
+        gigDate: gig.date,
+        shiftRole: shift.role,
+        documentKind: "Employment Contract",
+        generatedAt: approvedAt,
+      }),
+      buildStoredStaffDocumentRecord({
+        userId: assignment.staffId,
+        gigId: gig.id,
+        shiftId: shift.id,
+        gigName: gig.artist,
+        gigDate: gig.date,
+        shiftRole: shift.role,
+        documentKind: "Time Report",
+        generatedAt: approvedAt,
+      }),
+    ]),
+  );
 
   await Promise.all([
     replaceStoredStaffDocumentsForGig(gig.id, generatedDocuments),

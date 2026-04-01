@@ -3,6 +3,10 @@ import path from "node:path";
 
 import type { StaffAppScmInfoSectionKey } from "@/lib/system-scm-info-store";
 import {
+  readSingletonSystemSetting,
+  writeSingletonSystemSetting,
+} from "@/lib/system-singleton-store";
+import {
   createEmptyStaffAppScmInfoPdfAsset,
   createEmptyStaffAppScmInfoPdfSlots,
   STAFF_APP_SCM_INFO_PDF_LIMIT,
@@ -18,6 +22,7 @@ import type {
 
 const storeDirectory = path.join(process.cwd(), "data");
 const storePath = path.join(storeDirectory, "system-scm-info-pdf-store.json");
+const systemSettingKey = "systemScmInfoPdfs";
 
 function createDefaultSystemScmInfoPdfSettings(): SystemScmInfoPdfSettings {
   return {
@@ -91,28 +96,25 @@ function normalizeSystemScmInfoPdfSettings(
   } satisfies SystemScmInfoPdfSettings;
 }
 
-async function ensureSystemScmInfoPdfStore() {
+async function readSystemScmInfoPdfStoreSnapshot() {
   try {
-    await fs.access(storePath);
-  } catch {
-    await fs.mkdir(storeDirectory, { recursive: true });
-    await fs.writeFile(
-      storePath,
-      JSON.stringify(createDefaultSystemScmInfoPdfSettings(), null, 2),
-      "utf8",
+    const raw = await fs.readFile(storePath, "utf8");
+    return normalizeSystemScmInfoPdfSettings(
+      JSON.parse(raw) as Partial<SystemScmInfoPdfSettings>,
     );
+  } catch (error) {
+    const readError = error as NodeJS.ErrnoException;
+
+    if (readError.code === "ENOENT") {
+      return createDefaultSystemScmInfoPdfSettings();
+    }
+
+    throw error;
   }
 }
 
-async function readSystemScmInfoPdfStore() {
-  await ensureSystemScmInfoPdfStore();
-  const raw = await fs.readFile(storePath, "utf8");
-  return normalizeSystemScmInfoPdfSettings(
-    JSON.parse(raw) as Partial<SystemScmInfoPdfSettings>,
-  );
-}
-
 async function writeSystemScmInfoPdfStore(settings: SystemScmInfoPdfSettings) {
+  await fs.mkdir(storeDirectory, { recursive: true });
   await fs.writeFile(storePath, JSON.stringify(settings, null, 2), "utf8");
 }
 
@@ -127,7 +129,11 @@ export function isStaffAppScmInfoItemPdfSectionKey(
 }
 
 export async function getSystemScmInfoPdfSettings() {
-  return readSystemScmInfoPdfStore();
+  return readSingletonSystemSetting({
+    settingKey: systemSettingKey,
+    normalize: normalizeSystemScmInfoPdfSettings,
+    readFallback: readSystemScmInfoPdfStoreSnapshot,
+  });
 }
 
 export async function updateSystemScmInfoSectionPdf(
@@ -135,7 +141,7 @@ export async function updateSystemScmInfoSectionPdf(
   slotIndex: number,
   asset: Partial<StaffAppScmInfoPdfAsset>,
 ) {
-  const currentSettings = await readSystemScmInfoPdfStore();
+  const currentSettings = await getSystemScmInfoPdfSettings();
   const currentSlots = normalizePdfAssetSlots(currentSettings.sectionPdfs[sectionId]);
   const nextSlots = currentSlots.map((currentAsset, currentIndex) =>
     currentIndex === slotIndex ? normalizePdfAsset(asset) : currentAsset,
@@ -158,7 +164,7 @@ export async function updateSystemScmInfoItemPdf(
   slotIndex: number,
   asset: Partial<StaffAppScmInfoPdfAsset>,
 ) {
-  const currentSettings = await readSystemScmInfoPdfStore();
+  const currentSettings = await getSystemScmInfoPdfSettings();
   const itemKey = getSystemScmInfoItemPdfKey(sectionId, itemIndex);
   const currentSlots = normalizePdfAssetSlots(currentSettings.itemPdfs[itemKey]);
   const nextSlots = currentSlots.map((currentAsset, currentIndex) =>
@@ -179,9 +185,12 @@ export async function updateSystemScmInfoItemPdf(
 export async function updateSystemScmInfoPdfSettings(
   settings: Partial<SystemScmInfoPdfSettings>,
 ) {
-  const normalizedSettings = normalizeSystemScmInfoPdfSettings(settings);
-  await writeSystemScmInfoPdfStore(normalizedSettings);
-  return normalizedSettings;
+  return writeSingletonSystemSetting({
+    settingKey: systemSettingKey,
+    value: settings,
+    normalize: normalizeSystemScmInfoPdfSettings,
+    writeFallback: writeSystemScmInfoPdfStore,
+  });
 }
 
 export function getEmptySystemScmInfoPdfAsset() {

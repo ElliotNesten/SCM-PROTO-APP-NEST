@@ -165,6 +165,12 @@ export async function ensureProductionStorageSchema() {
         updated_at text not null
       );
 
+      create table if not exists system_singleton_settings (
+        setting_key text primary key,
+        value_json text not null,
+        updated_at text not null
+      );
+
       create table if not exists gigs (
         id text primary key,
         artist text not null,

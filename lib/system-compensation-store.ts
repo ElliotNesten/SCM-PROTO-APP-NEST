@@ -3,12 +3,17 @@ import path from "node:path";
 
 import { normalizeCompensationRateMatrix } from "@/lib/compensation";
 import {
+  readSingletonSystemSetting,
+  writeSingletonSystemSetting,
+} from "@/lib/system-singleton-store";
+import {
   createDefaultCompensationRateMatrix,
   type SystemCompensationSettings,
 } from "@/types/compensation";
 
 const storeDirectory = path.join(process.cwd(), "data");
 const storePath = path.join(storeDirectory, "system-compensation-store.json");
+const systemSettingKey = "systemCompensation";
 
 function createDefaultSystemCompensationSettings(): SystemCompensationSettings {
   return {
@@ -33,47 +38,52 @@ function normalizeSystemCompensationSettings(
   } satisfies SystemCompensationSettings;
 }
 
-async function ensureSystemCompensationStore() {
+async function readSystemCompensationStoreSnapshot() {
   try {
-    await fs.access(storePath);
-  } catch {
-    await fs.mkdir(storeDirectory, { recursive: true });
-    await fs.writeFile(
-      storePath,
-      JSON.stringify(createDefaultSystemCompensationSettings(), null, 2),
-      "utf8",
+    const raw = await fs.readFile(storePath, "utf8");
+    return normalizeSystemCompensationSettings(
+      JSON.parse(raw) as Partial<SystemCompensationSettings>,
     );
-  }
-}
+  } catch (error) {
+    const readError = error as NodeJS.ErrnoException;
 
-async function readSystemCompensationStore() {
-  await ensureSystemCompensationStore();
-  const raw = await fs.readFile(storePath, "utf8");
-  return normalizeSystemCompensationSettings(
-    JSON.parse(raw) as Partial<SystemCompensationSettings>,
-  );
+    if (readError.code === "ENOENT") {
+      return createDefaultSystemCompensationSettings();
+    }
+
+    throw error;
+  }
 }
 
 async function writeSystemCompensationStore(
   settings: SystemCompensationSettings,
 ) {
+  await fs.mkdir(storeDirectory, { recursive: true });
   await fs.writeFile(storePath, JSON.stringify(settings, null, 2), "utf8");
 }
 
 export async function getSystemCompensationSettings() {
-  return readSystemCompensationStore();
+  return readSingletonSystemSetting({
+    settingKey: systemSettingKey,
+    normalize: normalizeSystemCompensationSettings,
+    readFallback: readSystemCompensationStoreSnapshot,
+  });
 }
 
 export async function updateSystemCompensationSettings(
   updates: Partial<SystemCompensationSettings>,
 ) {
-  const currentSettings = await readSystemCompensationStore();
-  const nextSettings = normalizeSystemCompensationSettings({
+  const currentSettings = await getSystemCompensationSettings();
+  const nextSettings = {
     ...currentSettings,
     ...updates,
     updatedAt: new Date().toISOString(),
-  });
+  };
 
-  await writeSystemCompensationStore(nextSettings);
-  return nextSettings;
+  return writeSingletonSystemSetting({
+    settingKey: systemSettingKey,
+    value: nextSettings,
+    normalize: normalizeSystemCompensationSettings,
+    writeFallback: writeSystemCompensationStore,
+  });
 }

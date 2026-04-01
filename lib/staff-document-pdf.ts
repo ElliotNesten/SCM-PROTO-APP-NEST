@@ -1,5 +1,5 @@
 import type { StoredStaffDocument } from "@/types/staff-documents";
-import { getSystemPdfTemplateSync } from "@/lib/system-template-store";
+import { getSystemPdfTemplate } from "@/lib/system-template-store";
 import { buildShiftPdfTemplateLines } from "@/types/system-settings";
 
 function escapePdfText(value: string) {
@@ -79,8 +79,8 @@ function createPdfBuffer(lines: string[]) {
   return Buffer.from(pdf, "utf8");
 }
 
-export function buildStaffDocumentPdf(document: StoredStaffDocument) {
-  const template = getSystemPdfTemplateSync(
+export async function buildStaffDocumentPdf(document: StoredStaffDocument) {
+  const template = await getSystemPdfTemplate(
     getTemplateIdFromDocumentKind(document.documentKind),
   );
   const lines = buildShiftPdfTemplateLines(template, {

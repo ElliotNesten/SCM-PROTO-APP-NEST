@@ -94,7 +94,7 @@ async function writeStaffDocumentStore(documents: StoredStaffDocument[]) {
   );
 }
 
-export function buildStoredStaffDocumentRecord({
+export async function buildStoredStaffDocumentRecord({
   userId,
   gigId,
   shiftId,
@@ -114,7 +114,7 @@ export function buildStoredStaffDocumentRecord({
   documentKind: StoredStaffDocument["documentKind"];
   generatedAt: string;
   generatedBy?: StoredStaffDocument["generatedBy"];
-}): StoredStaffDocument {
+}): Promise<StoredStaffDocument> {
   const record: StoredStaffDocument = {
     id: buildDocumentId(userId, shiftId, documentKind),
     userId,
@@ -134,7 +134,7 @@ export function buildStoredStaffDocumentRecord({
 
   return {
     ...record,
-    fileSize: buildStaffDocumentPdf(record).byteLength,
+    fileSize: (await buildStaffDocumentPdf(record)).byteLength,
   };
 }
 

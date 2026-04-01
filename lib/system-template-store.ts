@@ -1,7 +1,10 @@
-import fs from "node:fs";
 import fsp from "node:fs/promises";
 import path from "node:path";
 
+import {
+  readSingletonSystemSetting,
+  writeSingletonSystemSetting,
+} from "@/lib/system-singleton-store";
 import {
   defaultShiftPdfTemplates,
   normalizeShiftPdfTemplate,
@@ -16,6 +19,7 @@ interface StoredSystemTemplateState {
 
 const storeDirectory = path.join(process.cwd(), "data");
 const storePath = path.join(storeDirectory, "system-template-store.json");
+const systemSettingKey = "systemPdfTemplates";
 
 function createDefaultSystemTemplateState(): StoredSystemTemplateState {
   return {
@@ -26,17 +30,6 @@ function createDefaultSystemTemplateState(): StoredSystemTemplateState {
       timeReport: normalizeShiftPdfTemplate(defaultShiftPdfTemplates.timeReport),
     },
   };
-}
-
-function writeStoreSync(state: StoredSystemTemplateState) {
-  fs.mkdirSync(storeDirectory, { recursive: true });
-  fs.writeFileSync(storePath, JSON.stringify(state, null, 2), "utf8");
-}
-
-function ensureStoreSync() {
-  if (!fs.existsSync(storePath)) {
-    writeStoreSync(createDefaultSystemTemplateState());
-  }
 }
 
 function normalizeStoredState(
@@ -57,41 +50,36 @@ function normalizeStoredState(
   } satisfies StoredSystemTemplateState;
 }
 
-async function ensureStore() {
+async function readStoreSnapshot() {
   try {
-    await fsp.access(storePath);
-  } catch {
-    await fsp.mkdir(storeDirectory, { recursive: true });
-    await fsp.writeFile(
-      storePath,
-      JSON.stringify(createDefaultSystemTemplateState(), null, 2),
-      "utf8",
-    );
+    const raw = await fsp.readFile(storePath, "utf8");
+    return normalizeStoredState(JSON.parse(raw) as StoredSystemTemplateState);
+  } catch (error) {
+    const readError = error as NodeJS.ErrnoException;
+
+    if (readError.code === "ENOENT") {
+      return createDefaultSystemTemplateState();
+    }
+
+    throw error;
   }
 }
 
-async function readStore() {
-  await ensureStore();
-  const raw = await fsp.readFile(storePath, "utf8");
-  return normalizeStoredState(JSON.parse(raw) as StoredSystemTemplateState);
-}
-
-export function getSystemPdfTemplatesSync() {
-  ensureStoreSync();
-  const raw = fs.readFileSync(storePath, "utf8");
-  return normalizeStoredState(JSON.parse(raw) as StoredSystemTemplateState);
-}
-
-export function getSystemPdfTemplateSync(templateId: ShiftPdfTemplateId) {
-  return getSystemPdfTemplatesSync().templates[templateId];
+async function writeStore(state: StoredSystemTemplateState) {
+  await fsp.mkdir(storeDirectory, { recursive: true });
+  await fsp.writeFile(storePath, JSON.stringify(state, null, 2), "utf8");
 }
 
 export async function getSystemPdfTemplates() {
-  return await readStore();
+  return readSingletonSystemSetting({
+    settingKey: systemSettingKey,
+    normalize: normalizeStoredState,
+    readFallback: readStoreSnapshot,
+  });
 }
 
 export async function getSystemPdfTemplate(templateId: ShiftPdfTemplateId) {
-  const state = await readStore();
+  const state = await getSystemPdfTemplates();
   return state.templates[templateId];
 }
 
@@ -99,12 +87,11 @@ export async function updateSystemPdfTemplate(
   templateId: ShiftPdfTemplateId,
   nextTemplate: ShiftPdfTemplate,
 ) {
-  const state = await readStore();
+  const state = await getSystemPdfTemplates();
   const normalizedTemplate = normalizeShiftPdfTemplate({
     ...nextTemplate,
     id: templateId,
   });
-
   const nextState: StoredSystemTemplateState = {
     templates: {
       ...state.templates,
@@ -112,9 +99,14 @@ export async function updateSystemPdfTemplate(
     },
   };
 
-  await fsp.writeFile(storePath, JSON.stringify(nextState, null, 2), "utf8");
+  const savedState = await writeSingletonSystemSetting({
+    settingKey: systemSettingKey,
+    value: nextState,
+    normalize: normalizeStoredState,
+    writeFallback: writeStore,
+  });
 
-  return nextState.templates[templateId];
+  return savedState.templates[templateId];
 }
 
 export function isShiftPdfTemplateId(value: string): value is ShiftPdfTemplateId {

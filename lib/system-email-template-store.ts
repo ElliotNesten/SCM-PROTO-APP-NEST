@@ -119,6 +119,25 @@ async function ensureSystemEmailTemplateStore() {
   }
 }
 
+async function readSystemEmailTemplateStoreSnapshot() {
+  try {
+    const raw = await fs.readFile(storePath, "utf8");
+    const parsed = JSON.parse(raw) as Partial<StoredSystemEmailTemplateState>;
+
+    return {
+      approvedApplication: normalizeApprovedApplicationTemplate(parsed.approvedApplication),
+    } satisfies StoredSystemEmailTemplateState;
+  } catch (error) {
+    const readError = error as NodeJS.ErrnoException;
+
+    if (readError.code === "ENOENT") {
+      return createDefaultSystemEmailTemplateState();
+    }
+
+    throw error;
+  }
+}
+
 async function readSystemEmailTemplateStore() {
   const sql = getPostgresClient();
 
@@ -130,7 +149,22 @@ async function readSystemEmailTemplateStore() {
       where id = 'approvedApplication'
       limit 1
     `;
-    const defaults = createDefaultSystemEmailTemplateState();
+
+    if (!rows[0]?.template_json) {
+      const fallbackState = await readSystemEmailTemplateStoreSnapshot();
+
+      await sql`
+        insert into system_email_templates (id, template_json, updated_at)
+        values (
+          'approvedApplication',
+          ${serializeJson(fallbackState.approvedApplication)},
+          ${new Date().toISOString()}
+        )
+        on conflict (id) do nothing
+      `;
+
+      return fallbackState;
+    }
 
     return {
       approvedApplication: normalizeApprovedApplicationTemplate(
@@ -143,13 +177,7 @@ async function readSystemEmailTemplateStore() {
   }
 
   await ensureSystemEmailTemplateStore();
-  const raw = await fs.readFile(storePath, "utf8");
-  const parsed = JSON.parse(raw) as Partial<StoredSystemEmailTemplateState>;
-  const defaults = createDefaultSystemEmailTemplateState();
-
-  return {
-    approvedApplication: normalizeApprovedApplicationTemplate(parsed.approvedApplication),
-  } satisfies StoredSystemEmailTemplateState;
+  return readSystemEmailTemplateStoreSnapshot();
 }
 
 export async function getSystemEmailTemplateState() {

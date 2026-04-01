@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
-import fs from "node:fs/promises";
 import path from "node:path";
 
+import { ensureJsonFile, readJsonFile, writeJsonFile } from "@/lib/json-file-store";
 import {
   ensureProductionStorageSchema,
   getPostgresClient,
@@ -12,22 +12,16 @@ const storeDirectory = path.join(process.cwd(), "data");
 const storePath = path.join(storeDirectory, "staff-onboarding-store.json");
 
 async function ensureStaffOnboardingStore() {
-  try {
-    await fs.access(storePath);
-  } catch {
-    await fs.mkdir(storeDirectory, { recursive: true });
-    await fs.writeFile(storePath, JSON.stringify([], null, 2), "utf8");
-  }
+  await ensureJsonFile(storePath, [] as StaffOnboardingRecord[]);
 }
 
 async function readStaffOnboardingStore() {
   await ensureStaffOnboardingStore();
-  const raw = await fs.readFile(storePath, "utf8");
-  return JSON.parse(raw) as StaffOnboardingRecord[];
+  return readJsonFile<StaffOnboardingRecord[]>(storePath, []);
 }
 
 async function writeStaffOnboardingStore(records: StaffOnboardingRecord[]) {
-  await fs.writeFile(storePath, JSON.stringify(records, null, 2), "utf8");
+  await writeJsonFile(storePath, records);
 }
 
 type StaffOnboardingRow = {

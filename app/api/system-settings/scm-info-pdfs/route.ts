@@ -1,5 +1,4 @@
 import { randomUUID } from "node:crypto";
-import { promises as fs } from "node:fs";
 import path from "node:path";
 
 import { NextResponse } from "next/server";
@@ -8,6 +7,10 @@ import {
   getCurrentAuthenticatedScmStaffProfile,
   isSuperAdminRole,
 } from "@/lib/auth-session";
+import {
+  deleteStoredPublicUpload,
+  storePublicUpload,
+} from "@/lib/public-file-storage";
 import {
   getSystemScmInfoPdfSettings,
   updateSystemScmInfoPdfSettings,
@@ -47,30 +50,6 @@ function sanitizeFileBaseName(fileName: string) {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "")
     .slice(0, 48);
-}
-
-async function deleteStoredPdf(pdfUrl: string | undefined) {
-  if (!pdfUrl || !pdfUrl.startsWith("/system-scm-info-pdfs/")) {
-    return;
-  }
-
-  const relativeSegments = pdfUrl.split("/").filter(Boolean);
-  const filePath = path.join(publicRootDirectory, ...relativeSegments);
-  const normalizedPath = path.normalize(filePath);
-  const normalizedPublicRoot = path.normalize(publicRootDirectory);
-
-  if (!normalizedPath.startsWith(normalizedPublicRoot)) {
-    return;
-  }
-
-  try {
-    await fs.unlink(normalizedPath);
-  } catch (error) {
-    const unlinkError = error as NodeJS.ErrnoException;
-    if (unlinkError.code !== "ENOENT") {
-      throw error;
-    }
-  }
 }
 
 async function requireSuperAdminApiProfile() {
@@ -148,13 +127,13 @@ export async function POST(request: Request) {
   const baseName = sanitizeFileBaseName(path.parse(uploadedEntry.name).name) || "scm-guide";
   const uniqueSuffix = randomUUID().slice(0, 8);
   const storageFileName = `${baseName}-${uniqueSuffix}.pdf`;
-  const outputPath = path.join(scmInfoPdfRootDirectory, storageFileName);
-
-  await fs.mkdir(scmInfoPdfRootDirectory, { recursive: true });
-  const fileBuffer = Buffer.from(await uploadedEntry.arrayBuffer());
-  await fs.writeFile(outputPath, fileBuffer);
-
-  const pdfUrl = `/system-scm-info-pdfs/${storageFileName}`;
+  const pdfUrl = await storePublicUpload({
+    blobPath: `system-scm-info-pdfs/${storageFileName}`,
+    file: uploadedEntry,
+    localDirectory: scmInfoPdfRootDirectory,
+    localFileName: storageFileName,
+    localUrlPath: `/system-scm-info-pdfs/${storageFileName}`,
+  });
   let updatedPdfs = existingPdfs;
 
   if (targetType === "section") {
@@ -167,10 +146,18 @@ export async function POST(request: Request) {
       buttonLabel:
         buttonLabel || currentAsset?.buttonLabel || path.parse(uploadedEntry.name).name,
     });
-    await deleteStoredPdf(currentAsset?.pdfUrl);
+    await deleteStoredPublicUpload({
+      fileUrl: currentAsset?.pdfUrl,
+      localUrlPrefix: "/system-scm-info-pdfs/",
+      localRootDirectory: scmInfoPdfRootDirectory,
+    });
   } else if (targetType === "item") {
     if (!isStaffAppScmInfoItemPdfSectionKey(sectionId)) {
-      await fs.unlink(outputPath);
+      await deleteStoredPublicUpload({
+        fileUrl: pdfUrl,
+        localUrlPrefix: "/system-scm-info-pdfs/",
+        localRootDirectory: scmInfoPdfRootDirectory,
+      });
       return NextResponse.json(
         { error: "This SCM guide section does not support entry PDFs." },
         { status: 400 },
@@ -180,7 +167,11 @@ export async function POST(request: Request) {
     const itemIndex = Number.parseInt(itemIndexRaw, 10);
 
     if (!Number.isInteger(itemIndex) || itemIndex < 0) {
-      await fs.unlink(outputPath);
+      await deleteStoredPublicUpload({
+        fileUrl: pdfUrl,
+        localUrlPrefix: "/system-scm-info-pdfs/",
+        localRootDirectory: scmInfoPdfRootDirectory,
+      });
       return NextResponse.json({ error: "Choose a valid guide entry." }, { status: 400 });
     }
 
@@ -194,9 +185,17 @@ export async function POST(request: Request) {
       buttonLabel:
         buttonLabel || currentAsset?.buttonLabel || path.parse(uploadedEntry.name).name,
     });
-    await deleteStoredPdf(currentAsset?.pdfUrl);
+    await deleteStoredPublicUpload({
+      fileUrl: currentAsset?.pdfUrl,
+      localUrlPrefix: "/system-scm-info-pdfs/",
+      localRootDirectory: scmInfoPdfRootDirectory,
+    });
   } else {
-    await fs.unlink(outputPath);
+    await deleteStoredPublicUpload({
+      fileUrl: pdfUrl,
+      localUrlPrefix: "/system-scm-info-pdfs/",
+      localRootDirectory: scmInfoPdfRootDirectory,
+    });
     return NextResponse.json({ error: "Choose where the PDF should be attached." }, { status: 400 });
   }
 
@@ -271,7 +270,11 @@ export async function DELETE(request: Request) {
 
   if (targetType === "section") {
     const currentAsset = existingPdfs.sectionPdfs[sectionId][validSlotIndex];
-    await deleteStoredPdf(currentAsset?.pdfUrl);
+    await deleteStoredPublicUpload({
+      fileUrl: currentAsset?.pdfUrl,
+      localUrlPrefix: "/system-scm-info-pdfs/",
+      localRootDirectory: scmInfoPdfRootDirectory,
+    });
     updatedPdfs = await updateSystemScmInfoSectionPdf(
       sectionId,
       validSlotIndex,
@@ -294,7 +297,11 @@ export async function DELETE(request: Request) {
     const validItemIndex = itemIndex;
     const itemKey = getSystemScmInfoItemPdfKey(sectionId, validItemIndex);
     const currentAsset = existingPdfs.itemPdfs[itemKey]?.[validSlotIndex];
-    await deleteStoredPdf(currentAsset?.pdfUrl);
+    await deleteStoredPublicUpload({
+      fileUrl: currentAsset?.pdfUrl,
+      localUrlPrefix: "/system-scm-info-pdfs/",
+      localRootDirectory: scmInfoPdfRootDirectory,
+    });
     updatedPdfs = await updateSystemScmInfoItemPdf(
       sectionId,
       validItemIndex,

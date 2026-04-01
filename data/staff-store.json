@@ -18,13 +18,11 @@
     "profileApproved": true,
     "profileApprovalLabel": "Approved",
     "profileImageName": "sk-rmbild-2025-07-01-101459-bdfd7e1a.png",
-    "bankDetails": "",
+    "bankDetails": "1234 56 789",
     "personalNumber": "2000-01-01-1234",
     "profileComments": "[Stand Leader] No profile comments",
     "documents": [],
     "pendingRecords": [
-      "Driver license",
-      "Allergies",
       "Policy confirmations",
       "Own bookings",
       "Own contracts",
@@ -35,10 +33,10 @@
     "regions": [
       "Stockholm"
     ],
-    "bankName": "",
+    "bankName": "SEB",
     "driverLicenseManual": false,
     "driverLicenseAutomatic": false,
-    "allergies": "",
+    "allergies": "None",
     "roleProfiles": {
       "Seller": {
         "enabled": true,

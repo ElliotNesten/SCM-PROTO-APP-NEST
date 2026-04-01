@@ -1,6 +1,6 @@
-import fs from "node:fs/promises";
 import path from "node:path";
 
+import { ensureJsonFile, readJsonFile, writeJsonFile } from "@/lib/json-file-store";
 import {
   createPasswordHash,
   getSeedScmStaffPassword,
@@ -317,26 +317,20 @@ async function upsertDatabaseStaffAppAccount(account: StaffAppAccount) {
 }
 
 async function ensureStaffAppAccountStore() {
-  try {
-    await fs.access(storePath);
-  } catch {
-    await fs.mkdir(storeDirectory, { recursive: true });
-    await fs.writeFile(
-      storePath,
-      JSON.stringify(createSeedStaffAppAccounts(), null, 2),
-      "utf8",
-    );
-  }
+  await ensureJsonFile(storePath, createSeedStaffAppAccounts());
 }
 
 async function readStaffAppAccountStore() {
   await ensureStaffAppAccountStore();
-  const raw = await fs.readFile(storePath, "utf8");
-  return (JSON.parse(raw) as LegacyStaffAppAccount[]).map(normalizeStaffAppAccount);
+  const parsed = await readJsonFile<LegacyStaffAppAccount[]>(
+    storePath,
+    createSeedStaffAppAccounts(),
+  );
+  return parsed.map(normalizeStaffAppAccount);
 }
 
 async function writeStaffAppAccountStore(accounts: StaffAppAccount[]) {
-  await fs.writeFile(storePath, JSON.stringify(accounts, null, 2), "utf8");
+  await writeJsonFile(storePath, accounts);
 }
 
 export async function getAllStaffAppAccounts() {

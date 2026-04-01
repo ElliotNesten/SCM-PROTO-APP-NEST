@@ -8171,7 +8171,8 @@ a.queue-card:hover {
   color: #213154;
   text-align: left;
   min-height: 100%;
-  cursor: default;
+  cursor: pointer;
+  outline: none;
   transition:
     transform 160ms ease,
     border-color 160ms ease,
@@ -8179,7 +8180,8 @@ a.queue-card:hover {
     background 160ms ease;
 }
 
-.system-settings-overview-card:hover {
+.system-settings-overview-card:hover,
+.system-settings-overview-card:focus-visible {
   transform: translateY(-1px);
   border-color: rgba(128, 148, 219, 0.95);
   box-shadow: 0 14px 28px rgba(72, 88, 145, 0.12);
@@ -8268,7 +8270,6 @@ a.queue-card:hover {
   font: inherit;
   font-weight: 800;
   line-height: 1;
-  cursor: pointer;
   transition:
     transform 160ms ease,
     border-color 160ms ease,
@@ -8277,8 +8278,8 @@ a.queue-card:hover {
     color 160ms ease;
 }
 
-.system-settings-open-button:hover {
-  transform: translateY(-1px);
+.system-settings-overview-card:hover .system-settings-open-button,
+.system-settings-overview-card:focus-visible .system-settings-open-button {
   border-color: rgba(126, 145, 218, 0.95);
   box-shadow: 0 12px 24px rgba(80, 94, 147, 0.14);
 }

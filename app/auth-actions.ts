@@ -26,13 +26,31 @@ function readString(formData: FormData, key: string) {
   return typeof value === "string" ? value.trim() : "";
 }
 
+function buildLoginRedirectUrl(
+  error: "missing" | "invalid" | "expired",
+  email: string,
+  mode: string,
+) {
+  const searchParams = new URLSearchParams({
+    error,
+    email,
+  });
+
+  if (mode === "switch") {
+    searchParams.set("mode", mode);
+  }
+
+  return `/login?${searchParams.toString()}`;
+}
+
 export async function loginWithScmStaff(formData: FormData) {
   const email = readString(formData, "email").toLowerCase();
   const password = readString(formData, "password");
+  const mode = readString(formData, "mode");
   const normalizedPassword = password.trim();
 
   if (!email || !password) {
-    redirect(`/login?error=missing&email=${encodeURIComponent(email)}`);
+    redirect(buildLoginRedirectUrl("missing", email, mode));
   }
 
   const profile = await getStoredScmStaffProfileByEmail(email);
@@ -94,9 +112,7 @@ export async function loginWithScmStaff(formData: FormData) {
     accessExpired = accessExpired || Boolean(linkedStaffProfileId);
   }
 
-  redirect(
-    `/login?error=${accessExpired ? "expired" : "invalid"}&email=${encodeURIComponent(email)}`,
-  );
+  redirect(buildLoginRedirectUrl(accessExpired ? "expired" : "invalid", email, mode));
 }
 
 export async function logoutCurrentUser() {

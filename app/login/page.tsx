@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
 import { loginWithScmStaff, logoutCurrentUser } from "@/app/auth-actions";
 import { LoginPasswordField } from "@/components/login-password-field";
@@ -10,6 +11,7 @@ type LoginPageProps = {
   searchParams?: Promise<{
     error?: string | string[];
     email?: string | string[];
+    mode?: string | string[];
   }>;
 };
 
@@ -36,6 +38,12 @@ function getErrorMessage(errorCode: string | undefined) {
 export default async function LoginPage({ searchParams }: LoginPageProps) {
   const resolvedSearchParams = searchParams ? await searchParams : undefined;
   const currentUser = await getCurrentAuthenticatedUserSummary();
+  const loginMode = pickQueryValue(resolvedSearchParams?.mode);
+
+  if (currentUser && loginMode !== "switch") {
+    redirect("/dashboard");
+  }
+
   const brandSettings = await getBrandSettings();
   const savedEmail = pickQueryValue(resolvedSearchParams?.email) ?? "";
   const errorMessage = getErrorMessage(pickQueryValue(resolvedSearchParams?.error));
@@ -95,6 +103,10 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
                   <p className="eyebrow">SCM Staff account</p>
                   <h2>Sign in</h2>
                 </div>
+
+                {loginMode === "switch" ? (
+                  <input type="hidden" name="mode" value="switch" />
+                ) : null}
 
                 <div className="login-form-fields">
                   <label className="field full-width">

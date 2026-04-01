@@ -3,6 +3,7 @@
 import {
   useDeferredValue,
   useEffect,
+  type KeyboardEvent,
   useMemo,
   useState,
   type ReactNode,
@@ -124,6 +125,18 @@ export function SystemSettingsWorkspace({
     setActiveSectionId(null);
   }
 
+  function handleSectionCardKeyDown(
+    event: KeyboardEvent<HTMLElement>,
+    sectionId: string,
+  ) {
+    if (event.key !== "Enter" && event.key !== " ") {
+      return;
+    }
+
+    event.preventDefault();
+    openSection(sectionId);
+  }
+
   function openFirstVisibleSection() {
     if (!visibleSections[0]) {
       return;
@@ -185,7 +198,7 @@ export function SystemSettingsWorkspace({
               : `Showing ${sections.length} settings areas on one overview page.`}
           </span>
           <span className="helper-caption">
-            Click <code>Open settings</code> to edit inside a popup window.
+            Click any settings card to edit inside a popup window.
           </span>
         </div>
       </section>
@@ -207,11 +220,17 @@ export function SystemSettingsWorkspace({
             return (
               <article
                 key={section.id}
+                role="button"
+                tabIndex={0}
+                aria-label={`Open ${section.title}`}
+                aria-haspopup="dialog"
                 className={
                   isActive
                     ? "system-settings-overview-card active"
                     : "system-settings-overview-card"
                 }
+                onClick={() => openSection(section.id)}
+                onKeyDown={(event) => handleSectionCardKeyDown(event, section.id)}
               >
                 <span className="system-settings-overview-eyebrow">
                   {section.eyebrow}
@@ -230,17 +249,15 @@ export function SystemSettingsWorkspace({
                 </div>
                 <div className="system-settings-overview-card-foot">
                   <span className="system-settings-hub-summary-pill">Opens in popup</span>
-                  <button
-                    type="button"
+                  <span
                     className={
                       isActive
                         ? "system-settings-open-button active"
                         : "system-settings-open-button"
                     }
-                    onClick={() => openSection(section.id)}
                   >
                     Open settings
-                  </button>
+                  </span>
                 </div>
               </article>
             );

@@ -13,6 +13,15 @@ type SubmissionState = "idle" | "submitting" | "success";
 const thankYouMessage =
   "Thank you for your application. We will review it as soon as possible. More information will be sent by email.";
 
+function getDisplayInitials(name: string) {
+  return name
+    .split(" ")
+    .map((part) => part.trim()[0] ?? "")
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+}
+
 function createInitialFormState() {
   return {
     profileImage: null as File | null,
@@ -29,16 +38,35 @@ export function WorkAtScmModal() {
   const [portalRoot, setPortalRoot] = useState<HTMLElement | null>(null);
   const [submissionState, setSubmissionState] = useState<SubmissionState>("idle");
   const [errorMessage, setErrorMessage] = useState("");
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [formState, setFormState] = useState(createInitialFormState);
   const selectedFileLabel = useMemo(
     () => formState.profileImage?.name ?? "Upload profile image",
     [formState.profileImage],
   );
   const requiresSwedenDropdown = formState.country === "Sweden";
+  const displayInitials = useMemo(
+    () => getDisplayInitials(formState.displayName) || "SC",
+    [formState.displayName],
+  );
 
   useEffect(() => {
     setPortalRoot(document.body);
   }, []);
+
+  useEffect(() => {
+    if (!formState.profileImage) {
+      setPreviewUrl(null);
+      return;
+    }
+
+    const nextPreviewUrl = URL.createObjectURL(formState.profileImage);
+    setPreviewUrl(nextPreviewUrl);
+
+    return () => {
+      URL.revokeObjectURL(nextPreviewUrl);
+    };
+  }, [formState.profileImage]);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -133,6 +161,15 @@ export function WorkAtScmModal() {
                     <label className="staff-app-form-field">
                       <span>Profile image</span>
                       <div className="staff-app-upload-field">
+                        <div className="staff-app-upload-preview" aria-hidden="true">
+                          {previewUrl ? (
+                            <img src={previewUrl} alt="" className="staff-app-upload-preview-image" />
+                          ) : (
+                            <span className="staff-app-upload-preview-fallback">
+                              {displayInitials}
+                            </span>
+                          )}
+                        </div>
                         <input
                           type="file"
                           accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp"
@@ -146,7 +183,6 @@ export function WorkAtScmModal() {
                           required
                         />
                         <strong>{selectedFileLabel}</strong>
-                        <small>PNG, JPG or WEBP, max 5 MB</small>
                       </div>
                     </label>
 

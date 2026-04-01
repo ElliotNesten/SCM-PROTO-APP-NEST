@@ -1,10 +1,9 @@
-import Image from "next/image";
-
 import {
   approveStaffApplication,
   rejectStaffApplication,
   resendStaffApplicationActivationEmail,
 } from "@/app/(platform)/people/application-actions";
+import { StaffApplicationAvatar } from "@/components/staff-application-avatar";
 import { StatusBadge } from "@/components/status-badge";
 import type { StoredStaffApplication } from "@/types/job-applications";
 
@@ -95,15 +94,10 @@ export function StaffApplicationReviewPanel({
           {applications.map((application) => (
             <article key={application.id} className="staff-application-card">
               <div className="staff-application-card-main">
-                <div className="staff-application-avatar">
-                  <Image
-                    src={application.profileImageUrl}
-                    alt={application.displayName}
-                    fill
-                    sizes="88px"
-                    className="staff-application-avatar-image"
-                  />
-                </div>
+                <StaffApplicationAvatar
+                  displayName={application.displayName}
+                  imageUrl={application.profileImageUrl}
+                />
 
                 <div className="staff-application-copy">
                   <div className="staff-application-copy-head">

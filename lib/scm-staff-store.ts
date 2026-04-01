@@ -3,6 +3,12 @@ import path from "node:path";
 
 import { gigs } from "@/data/scm-data";
 import {
+  ensureProductionStorageSchema,
+  getPostgresClient,
+  parseJsonValue,
+  serializeJson,
+} from "@/lib/postgres";
+import {
   getSeedScmStaffPassword,
   createPasswordHash,
   verifyPasswordHash,
@@ -16,6 +22,31 @@ import {
 
 const storeDirectory = path.join(process.cwd(), "data");
 const storePath = path.join(storeDirectory, "scm-staff-store.json");
+
+type ScmStaffProfileRow = {
+  id: string;
+  display_name: string;
+  email: string;
+  email_lower: string;
+  password_hash: string;
+  password_plaintext: string | null;
+  phone: string;
+  role_key: StoredScmStaffProfile["roleKey"];
+  country: string;
+  regions_json: string;
+  assigned_gig_ids_json: string;
+  linked_staff_id: string | null;
+  linked_staff_name: string | null;
+  profile_image_name: string;
+  profile_image_url: string | null;
+  notes: string;
+  is_deleted: boolean;
+};
+
+type ScmStaffDatabaseLookupResult =
+  | { status: "missing" }
+  | { status: "deleted" }
+  | { status: "found"; profile: StoredScmStaffProfile };
 
 function shouldIgnoreReadOnlyStoreWriteError(error: unknown) {
   const errorCode =
@@ -157,7 +188,7 @@ function normalizeStoredScmStaffProfile(
 
   const normalizedCountry =
     roleKey === "regionalManager" ? profile.country || "Sweden" : "Global";
-  const normalizedRegions = normalizeRegions(profile.regions);
+  const normalizedRegions = normalizeRegions(profile.regions ?? []);
   const swedenOnlyRegions = normalizedCountry === "Sweden" ? normalizedRegions : [];
   const fallbackSeedPassword = getSeedScmStaffPassword(profile.email);
   const normalizedPasswordHash =
@@ -174,77 +205,310 @@ function normalizeStoredScmStaffProfile(
     passwordPlaintext: normalizedPasswordPlaintext,
     country: normalizedCountry,
     regions: roleKey === "regionalManager" ? swedenOnlyRegions : [],
-    assignedGigIds: Array.from(new Set(profile.assignedGigIds)),
+    assignedGigIds: Array.from(new Set(profile.assignedGigIds ?? [])),
+    linkedStaffId: profile.linkedStaffId?.trim() || undefined,
+    linkedStaffName: profile.linkedStaffName?.trim() || undefined,
     profileImageName: profile.profileImageName?.trim() ?? "",
     profileImageUrl: profile.profileImageUrl?.trim() ?? "",
-    notes: profile.notes.trim(),
+    notes: profile.notes?.trim() ?? "",
   };
+}
+
+function mapScmStaffProfileRow(
+  row: ScmStaffProfileRow,
+): StoredScmStaffProfile | null {
+  return normalizeStoredScmStaffProfile({
+    id: row.id,
+    displayName: row.display_name,
+    email: row.email,
+    passwordHash: row.password_hash,
+    passwordPlaintext: row.password_plaintext ?? undefined,
+    phone: row.phone,
+    roleKey: row.role_key,
+    country: row.country,
+    regions: parseJsonValue<string[]>(row.regions_json, []),
+    assignedGigIds: parseJsonValue<string[]>(row.assigned_gig_ids_json, []),
+    linkedStaffId: row.linked_staff_id ?? undefined,
+    linkedStaffName: row.linked_staff_name ?? undefined,
+    profileImageName: row.profile_image_name,
+    profileImageUrl: row.profile_image_url ?? undefined,
+    notes: row.notes,
+  });
+}
+
+function getDatabaseLookupResult(row: ScmStaffProfileRow | null): ScmStaffDatabaseLookupResult {
+  if (!row) {
+    return { status: "missing" };
+  }
+
+  if (row.is_deleted) {
+    return { status: "deleted" };
+  }
+
+  const profile = mapScmStaffProfileRow(row);
+
+  if (!profile) {
+    return { status: "missing" };
+  }
+
+  return {
+    status: "found",
+    profile,
+  };
+}
+
+async function getDatabaseScmStaffRows() {
+  const sql = getPostgresClient();
+
+  if (!sql) {
+    return [] as ScmStaffProfileRow[];
+  }
+
+  await ensureProductionStorageSchema();
+  return sql<ScmStaffProfileRow[]>`
+    select *
+    from scm_staff_profiles
+    order by is_deleted asc, updated_at desc, display_name asc
+  `;
+}
+
+async function getDatabaseScmStaffProfileByIdLookup(personId: string) {
+  const sql = getPostgresClient();
+
+  if (!sql) {
+    return { status: "missing" } satisfies ScmStaffDatabaseLookupResult;
+  }
+
+  await ensureProductionStorageSchema();
+  const rows = await sql<ScmStaffProfileRow[]>`
+    select *
+    from scm_staff_profiles
+    where id = ${personId}
+    limit 1
+  `;
+
+  return getDatabaseLookupResult(rows[0] ?? null);
+}
+
+async function getDatabaseScmStaffProfileByEmailLookup(email: string) {
+  const sql = getPostgresClient();
+
+  if (!sql) {
+    return { status: "missing" } satisfies ScmStaffDatabaseLookupResult;
+  }
+
+  await ensureProductionStorageSchema();
+  const rows = await sql<ScmStaffProfileRow[]>`
+    select *
+    from scm_staff_profiles
+    where email_lower = ${email.trim().toLowerCase()}
+    order by is_deleted asc, updated_at desc
+    limit 1
+  `;
+
+  return getDatabaseLookupResult(rows[0] ?? null);
+}
+
+async function upsertDatabaseScmStaffProfile(
+  profile: StoredScmStaffProfile,
+  options?: { isDeleted?: boolean },
+) {
+  const sql = getPostgresClient();
+
+  if (!sql) {
+    return profile;
+  }
+
+  await ensureProductionStorageSchema();
+  const now = new Date().toISOString();
+
+  await sql`
+    insert into scm_staff_profiles (
+      id,
+      display_name,
+      email,
+      email_lower,
+      password_hash,
+      password_plaintext,
+      phone,
+      role_key,
+      country,
+      regions_json,
+      assigned_gig_ids_json,
+      linked_staff_id,
+      linked_staff_name,
+      profile_image_name,
+      profile_image_url,
+      notes,
+      is_deleted,
+      created_at,
+      updated_at
+    ) values (
+      ${profile.id},
+      ${profile.displayName},
+      ${profile.email},
+      ${profile.email.toLowerCase()},
+      ${profile.passwordHash},
+      ${profile.passwordPlaintext ?? null},
+      ${profile.phone},
+      ${profile.roleKey},
+      ${profile.country},
+      ${serializeJson(profile.regions)},
+      ${serializeJson(profile.assignedGigIds)},
+      ${profile.linkedStaffId ?? null},
+      ${profile.linkedStaffName ?? null},
+      ${profile.profileImageName ?? ""},
+      ${profile.profileImageUrl ?? null},
+      ${profile.notes},
+      ${options?.isDeleted ?? false},
+      ${now},
+      ${now}
+    )
+    on conflict (id) do update set
+      display_name = excluded.display_name,
+      email = excluded.email,
+      email_lower = excluded.email_lower,
+      password_hash = excluded.password_hash,
+      password_plaintext = excluded.password_plaintext,
+      phone = excluded.phone,
+      role_key = excluded.role_key,
+      country = excluded.country,
+      regions_json = excluded.regions_json,
+      assigned_gig_ids_json = excluded.assigned_gig_ids_json,
+      linked_staff_id = excluded.linked_staff_id,
+      linked_staff_name = excluded.linked_staff_name,
+      profile_image_name = excluded.profile_image_name,
+      profile_image_url = excluded.profile_image_url,
+      notes = excluded.notes,
+      is_deleted = excluded.is_deleted,
+      updated_at = excluded.updated_at
+  `;
+
+  return profile;
 }
 
 async function ensureScmStaffStore() {
   try {
     await fs.access(storePath);
   } catch {
-    await fs.mkdir(storeDirectory, { recursive: true });
-    await fs.writeFile(
-      storePath,
-      JSON.stringify(createSeedScmStaffProfiles(), null, 2),
-      "utf8",
-    );
-  }
-}
-
-async function readScmStaffStore() {
-  await ensureScmStaffStore();
-  const raw = await fs.readFile(storePath, "utf8");
-  const parsed = JSON.parse(raw) as StoredScmStaffProfile[];
-  const normalizedProfiles = parsed
-    .map(normalizeStoredScmStaffProfile)
-    .filter((profile): profile is StoredScmStaffProfile => Boolean(profile));
-
-  if (normalizedProfiles.length !== parsed.length) {
     try {
-      await writeScmStaffStore(normalizedProfiles);
+      await fs.mkdir(storeDirectory, { recursive: true });
+      await fs.writeFile(
+        storePath,
+        JSON.stringify(createSeedScmStaffProfiles(), null, 2),
+        "utf8",
+      );
     } catch (error) {
       if (!shouldIgnoreReadOnlyStoreWriteError(error)) {
         throw error;
       }
     }
   }
+}
 
-  return normalizedProfiles;
+async function readScmStaffStore() {
+  try {
+    await ensureScmStaffStore();
+    const raw = await fs.readFile(storePath, "utf8");
+    const parsed = JSON.parse(raw) as StoredScmStaffProfile[];
+    const normalizedProfiles = parsed
+      .map(normalizeStoredScmStaffProfile)
+      .filter((profile): profile is StoredScmStaffProfile => Boolean(profile));
+
+    if (normalizedProfiles.length !== parsed.length) {
+      try {
+        await writeScmStaffStore(normalizedProfiles);
+      } catch (error) {
+        if (!shouldIgnoreReadOnlyStoreWriteError(error)) {
+          throw error;
+        }
+      }
+    }
+
+    return normalizedProfiles;
+  } catch (error) {
+    if (!shouldIgnoreReadOnlyStoreWriteError(error)) {
+      throw error;
+    }
+
+    return createSeedScmStaffProfiles();
+  }
 }
 
 async function writeScmStaffStore(profiles: StoredScmStaffProfile[]) {
+  await fs.mkdir(storeDirectory, { recursive: true });
   await fs.writeFile(storePath, JSON.stringify(profiles, null, 2), "utf8");
 }
 
 export async function getAllStoredScmStaffProfiles() {
-  return readScmStaffStore();
+  const [seedProfiles, databaseRows] = await Promise.all([
+    readScmStaffStore(),
+    getDatabaseScmStaffRows(),
+  ]);
+
+  if (databaseRows.length === 0) {
+    return seedProfiles;
+  }
+
+  const blockedIds = new Set(databaseRows.map((row) => row.id));
+  const blockedEmails = new Set(databaseRows.map((row) => row.email_lower));
+  const databaseProfiles = databaseRows
+    .filter((row) => !row.is_deleted)
+    .map(mapScmStaffProfileRow)
+    .filter((profile): profile is StoredScmStaffProfile => Boolean(profile));
+
+  return [
+    ...databaseProfiles,
+    ...seedProfiles.filter((profile) => {
+      const normalizedEmail = profile.email.toLowerCase();
+      return !blockedIds.has(profile.id) && !blockedEmails.has(normalizedEmail);
+    }),
+  ];
 }
 
 export async function getStoredScmStaffProfileById(personId: string) {
+  const databaseLookup = await getDatabaseScmStaffProfileByIdLookup(personId);
+
+  if (databaseLookup.status === "found") {
+    return databaseLookup.profile;
+  }
+
+  if (databaseLookup.status === "deleted") {
+    return null;
+  }
+
   const profiles = await readScmStaffStore();
-  return profiles.find((profile) => profile.id === personId);
+  return profiles.find((profile) => profile.id === personId) ?? null;
 }
 
 export async function getStoredScmStaffProfileByEmail(email: string) {
+  const databaseLookup = await getDatabaseScmStaffProfileByEmailLookup(email);
+
+  if (databaseLookup.status === "found") {
+    return databaseLookup.profile;
+  }
+
+  if (databaseLookup.status === "deleted") {
+    return null;
+  }
+
   const profiles = await readScmStaffStore();
-  return profiles.find((profile) => profile.email.toLowerCase() === email.toLowerCase());
+  return (
+    profiles.find((profile) => profile.email.toLowerCase() === email.toLowerCase()) ?? null
+  );
 }
 
 export async function getCurrentStoredScmStaffProfile(baseSummary: {
   id: string;
   email: string;
 }) {
-  const profiles = await readScmStaffStore();
+  const matchedById = await getStoredScmStaffProfileById(baseSummary.id);
 
-  return (
-    profiles.find((profile) => profile.id === baseSummary.id) ??
-    profiles.find(
-      (profile) => profile.email.toLowerCase() === baseSummary.email.toLowerCase(),
-    )
-  );
+  if (matchedById) {
+    return matchedById;
+  }
+
+  return getStoredScmStaffProfileByEmail(baseSummary.email);
 }
 
 export async function getCurrentScmStaffUserSummary(baseSummary: {
@@ -281,7 +545,6 @@ export async function createStoredScmStaffProfile(input: CreateScmStaffProfileIn
     throw new Error("Temporary Gig Manager profiles must be created from Share gig info.");
   }
 
-  const profiles = await readScmStaffStore();
   const createdProfile = normalizeStoredScmStaffProfile({
     ...input,
     id: createScmStaffId(input.roleKey),
@@ -291,6 +554,14 @@ export async function createStoredScmStaffProfile(input: CreateScmStaffProfileIn
     throw new Error("Temporary Gig Manager profiles must be created from Share gig info.");
   }
 
+  const sql = getPostgresClient();
+
+  if (sql) {
+    await upsertDatabaseScmStaffProfile(createdProfile);
+    return createdProfile;
+  }
+
+  const profiles = await readScmStaffStore();
   profiles.push(createdProfile);
   await writeScmStaffStore(profiles);
 
@@ -305,14 +576,23 @@ export async function updateStoredScmStaffProfile(
     return null;
   }
 
-  const profiles = await readScmStaffStore();
-  const profileIndex = profiles.findIndex((profile) => profile.id === personId);
+  const databaseLookup = await getDatabaseScmStaffProfileByIdLookup(personId);
 
-  if (profileIndex === -1) {
+  if (databaseLookup.status === "deleted") {
     return null;
   }
 
-  const currentProfile = profiles[profileIndex];
+  const fileProfiles =
+    databaseLookup.status === "missing" ? await readScmStaffStore() : null;
+  const currentProfile =
+    databaseLookup.status === "found"
+      ? databaseLookup.profile
+      : fileProfiles?.find((profile) => profile.id === personId) ?? null;
+
+  if (!currentProfile) {
+    return null;
+  }
+
   const updatedProfile = normalizeStoredScmStaffProfile({
     ...currentProfile,
     ...updates,
@@ -330,8 +610,25 @@ export async function updateStoredScmStaffProfile(
     return null;
   }
 
-  profiles[profileIndex] = updatedProfile;
-  await writeScmStaffStore(profiles);
+  const sql = getPostgresClient();
+
+  if (sql) {
+    await upsertDatabaseScmStaffProfile(updatedProfile);
+    return updatedProfile;
+  }
+
+  if (!fileProfiles) {
+    return null;
+  }
+
+  const profileIndex = fileProfiles.findIndex((profile) => profile.id === personId);
+
+  if (profileIndex === -1) {
+    return null;
+  }
+
+  fileProfiles[profileIndex] = updatedProfile;
+  await writeScmStaffStore(fileProfiles);
 
   return updatedProfile;
 }
@@ -347,6 +644,34 @@ export async function updateStoredScmStaffImage(
 }
 
 export async function deleteStoredScmStaffProfile(personId: string) {
+  const databaseLookup = await getDatabaseScmStaffProfileByIdLookup(personId);
+
+  if (databaseLookup.status === "deleted") {
+    return null;
+  }
+
+  const sql = getPostgresClient();
+
+  if (databaseLookup.status === "found") {
+    if (sql) {
+      await upsertDatabaseScmStaffProfile(databaseLookup.profile, { isDeleted: true });
+      return databaseLookup.profile;
+    }
+
+    const profiles = await readScmStaffStore();
+    const profileIndex = profiles.findIndex((profile) => profile.id === personId);
+
+    if (profileIndex === -1) {
+      return null;
+    }
+
+    const deletedProfile = profiles[profileIndex];
+    profiles.splice(profileIndex, 1);
+    await writeScmStaffStore(profiles);
+
+    return deletedProfile;
+  }
+
   const profiles = await readScmStaffStore();
   const profileIndex = profiles.findIndex((profile) => profile.id === personId);
 
@@ -355,6 +680,12 @@ export async function deleteStoredScmStaffProfile(personId: string) {
   }
 
   const deletedProfile = profiles[profileIndex];
+
+  if (sql) {
+    await upsertDatabaseScmStaffProfile(deletedProfile, { isDeleted: true });
+    return deletedProfile;
+  }
+
   profiles.splice(profileIndex, 1);
   await writeScmStaffStore(profiles);
 

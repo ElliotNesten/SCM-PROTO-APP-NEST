@@ -51,8 +51,10 @@ async function writePasswordSetupTokenStore(tokens: PasswordSetupTokenRecord[]) 
 type PasswordSetupTokenRow = {
   id: string;
   email: string;
+  subject_type: "staffApp" | "scmStaff" | null;
   staff_profile_id: string;
   staff_app_account_id: string;
+  scm_staff_profile_id: string | null;
   application_id: string | null;
   token_hash: string;
   created_at: string;
@@ -65,8 +67,10 @@ function mapPasswordSetupTokenRow(row: PasswordSetupTokenRow): PasswordSetupToke
   return {
     id: row.id,
     email: row.email,
+    subjectType: row.subject_type ?? "staffApp",
     staffProfileId: row.staff_profile_id,
     staffAppAccountId: row.staff_app_account_id,
+    scmStaffProfileId: row.scm_staff_profile_id,
     applicationId: row.application_id,
     tokenHash: row.token_hash,
     createdAt: row.created_at,
@@ -96,13 +100,24 @@ function getVerificationState(record: PasswordSetupTokenRecord | null) {
   return "valid" as const;
 }
 
+export function getScmStaffPasswordSetupAccountId(profileId: string) {
+  return `scm-staff:${profileId}`;
+}
+
 export async function createPasswordSetupToken(input: {
   email: string;
   staffProfileId: string;
   staffAppAccountId: string;
+  subjectType?: "staffApp" | "scmStaff";
+  scmStaffProfileId?: string | null;
   applicationId?: string | null;
 }) {
   const sql = getPostgresClient();
+  const subjectType = input.subjectType ?? "staffApp";
+  const scmStaffProfileId =
+    subjectType === "scmStaff"
+      ? input.scmStaffProfileId?.trim() || input.staffProfileId
+      : null;
 
   if (sql) {
     await ensureProductionStorageSchema();
@@ -112,8 +127,10 @@ export async function createPasswordSetupToken(input: {
     const issuedToken: PasswordSetupTokenRecord = {
       id: `pst-${randomUUID().slice(0, 8)}`,
       email: input.email.trim(),
+      subjectType,
       staffProfileId: input.staffProfileId,
       staffAppAccountId: input.staffAppAccountId,
+      scmStaffProfileId,
       applicationId: input.applicationId ?? null,
       tokenHash: hashPasswordSetupToken(rawToken),
       createdAt: invalidatedAt,
@@ -131,14 +148,17 @@ export async function createPasswordSetupToken(input: {
     `;
     await sql`
       insert into password_setup_tokens (
-        id, email, email_lower, staff_profile_id, staff_app_account_id, application_id,
-        token_hash, created_at, expires_at, consumed_at, invalidated_at
+        id, email, email_lower, subject_type, staff_profile_id, staff_app_account_id,
+        scm_staff_profile_id, application_id, token_hash, created_at, expires_at,
+        consumed_at, invalidated_at
       ) values (
         ${issuedToken.id},
         ${issuedToken.email},
         ${issuedToken.email.toLowerCase()},
+        ${issuedToken.subjectType ?? "staffApp"},
         ${issuedToken.staffProfileId},
         ${issuedToken.staffAppAccountId},
+        ${issuedToken.scmStaffProfileId ?? null},
         ${issuedToken.applicationId},
         ${issuedToken.tokenHash},
         ${issuedToken.createdAt},
@@ -160,8 +180,10 @@ export async function createPasswordSetupToken(input: {
   const issuedToken: PasswordSetupTokenRecord = {
     id: `pst-${randomUUID().slice(0, 8)}`,
     email: input.email.trim(),
+    subjectType,
     staffProfileId: input.staffProfileId,
     staffAppAccountId: input.staffAppAccountId,
+    scmStaffProfileId,
     applicationId: input.applicationId ?? null,
     tokenHash: hashPasswordSetupToken(rawToken),
     createdAt: now.toISOString(),

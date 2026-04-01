@@ -7,8 +7,34 @@ import { scmStaffManagedRoleOrder, getScmRoleDefinition } from "@/types/scm-rbac
 
 const countryOptions = ["Sweden", "Norway", "Denmark"] as const;
 
-export default async function NewScmStaffPage() {
+type NewScmStaffPageProps = {
+  searchParams?: Promise<{
+    create?: string | string[];
+  }>;
+};
+
+function pickQueryValue(value: string | string[] | undefined) {
+  return Array.isArray(value) ? value[0] : value;
+}
+
+function getCreateStatusMessage(status: string | undefined) {
+  if (status === "missing-email") {
+    return "Email is required to send the SCM Staff activation link.";
+  }
+
+  if (status === "duplicate-email") {
+    return "An SCM Staff profile with this email already exists.";
+  }
+
+  return "";
+}
+
+export default async function NewScmStaffPage({ searchParams }: NewScmStaffPageProps) {
   await requireScmStaffAdministrationProfile();
+  const resolvedSearchParams = searchParams ? await searchParams : undefined;
+  const createStatusMessage = getCreateStatusMessage(
+    pickQueryValue(resolvedSearchParams?.create),
+  );
 
   return (
     <>
@@ -21,6 +47,8 @@ export default async function NewScmStaffPage() {
           </Link>
         }
       />
+
+      {createStatusMessage ? <p className="login-error">{createStatusMessage}</p> : null}
 
       <form action={submitNewScmStaff} className="content-grid">
         <div className="stack-column full-width-column">
@@ -39,7 +67,12 @@ export default async function NewScmStaffPage() {
               </label>
               <label className="field">
                 <span>Email</span>
-                <input name="email" type="email" placeholder="edwin.jones@scm.se" />
+                <input
+                  name="email"
+                  type="email"
+                  placeholder="edwin.jones@scm.se"
+                  required
+                />
               </label>
               <label className="field">
                 <span>Phone</span>
@@ -86,7 +119,10 @@ export default async function NewScmStaffPage() {
 
           <section className="card footer-actions">
             <p className="muted">
-              Saving creates the SCM Staff profile immediately. Temporary Gig Manager access is assigned from `Share gig info` on each gig.
+              Saving creates the SCM Staff profile immediately and sends an activation
+              email from the SCM no-reply mail flow so the new SCM Staff user can create
+              their own password. Temporary Gig Manager access is assigned from `Share gig
+              info` on each gig.
             </p>
             <div className="page-actions">
               <button type="submit" className="button">

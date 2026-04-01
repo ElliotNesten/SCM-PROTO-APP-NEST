@@ -206,3 +206,838 @@
   digest: '3439609004'
 }
 ⚠ Missing `origin` header from a forwarded Server Actions request.
+⨯ ./app/auth-actions.ts:18:1
+Module not found: Can't resolve '@/lib/scm-staff-store'
+  [90m16 |[0m   getStoredStaffProfileByEmail,
+  [90m17 |[0m } [36mfrom[0m [32m"@/lib/staff-store"[0m;
+[31m[1m>[0m [90m18 |[0m [36mimport[0m {
+  [90m   |[0m [31m[1m^^^^^^^[0m
+[31m[1m>[0m [90m19 |[0m   getStoredScmStaffProfileByEmail,
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m20 |[0m   getStoredScmStaffProfileById,
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m21 |[0m } [36mfrom[0m [32m"@/lib/scm-staff-store"[0m;
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m22 |[0m
+  [90m23 |[0m [36mfunction[0m readString(formData: [33mFormData[0m, key: string) {
+  [90m24 |[0m   [36mconst[0m value = formData.get(key);
+
+Import map: aliased to relative './lib/scm-staff-store' inside of [project]/
+
+
+Import trace:
+  Server Component:
+    ./app/auth-actions.ts
+    ./components/platform-shell.tsx
+    ./app/(platform)/layout.tsx
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./app/auth-actions.ts:18:1
+Module not found: Can't resolve '@/lib/scm-staff-store'
+  [90m16 |[0m   getStoredStaffProfileByEmail,
+  [90m17 |[0m } [36mfrom[0m [32m"@/lib/staff-store"[0m;
+[31m[1m>[0m [90m18 |[0m [36mimport[0m {
+  [90m   |[0m [31m[1m^^^^^^^[0m
+[31m[1m>[0m [90m19 |[0m   getStoredScmStaffProfileByEmail,
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m20 |[0m   getStoredScmStaffProfileById,
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m21 |[0m } [36mfrom[0m [32m"@/lib/scm-staff-store"[0m;
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m22 |[0m
+  [90m23 |[0m [36mfunction[0m readString(formData: [33mFormData[0m, key: string) {
+  [90m24 |[0m   [36mconst[0m value = formData.get(key);
+
+Import map: aliased to relative './lib/scm-staff-store' inside of [project]/
+
+
+Import trace:
+  Server Component:
+    ./app/auth-actions.ts
+    ./components/platform-shell.tsx
+    ./app/(platform)/layout.tsx
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./app/auth-actions.ts:18:1
+Module not found: Can't resolve '@/lib/scm-staff-store'
+  [90m16 |[0m   getStoredStaffProfileByEmail,
+  [90m17 |[0m } [36mfrom[0m [32m"@/lib/staff-store"[0m;
+[31m[1m>[0m [90m18 |[0m [36mimport[0m {
+  [90m   |[0m [31m[1m^^^^^^^[0m
+[31m[1m>[0m [90m19 |[0m   getStoredScmStaffProfileByEmail,
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m20 |[0m   getStoredScmStaffProfileById,
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m21 |[0m } [36mfrom[0m [32m"@/lib/scm-staff-store"[0m;
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m22 |[0m
+  [90m23 |[0m [36mfunction[0m readString(formData: [33mFormData[0m, key: string) {
+  [90m24 |[0m   [36mconst[0m value = formData.get(key);
+
+Import map: aliased to relative './lib/scm-staff-store' inside of [project]/
+
+
+Import trace:
+  Server Component:
+    ./app/auth-actions.ts
+    ./components/platform-shell.tsx
+    ./app/(platform)/layout.tsx
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./lib/auth-session.ts:12:1
+Module not found: Can't resolve '@/lib/scm-staff-store'
+  [90m10 |[0m   encodeSignedSessionCookie,
+  [90m11 |[0m } [36mfrom[0m [32m"@/lib/session-cookie"[0m;
+[31m[1m>[0m [90m12 |[0m [36mimport[0m { getStoredScmStaffProfileById } [36mfrom[0m [32m"@/lib/scm-staff-store"[0m;
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m13 |[0m [36mimport[0m { getStoredStaffProfileById } [36mfrom[0m [32m"@/lib/staff-store"[0m;
+  [90m14 |[0m [36mimport[0m { getScmRoleDefinition, [36mtype[0m [33mScmStaffRoleKey[0m, [36mtype[0m [33mStoredScmStaffProfile[0m } [36mfrom[0m [32m"@/...[0m
+  [90m15 |[0m
+
+Import map: aliased to relative './lib/scm-staff-store' inside of [project]/
+
+
+Import traces:
+  #1 [Server Component]:
+    ./lib/auth-session.ts
+    ./app/(platform)/layout.tsx
+
+  #2 [Server Component]:
+    ./lib/auth-session.ts
+    ./app/(platform)/people/page.tsx
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./lib/auth-session.ts:12:1
+Module not found: Can't resolve '@/lib/scm-staff-store'
+  [90m10 |[0m   encodeSignedSessionCookie,
+  [90m11 |[0m } [36mfrom[0m [32m"@/lib/session-cookie"[0m;
+[31m[1m>[0m [90m12 |[0m [36mimport[0m { getStoredScmStaffProfileById } [36mfrom[0m [32m"@/lib/scm-staff-store"[0m;
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m13 |[0m [36mimport[0m { getStoredStaffProfileById } [36mfrom[0m [32m"@/lib/staff-store"[0m;
+  [90m14 |[0m [36mimport[0m { getScmRoleDefinition, [36mtype[0m [33mScmStaffRoleKey[0m, [36mtype[0m [33mStoredScmStaffProfile[0m } [36mfrom[0m [32m"@/...[0m
+  [90m15 |[0m
+
+Import map: aliased to relative './lib/scm-staff-store' inside of [project]/
+
+
+Import traces:
+  #1 [Server Component]:
+    ./lib/auth-session.ts
+    ./app/(platform)/layout.tsx
+
+  #2 [Server Component]:
+    ./lib/auth-session.ts
+    ./app/(platform)/people/page.tsx
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./app/auth-actions.ts:18:1
+Module not found: Can't resolve '@/lib/scm-staff-store'
+  [90m16 |[0m   getStoredStaffProfileByEmail,
+  [90m17 |[0m } [36mfrom[0m [32m"@/lib/staff-store"[0m;
+[31m[1m>[0m [90m18 |[0m [36mimport[0m {
+  [90m   |[0m [31m[1m^^^^^^^[0m
+[31m[1m>[0m [90m19 |[0m   getStoredScmStaffProfileByEmail,
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m20 |[0m   getStoredScmStaffProfileById,
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m21 |[0m } [36mfrom[0m [32m"@/lib/scm-staff-store"[0m;
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m22 |[0m
+  [90m23 |[0m [36mfunction[0m readString(formData: [33mFormData[0m, key: string) {
+  [90m24 |[0m   [36mconst[0m value = formData.get(key);
+
+Import map: aliased to relative './lib/scm-staff-store' inside of [project]/
+
+
+Import trace:
+  Server Component:
+    ./app/auth-actions.ts
+    ./app/login/page.tsx
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./app/auth-actions.ts:18:1
+Module not found: Can't resolve '@/lib/scm-staff-store'
+  [90m16 |[0m   getStoredStaffProfileByEmail,
+  [90m17 |[0m } [36mfrom[0m [32m"@/lib/staff-store"[0m;
+[31m[1m>[0m [90m18 |[0m [36mimport[0m {
+  [90m   |[0m [31m[1m^^^^^^^[0m
+[31m[1m>[0m [90m19 |[0m   getStoredScmStaffProfileByEmail,
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m20 |[0m   getStoredScmStaffProfileById,
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m21 |[0m } [36mfrom[0m [32m"@/lib/scm-staff-store"[0m;
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m22 |[0m
+  [90m23 |[0m [36mfunction[0m readString(formData: [33mFormData[0m, key: string) {
+  [90m24 |[0m   [36mconst[0m value = formData.get(key);
+
+Import map: aliased to relative './lib/scm-staff-store' inside of [project]/
+
+
+Import trace:
+  Server Component:
+    ./app/auth-actions.ts
+    ./app/login/page.tsx
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./app/auth-actions.ts:18:1
+Module not found: Can't resolve '@/lib/scm-staff-store'
+  [90m16 |[0m   getStoredStaffProfileByEmail,
+  [90m17 |[0m } [36mfrom[0m [32m"@/lib/staff-store"[0m;
+[31m[1m>[0m [90m18 |[0m [36mimport[0m {
+  [90m   |[0m [31m[1m^^^^^^^[0m
+[31m[1m>[0m [90m19 |[0m   getStoredScmStaffProfileByEmail,
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m20 |[0m   getStoredScmStaffProfileById,
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m21 |[0m } [36mfrom[0m [32m"@/lib/scm-staff-store"[0m;
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m22 |[0m
+  [90m23 |[0m [36mfunction[0m readString(formData: [33mFormData[0m, key: string) {
+  [90m24 |[0m   [36mconst[0m value = formData.get(key);
+
+Import map: aliased to relative './lib/scm-staff-store' inside of [project]/
+
+
+Import trace:
+  Server Component:
+    ./app/auth-actions.ts
+    ./app/login/page.tsx
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./lib/auth-session.ts:12:1
+Module not found: Can't resolve '@/lib/scm-staff-store'
+  [90m10 |[0m   encodeSignedSessionCookie,
+  [90m11 |[0m } [36mfrom[0m [32m"@/lib/session-cookie"[0m;
+[31m[1m>[0m [90m12 |[0m [36mimport[0m { getStoredScmStaffProfileById } [36mfrom[0m [32m"@/lib/scm-staff-store"[0m;
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m13 |[0m [36mimport[0m { getStoredStaffProfileById } [36mfrom[0m [32m"@/lib/staff-store"[0m;
+  [90m14 |[0m [36mimport[0m { getScmRoleDefinition, [36mtype[0m [33mScmStaffRoleKey[0m, [36mtype[0m [33mStoredScmStaffProfile[0m } [36mfrom[0m [32m"@/...[0m
+  [90m15 |[0m
+
+Import map: aliased to relative './lib/scm-staff-store' inside of [project]/
+
+
+Import trace:
+  Server Component:
+    ./lib/auth-session.ts
+    ./app/login/page.tsx
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./lib/auth-session.ts:12:1
+Module not found: Can't resolve '@/lib/scm-staff-store'
+  [90m10 |[0m   encodeSignedSessionCookie,
+  [90m11 |[0m } [36mfrom[0m [32m"@/lib/session-cookie"[0m;
+[31m[1m>[0m [90m12 |[0m [36mimport[0m { getStoredScmStaffProfileById } [36mfrom[0m [32m"@/lib/scm-staff-store"[0m;
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m13 |[0m [36mimport[0m { getStoredStaffProfileById } [36mfrom[0m [32m"@/lib/staff-store"[0m;
+  [90m14 |[0m [36mimport[0m { getScmRoleDefinition, [36mtype[0m [33mScmStaffRoleKey[0m, [36mtype[0m [33mStoredScmStaffProfile[0m } [36mfrom[0m [32m"@/...[0m
+  [90m15 |[0m
+
+Import map: aliased to relative './lib/scm-staff-store' inside of [project]/
+
+
+Import trace:
+  Server Component:
+    ./lib/auth-session.ts
+    ./app/login/page.tsx
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./app/(platform)/scm-staff/new/actions.ts:6:1
+Module not found: Can't resolve '@/lib/scm-staff-store'
+  [90m4 |[0m [36mimport[0m { redirect } [36mfrom[0m [32m"next/navigation"[0m;
+  [90m5 |[0m
+[31m[1m>[0m [90m6 |[0m [36mimport[0m { createStoredScmStaffProfile } [36mfrom[0m [32m"@/lib/scm-staff-store"[0m;
+  [90m  |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m7 |[0m [36mimport[0m { createPasswordHash, getSeedScmStaffPassword } [36mfrom[0m [32m"@/lib/password-utils"[0m;
+  [90m8 |[0m [36mimport[0m {
+  [90m9 |[0m   isManuallyManagedScmStaffRole,
+
+Import map: aliased to relative './lib/scm-staff-store' inside of [project]/
+
+
+Import trace:
+  Server Component:
+    ./app/(platform)/scm-staff/new/actions.ts
+    ./app/(platform)/scm-staff/new/page.tsx
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./app/(platform)/scm-staff/new/actions.ts:6:1
+Module not found: Can't resolve '@/lib/scm-staff-store'
+  [90m4 |[0m [36mimport[0m { redirect } [36mfrom[0m [32m"next/navigation"[0m;
+  [90m5 |[0m
+[31m[1m>[0m [90m6 |[0m [36mimport[0m { createStoredScmStaffProfile } [36mfrom[0m [32m"@/lib/scm-staff-store"[0m;
+  [90m  |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m7 |[0m [36mimport[0m { createPasswordHash, getSeedScmStaffPassword } [36mfrom[0m [32m"@/lib/password-utils"[0m;
+  [90m8 |[0m [36mimport[0m {
+  [90m9 |[0m   isManuallyManagedScmStaffRole,
+
+Import map: aliased to relative './lib/scm-staff-store' inside of [project]/
+
+
+Import trace:
+  Server Component:
+    ./app/(platform)/scm-staff/new/actions.ts
+    ./app/(platform)/scm-staff/new/page.tsx
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./app/auth-actions.ts:18:1
+Module not found: Can't resolve '@/lib/scm-staff-store'
+  [90m16 |[0m   getStoredStaffProfileByEmail,
+  [90m17 |[0m } [36mfrom[0m [32m"@/lib/staff-store"[0m;
+[31m[1m>[0m [90m18 |[0m [36mimport[0m {
+  [90m   |[0m [31m[1m^^^^^^^[0m
+[31m[1m>[0m [90m19 |[0m   getStoredScmStaffProfileByEmail,
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m20 |[0m   getStoredScmStaffProfileById,
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m21 |[0m } [36mfrom[0m [32m"@/lib/scm-staff-store"[0m;
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m22 |[0m
+  [90m23 |[0m [36mfunction[0m readString(formData: [33mFormData[0m, key: string) {
+  [90m24 |[0m   [36mconst[0m value = formData.get(key);
+
+Import map: aliased to relative './lib/scm-staff-store' inside of [project]/
+
+
+Import trace:
+  Server Component:
+    ./app/auth-actions.ts
+    ./components/platform-shell.tsx
+    ./app/(platform)/layout.tsx
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./app/auth-actions.ts:18:1
+Module not found: Can't resolve '@/lib/scm-staff-store'
+  [90m16 |[0m   getStoredStaffProfileByEmail,
+  [90m17 |[0m } [36mfrom[0m [32m"@/lib/staff-store"[0m;
+[31m[1m>[0m [90m18 |[0m [36mimport[0m {
+  [90m   |[0m [31m[1m^^^^^^^[0m
+[31m[1m>[0m [90m19 |[0m   getStoredScmStaffProfileByEmail,
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m20 |[0m   getStoredScmStaffProfileById,
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m21 |[0m } [36mfrom[0m [32m"@/lib/scm-staff-store"[0m;
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m22 |[0m
+  [90m23 |[0m [36mfunction[0m readString(formData: [33mFormData[0m, key: string) {
+  [90m24 |[0m   [36mconst[0m value = formData.get(key);
+
+Import map: aliased to relative './lib/scm-staff-store' inside of [project]/
+
+
+Import trace:
+  Server Component:
+    ./app/auth-actions.ts
+    ./components/platform-shell.tsx
+    ./app/(platform)/layout.tsx
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./app/auth-actions.ts:18:1
+Module not found: Can't resolve '@/lib/scm-staff-store'
+  [90m16 |[0m   getStoredStaffProfileByEmail,
+  [90m17 |[0m } [36mfrom[0m [32m"@/lib/staff-store"[0m;
+[31m[1m>[0m [90m18 |[0m [36mimport[0m {
+  [90m   |[0m [31m[1m^^^^^^^[0m
+[31m[1m>[0m [90m19 |[0m   getStoredScmStaffProfileByEmail,
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m20 |[0m   getStoredScmStaffProfileById,
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m21 |[0m } [36mfrom[0m [32m"@/lib/scm-staff-store"[0m;
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m22 |[0m
+  [90m23 |[0m [36mfunction[0m readString(formData: [33mFormData[0m, key: string) {
+  [90m24 |[0m   [36mconst[0m value = formData.get(key);
+
+Import map: aliased to relative './lib/scm-staff-store' inside of [project]/
+
+
+Import trace:
+  Server Component:
+    ./app/auth-actions.ts
+    ./components/platform-shell.tsx
+    ./app/(platform)/layout.tsx
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./lib/auth-session.ts:12:1
+Module not found: Can't resolve '@/lib/scm-staff-store'
+  [90m10 |[0m   encodeSignedSessionCookie,
+  [90m11 |[0m } [36mfrom[0m [32m"@/lib/session-cookie"[0m;
+[31m[1m>[0m [90m12 |[0m [36mimport[0m { getStoredScmStaffProfileById } [36mfrom[0m [32m"@/lib/scm-staff-store"[0m;
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m13 |[0m [36mimport[0m { getStoredStaffProfileById } [36mfrom[0m [32m"@/lib/staff-store"[0m;
+  [90m14 |[0m [36mimport[0m { getScmRoleDefinition, [36mtype[0m [33mScmStaffRoleKey[0m, [36mtype[0m [33mStoredScmStaffProfile[0m } [36mfrom[0m [32m"@/...[0m
+  [90m15 |[0m
+
+Import map: aliased to relative './lib/scm-staff-store' inside of [project]/
+
+
+Import traces:
+  #1 [Server Component]:
+    ./lib/auth-session.ts
+    ./app/(platform)/layout.tsx
+
+  #2 [Server Component]:
+    ./lib/auth-session.ts
+    ./app/(platform)/scm-staff/new/page.tsx
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./lib/auth-session.ts:12:1
+Module not found: Can't resolve '@/lib/scm-staff-store'
+  [90m10 |[0m   encodeSignedSessionCookie,
+  [90m11 |[0m } [36mfrom[0m [32m"@/lib/session-cookie"[0m;
+[31m[1m>[0m [90m12 |[0m [36mimport[0m { getStoredScmStaffProfileById } [36mfrom[0m [32m"@/lib/scm-staff-store"[0m;
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m13 |[0m [36mimport[0m { getStoredStaffProfileById } [36mfrom[0m [32m"@/lib/staff-store"[0m;
+  [90m14 |[0m [36mimport[0m { getScmRoleDefinition, [36mtype[0m [33mScmStaffRoleKey[0m, [36mtype[0m [33mStoredScmStaffProfile[0m } [36mfrom[0m [32m"@/...[0m
+  [90m15 |[0m
+
+Import map: aliased to relative './lib/scm-staff-store' inside of [project]/
+
+
+Import traces:
+  #1 [Server Component]:
+    ./lib/auth-session.ts
+    ./app/(platform)/layout.tsx
+
+  #2 [Server Component]:
+    ./lib/auth-session.ts
+    ./app/(platform)/scm-staff/new/page.tsx
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./app/auth-actions.ts:18:1
+Module not found: Can't resolve '@/lib/scm-staff-store'
+  [90m16 |[0m   getStoredStaffProfileByEmail,
+  [90m17 |[0m } [36mfrom[0m [32m"@/lib/staff-store"[0m;
+[31m[1m>[0m [90m18 |[0m [36mimport[0m {
+  [90m   |[0m [31m[1m^^^^^^^[0m
+[31m[1m>[0m [90m19 |[0m   getStoredScmStaffProfileByEmail,
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m20 |[0m   getStoredScmStaffProfileById,
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m21 |[0m } [36mfrom[0m [32m"@/lib/scm-staff-store"[0m;
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m22 |[0m
+  [90m23 |[0m [36mfunction[0m readString(formData: [33mFormData[0m, key: string) {
+  [90m24 |[0m   [36mconst[0m value = formData.get(key);
+
+Import map: aliased to relative './lib/scm-staff-store' inside of [project]/
+
+
+Import trace:
+  Server Component:
+    ./app/auth-actions.ts
+    ./components/platform-shell.tsx
+    ./app/(platform)/layout.tsx
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./app/auth-actions.ts:18:1
+Module not found: Can't resolve '@/lib/scm-staff-store'
+  [90m16 |[0m   getStoredStaffProfileByEmail,
+  [90m17 |[0m } [36mfrom[0m [32m"@/lib/staff-store"[0m;
+[31m[1m>[0m [90m18 |[0m [36mimport[0m {
+  [90m   |[0m [31m[1m^^^^^^^[0m
+[31m[1m>[0m [90m19 |[0m   getStoredScmStaffProfileByEmail,
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m20 |[0m   getStoredScmStaffProfileById,
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m21 |[0m } [36mfrom[0m [32m"@/lib/scm-staff-store"[0m;
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m22 |[0m
+  [90m23 |[0m [36mfunction[0m readString(formData: [33mFormData[0m, key: string) {
+  [90m24 |[0m   [36mconst[0m value = formData.get(key);
+
+Import map: aliased to relative './lib/scm-staff-store' inside of [project]/
+
+
+Import trace:
+  Server Component:
+    ./app/auth-actions.ts
+    ./components/platform-shell.tsx
+    ./app/(platform)/layout.tsx
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./app/auth-actions.ts:18:1
+Module not found: Can't resolve '@/lib/scm-staff-store'
+  [90m16 |[0m   getStoredStaffProfileByEmail,
+  [90m17 |[0m } [36mfrom[0m [32m"@/lib/staff-store"[0m;
+[31m[1m>[0m [90m18 |[0m [36mimport[0m {
+  [90m   |[0m [31m[1m^^^^^^^[0m
+[31m[1m>[0m [90m19 |[0m   getStoredScmStaffProfileByEmail,
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m20 |[0m   getStoredScmStaffProfileById,
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m21 |[0m } [36mfrom[0m [32m"@/lib/scm-staff-store"[0m;
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m22 |[0m
+  [90m23 |[0m [36mfunction[0m readString(formData: [33mFormData[0m, key: string) {
+  [90m24 |[0m   [36mconst[0m value = formData.get(key);
+
+Import map: aliased to relative './lib/scm-staff-store' inside of [project]/
+
+
+Import trace:
+  Server Component:
+    ./app/auth-actions.ts
+    ./components/platform-shell.tsx
+    ./app/(platform)/layout.tsx
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./lib/auth-session.ts:12:1
+Module not found: Can't resolve '@/lib/scm-staff-store'
+  [90m10 |[0m   encodeSignedSessionCookie,
+  [90m11 |[0m } [36mfrom[0m [32m"@/lib/session-cookie"[0m;
+[31m[1m>[0m [90m12 |[0m [36mimport[0m { getStoredScmStaffProfileById } [36mfrom[0m [32m"@/lib/scm-staff-store"[0m;
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m13 |[0m [36mimport[0m { getStoredStaffProfileById } [36mfrom[0m [32m"@/lib/staff-store"[0m;
+  [90m14 |[0m [36mimport[0m { getScmRoleDefinition, [36mtype[0m [33mScmStaffRoleKey[0m, [36mtype[0m [33mStoredScmStaffProfile[0m } [36mfrom[0m [32m"@/...[0m
+  [90m15 |[0m
+
+Import map: aliased to relative './lib/scm-staff-store' inside of [project]/
+
+
+Import traces:
+  #1 [Server Component]:
+    ./lib/auth-session.ts
+    ./app/(platform)/layout.tsx
+
+  #2 [Server Component]:
+    ./lib/auth-session.ts
+    ./app/(platform)/system-settings/page.tsx
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./lib/auth-session.ts:12:1
+Module not found: Can't resolve '@/lib/scm-staff-store'
+  [90m10 |[0m   encodeSignedSessionCookie,
+  [90m11 |[0m } [36mfrom[0m [32m"@/lib/session-cookie"[0m;
+[31m[1m>[0m [90m12 |[0m [36mimport[0m { getStoredScmStaffProfileById } [36mfrom[0m [32m"@/lib/scm-staff-store"[0m;
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m13 |[0m [36mimport[0m { getStoredStaffProfileById } [36mfrom[0m [32m"@/lib/staff-store"[0m;
+  [90m14 |[0m [36mimport[0m { getScmRoleDefinition, [36mtype[0m [33mScmStaffRoleKey[0m, [36mtype[0m [33mStoredScmStaffProfile[0m } [36mfrom[0m [32m"@/...[0m
+  [90m15 |[0m
+
+Import map: aliased to relative './lib/scm-staff-store' inside of [project]/
+
+
+Import traces:
+  #1 [Server Component]:
+    ./lib/auth-session.ts
+    ./app/(platform)/layout.tsx
+
+  #2 [Server Component]:
+    ./lib/auth-session.ts
+    ./app/(platform)/system-settings/page.tsx
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./app/staff-app/actions.ts:23:1
+Module not found: Can't resolve '@/lib/scm-staff-store'
+  [90m21 |[0m } [36mfrom[0m [32m"@/lib/staff-app-session"[0m;
+  [90m22 |[0m [36mimport[0m { verifyPasswordHash } [36mfrom[0m [32m"@/lib/password-utils"[0m;
+[31m[1m>[0m [90m23 |[0m [36mimport[0m { getStoredScmStaffProfileByEmail } [36mfrom[0m [32m"@/lib/scm-staff-store"[0m;
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m24 |[0m [36mimport[0m {
+  [90m25 |[0m   acknowledgeStaffOnboardingWelcome,
+  [90m26 |[0m   upsertStaffOnboardingRecord,
+
+Import map: aliased to relative './lib/scm-staff-store' inside of [project]/
+
+
+Import trace:
+  Server Component:
+    ./app/staff-app/actions.ts
+    ./app/staff-app/(protected)/onboarding/page.tsx
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./app/staff-app/actions.ts:23:1
+Module not found: Can't resolve '@/lib/scm-staff-store'
+  [90m21 |[0m } [36mfrom[0m [32m"@/lib/staff-app-session"[0m;
+  [90m22 |[0m [36mimport[0m { verifyPasswordHash } [36mfrom[0m [32m"@/lib/password-utils"[0m;
+[31m[1m>[0m [90m23 |[0m [36mimport[0m { getStoredScmStaffProfileByEmail } [36mfrom[0m [32m"@/lib/scm-staff-store"[0m;
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m24 |[0m [36mimport[0m {
+  [90m25 |[0m   acknowledgeStaffOnboardingWelcome,
+  [90m26 |[0m   upsertStaffOnboardingRecord,
+
+Import map: aliased to relative './lib/scm-staff-store' inside of [project]/
+
+
+Import trace:
+  Server Component:
+    ./app/staff-app/actions.ts
+    ./app/staff-app/(protected)/onboarding/page.tsx
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./lib/staff-app-session.ts:8:1
+Module not found: Can't resolve '@/lib/scm-staff-store'
+  [90m 6 |[0m   encodeSignedSessionCookie,
+  [90m 7 |[0m } [36mfrom[0m [32m"@/lib/session-cookie"[0m;
+[31m[1m>[0m [90m 8 |[0m [36mimport[0m { getStoredScmStaffProfileById } [36mfrom[0m [32m"@/lib/scm-staff-store"[0m;
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m 9 |[0m [36mimport[0m { getStoredStaffProfileById } [36mfrom[0m [32m"@/lib/staff-store"[0m;
+  [90m10 |[0m [36mimport[0m {
+  [90m11 |[0m   getStaffAppAccountById,
+
+Import map: aliased to relative './lib/scm-staff-store' inside of [project]/
+
+
+Import traces:
+  #1 [Server Component]:
+    ./lib/staff-app-session.ts
+    ./app/staff-app/(protected)/layout.tsx
+
+  #2 [Server Component]:
+    ./lib/staff-app-session.ts
+    ./app/staff-app/(protected)/onboarding/page.tsx
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./lib/staff-app-session.ts:8:1
+Module not found: Can't resolve '@/lib/scm-staff-store'
+  [90m 6 |[0m   encodeSignedSessionCookie,
+  [90m 7 |[0m } [36mfrom[0m [32m"@/lib/session-cookie"[0m;
+[31m[1m>[0m [90m 8 |[0m [36mimport[0m { getStoredScmStaffProfileById } [36mfrom[0m [32m"@/lib/scm-staff-store"[0m;
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m 9 |[0m [36mimport[0m { getStoredStaffProfileById } [36mfrom[0m [32m"@/lib/staff-store"[0m;
+  [90m10 |[0m [36mimport[0m {
+  [90m11 |[0m   getStaffAppAccountById,
+
+Import map: aliased to relative './lib/scm-staff-store' inside of [project]/
+
+
+Import traces:
+  #1 [Server Component]:
+    ./lib/staff-app-session.ts
+    ./app/staff-app/(protected)/layout.tsx
+
+  #2 [Server Component]:
+    ./lib/staff-app-session.ts
+    ./app/staff-app/(protected)/onboarding/page.tsx
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./app/staff-app/actions.ts:23:1
+Module not found: Can't resolve '@/lib/scm-staff-store'
+  [90m21 |[0m } [36mfrom[0m [32m"@/lib/staff-app-session"[0m;
+  [90m22 |[0m [36mimport[0m { verifyPasswordHash } [36mfrom[0m [32m"@/lib/password-utils"[0m;
+[31m[1m>[0m [90m23 |[0m [36mimport[0m { getStoredScmStaffProfileByEmail } [36mfrom[0m [32m"@/lib/scm-staff-store"[0m;
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m24 |[0m [36mimport[0m {
+  [90m25 |[0m   acknowledgeStaffOnboardingWelcome,
+  [90m26 |[0m   upsertStaffOnboardingRecord,
+
+Import map: aliased to relative './lib/scm-staff-store' inside of [project]/
+
+
+Import trace:
+  Server Component:
+    ./app/staff-app/actions.ts
+    ./app/staff-app/login/page.tsx
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./app/staff-app/actions.ts:23:1
+Module not found: Can't resolve '@/lib/scm-staff-store'
+  [90m21 |[0m } [36mfrom[0m [32m"@/lib/staff-app-session"[0m;
+  [90m22 |[0m [36mimport[0m { verifyPasswordHash } [36mfrom[0m [32m"@/lib/password-utils"[0m;
+[31m[1m>[0m [90m23 |[0m [36mimport[0m { getStoredScmStaffProfileByEmail } [36mfrom[0m [32m"@/lib/scm-staff-store"[0m;
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m24 |[0m [36mimport[0m {
+  [90m25 |[0m   acknowledgeStaffOnboardingWelcome,
+  [90m26 |[0m   upsertStaffOnboardingRecord,
+
+Import map: aliased to relative './lib/scm-staff-store' inside of [project]/
+
+
+Import trace:
+  Server Component:
+    ./app/staff-app/actions.ts
+    ./app/staff-app/login/page.tsx
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./lib/staff-app-session.ts:8:1
+Module not found: Can't resolve '@/lib/scm-staff-store'
+  [90m 6 |[0m   encodeSignedSessionCookie,
+  [90m 7 |[0m } [36mfrom[0m [32m"@/lib/session-cookie"[0m;
+[31m[1m>[0m [90m 8 |[0m [36mimport[0m { getStoredScmStaffProfileById } [36mfrom[0m [32m"@/lib/scm-staff-store"[0m;
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m 9 |[0m [36mimport[0m { getStoredStaffProfileById } [36mfrom[0m [32m"@/lib/staff-store"[0m;
+  [90m10 |[0m [36mimport[0m {
+  [90m11 |[0m   getStaffAppAccountById,
+
+Import map: aliased to relative './lib/scm-staff-store' inside of [project]/
+
+
+Import trace:
+  Server Component:
+    ./lib/staff-app-session.ts
+    ./app/staff-app/actions.ts
+    ./app/staff-app/login/page.tsx
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./lib/staff-app-session.ts:8:1
+Module not found: Can't resolve '@/lib/scm-staff-store'
+  [90m 6 |[0m   encodeSignedSessionCookie,
+  [90m 7 |[0m } [36mfrom[0m [32m"@/lib/session-cookie"[0m;
+[31m[1m>[0m [90m 8 |[0m [36mimport[0m { getStoredScmStaffProfileById } [36mfrom[0m [32m"@/lib/scm-staff-store"[0m;
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m 9 |[0m [36mimport[0m { getStoredStaffProfileById } [36mfrom[0m [32m"@/lib/staff-store"[0m;
+  [90m10 |[0m [36mimport[0m {
+  [90m11 |[0m   getStaffAppAccountById,
+
+Import map: aliased to relative './lib/scm-staff-store' inside of [project]/
+
+
+Import trace:
+  Server Component:
+    ./lib/staff-app-session.ts
+    ./app/staff-app/actions.ts
+    ./app/staff-app/login/page.tsx
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./lib/staff-app-session.ts:8:1
+Module not found: Can't resolve '@/lib/scm-staff-store'
+  [90m 6 |[0m   encodeSignedSessionCookie,
+  [90m 7 |[0m } [36mfrom[0m [32m"@/lib/session-cookie"[0m;
+[31m[1m>[0m [90m 8 |[0m [36mimport[0m { getStoredScmStaffProfileById } [36mfrom[0m [32m"@/lib/scm-staff-store"[0m;
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m 9 |[0m [36mimport[0m { getStoredStaffProfileById } [36mfrom[0m [32m"@/lib/staff-store"[0m;
+  [90m10 |[0m [36mimport[0m {
+  [90m11 |[0m   getStaffAppAccountById,
+
+Import map: aliased to relative './lib/scm-staff-store' inside of [project]/
+
+
+Import traces:
+  #1 [Server Component]:
+    ./lib/staff-app-session.ts
+    ./app/staff-app/(protected)/(requires-onboarding)/home/page.tsx
+
+  #2 [Server Component]:
+    ./lib/staff-app-session.ts
+    ./app/staff-app/(protected)/(requires-onboarding)/layout.tsx
+
+  #3 [Server Component]:
+    ./lib/staff-app-session.ts
+    ./app/staff-app/(protected)/layout.tsx
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./lib/staff-app-session.ts:8:1
+Module not found: Can't resolve '@/lib/scm-staff-store'
+  [90m 6 |[0m   encodeSignedSessionCookie,
+  [90m 7 |[0m } [36mfrom[0m [32m"@/lib/session-cookie"[0m;
+[31m[1m>[0m [90m 8 |[0m [36mimport[0m { getStoredScmStaffProfileById } [36mfrom[0m [32m"@/lib/scm-staff-store"[0m;
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m 9 |[0m [36mimport[0m { getStoredStaffProfileById } [36mfrom[0m [32m"@/lib/staff-store"[0m;
+  [90m10 |[0m [36mimport[0m {
+  [90m11 |[0m   getStaffAppAccountById,
+
+Import map: aliased to relative './lib/scm-staff-store' inside of [project]/
+
+
+Import traces:
+  #1 [Server Component]:
+    ./lib/staff-app-session.ts
+    ./app/staff-app/(protected)/(requires-onboarding)/home/page.tsx
+
+  #2 [Server Component]:
+    ./lib/staff-app-session.ts
+    ./app/staff-app/(protected)/(requires-onboarding)/layout.tsx
+
+  #3 [Server Component]:
+    ./lib/staff-app-session.ts
+    ./app/staff-app/(protected)/layout.tsx
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./app/(platform)/system-settings/page.tsx:10:1
+Module not found: Can't resolve '@/components/system-settings-workspace'
+  [90m 8 |[0m [36mimport[0m { [33mSystemSettingsTemplateEditor[0m } [36mfrom[0m [32m"@/components/system-settings-template-editor"[0m;
+  [90m 9 |[0m [36mimport[0m { [33mSystemSettingsTextEditingPanel[0m } [36mfrom[0m [32m"@/components/system-settings-text-editing-...[0m
+[31m[1m>[0m [90m10 |[0m [36mimport[0m { [33mSystemSettingsWorkspace[0m } [36mfrom[0m [32m"@/components/system-settings-workspace"[0m;
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m11 |[0m [36mimport[0m { getPostmarkConfigurationStatus } [36mfrom[0m [32m"@/lib/postmark"[0m;
+  [90m12 |[0m [36mimport[0m { requireSuperAdminProfile } [36mfrom[0m [32m"@/lib/auth-session"[0m;
+  [90m13 |[0m [36mimport[0m { getSystemPolicySettings } [36mfrom[0m [32m"@/lib/system-policy-store"[0m;
+
+Import map: aliased to relative './components/system-settings-workspace' inside of [project]/
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./app/(platform)/system-settings/page.tsx:10:1
+Module not found: Can't resolve '@/components/system-settings-workspace'
+  [90m 8 |[0m [36mimport[0m { [33mSystemSettingsTemplateEditor[0m } [36mfrom[0m [32m"@/components/system-settings-template-editor"[0m;
+  [90m 9 |[0m [36mimport[0m { [33mSystemSettingsTextEditingPanel[0m } [36mfrom[0m [32m"@/components/system-settings-text-editing-...[0m
+[31m[1m>[0m [90m10 |[0m [36mimport[0m { [33mSystemSettingsWorkspace[0m } [36mfrom[0m [32m"@/components/system-settings-workspace"[0m;
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m11 |[0m [36mimport[0m { getPostmarkConfigurationStatus } [36mfrom[0m [32m"@/lib/postmark"[0m;
+  [90m12 |[0m [36mimport[0m { requireSuperAdminProfile } [36mfrom[0m [32m"@/lib/auth-session"[0m;
+  [90m13 |[0m [36mimport[0m { getSystemPolicySettings } [36mfrom[0m [32m"@/lib/system-policy-store"[0m;
+
+Import map: aliased to relative './components/system-settings-workspace' inside of [project]/
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+

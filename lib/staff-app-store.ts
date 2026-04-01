@@ -813,3 +813,42 @@ export async function touchStaffAppAccountLastLogin(accountId: string) {
   await tryWriteStaffAppAccountStore(accounts);
   return accounts[accountIndex];
 }
+
+export async function deleteStaffAppAccountsByLinkedStaffProfileId(staffProfileId: string) {
+  const sql = getPostgresClient();
+
+  if (sql) {
+    await ensureProductionStorageSchema();
+    const rows = await sql<StaffAppAccountRow[]>`
+      select *
+      from staff_app_accounts
+      where linked_staff_profile_id = ${staffProfileId}
+    `;
+
+    if (rows.length === 0) {
+      return [] as StaffAppAccount[];
+    }
+
+    await sql`
+      delete from staff_app_accounts
+      where linked_staff_profile_id = ${staffProfileId}
+    `;
+
+    return rows.map(mapStaffAppAccountRow);
+  }
+
+  const accounts = await readStaffAppAccountStore();
+  const deletedAccounts = accounts.filter(
+    (account) => account.linkedStaffProfileId === staffProfileId,
+  );
+
+  if (deletedAccounts.length === 0) {
+    return [] as StaffAppAccount[];
+  }
+
+  await tryWriteStaffAppAccountStore(
+    accounts.filter((account) => account.linkedStaffProfileId !== staffProfileId),
+  );
+
+  return deletedAccounts;
+}

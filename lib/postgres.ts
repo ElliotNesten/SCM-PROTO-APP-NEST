@@ -75,9 +75,13 @@ export async function ensureProductionStorageSchema() {
         profile_comments text not null,
         documents_json text not null,
         pending_records_json text not null,
+        is_deleted boolean not null default false,
         created_at text not null,
         updated_at text not null
       );
+
+      alter table staff_profiles
+        add column if not exists is_deleted boolean not null default false;
 
       create table if not exists staff_app_accounts (
         id text primary key,
@@ -100,6 +104,31 @@ export async function ensureProductionStorageSchema() {
         created_at text not null,
         updated_at text not null
       );
+
+      create table if not exists scm_staff_profiles (
+        id text primary key,
+        display_name text not null,
+        email text not null,
+        email_lower text not null,
+        password_hash text not null,
+        password_plaintext text,
+        phone text not null,
+        role_key text not null,
+        country text not null,
+        regions_json text not null,
+        assigned_gig_ids_json text not null,
+        linked_staff_id text,
+        linked_staff_name text,
+        profile_image_name text not null,
+        profile_image_url text,
+        notes text not null,
+        is_deleted boolean not null default false,
+        created_at text not null,
+        updated_at text not null
+      );
+
+      create index if not exists idx_scm_staff_profiles_email_lower
+        on scm_staff_profiles (email_lower);
 
       create table if not exists staff_applications (
         id text primary key,
@@ -141,6 +170,12 @@ export async function ensureProductionStorageSchema() {
         invalidated_at text
       );
 
+      alter table password_setup_tokens
+        add column if not exists subject_type text not null default 'staffApp';
+
+      alter table password_setup_tokens
+        add column if not exists scm_staff_profile_id text;
+
       create index if not exists idx_password_setup_tokens_account_id
         on password_setup_tokens (staff_app_account_id);
 
@@ -157,6 +192,13 @@ export async function ensureProductionStorageSchema() {
         saved_at text not null,
         updated_at text not null,
         welcome_acknowledged_at text
+      );
+
+      create table if not exists archived_staff_documents (
+        archived_id text primary key,
+        source_profile_id text not null,
+        archived_at text not null,
+        record_json text not null
       );
 
       create table if not exists system_email_templates (

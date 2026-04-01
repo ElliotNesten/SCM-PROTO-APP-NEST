@@ -244,3 +244,40 @@ export async function acknowledgeStaffOnboardingWelcome(staffAppAccountId: strin
   await writeStaffOnboardingStore(records);
   return records[recordIndex];
 }
+
+export async function deleteStaffOnboardingRecordsByStaffProfileId(staffProfileId: string) {
+  const sql = getPostgresClient();
+
+  if (sql) {
+    await ensureProductionStorageSchema();
+    const rows = await sql<StaffOnboardingRow[]>`
+      select *
+      from staff_onboarding
+      where staff_profile_id = ${staffProfileId}
+    `;
+
+    if (rows.length === 0) {
+      return [] as StaffOnboardingRecord[];
+    }
+
+    await sql`
+      delete from staff_onboarding
+      where staff_profile_id = ${staffProfileId}
+    `;
+
+    return rows.map(mapStaffOnboardingRow);
+  }
+
+  const records = await readStaffOnboardingStore();
+  const deletedRecords = records.filter((record) => record.staffProfileId === staffProfileId);
+
+  if (deletedRecords.length === 0) {
+    return [] as StaffOnboardingRecord[];
+  }
+
+  await writeStaffOnboardingStore(
+    records.filter((record) => record.staffProfileId !== staffProfileId),
+  );
+
+  return deletedRecords;
+}

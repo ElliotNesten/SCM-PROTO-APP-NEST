@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { createAuthSession } from "@/lib/auth-session";
 import { activateStaffAccountWithPassword } from "@/lib/staff-account-activation";
 import { createStaffAppSession } from "@/lib/staff-app-session";
 import { touchStaffAppAccountLastLogin } from "@/lib/staff-app-store";
@@ -29,6 +30,15 @@ export async function POST(request: Request) {
 
   if (!activation.ok) {
     return NextResponse.json({ error: activation.error }, { status: activation.status });
+  }
+
+  if (activation.subjectType === "scmStaff") {
+    await createAuthSession(activation.profile.id);
+
+    return NextResponse.json({
+      ok: true,
+      redirectTo: "/dashboard",
+    });
   }
 
   await createStaffAppSession({

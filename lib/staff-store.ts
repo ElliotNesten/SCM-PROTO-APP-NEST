@@ -104,7 +104,20 @@ type StaffProfileRow = {
   profile_comments: string;
   documents_json: string;
   pending_records_json: string;
+  is_deleted: boolean;
 };
+
+type ArchivedStaffDocumentRow = {
+  archived_id: string;
+  source_profile_id: string;
+  archived_at: string;
+  record_json: string;
+};
+
+type StaffProfileDatabaseLookupResult =
+  | { status: "missing" }
+  | { status: "deleted" }
+  | { status: "found"; profile: StoredStaffProfile };
 
 function getRegistrationLabel(status: RegistrationStatus) {
   switch (status) {
@@ -323,28 +336,43 @@ function mapStaffProfileRow(row: StaffProfileRow): StoredStaffProfile {
   });
 }
 
-async function getDatabaseStaffProfiles() {
+function getDatabaseStaffProfileLookupResult(
+  row: StaffProfileRow | null,
+): StaffProfileDatabaseLookupResult {
+  if (!row) {
+    return { status: "missing" };
+  }
+
+  if (row.is_deleted) {
+    return { status: "deleted" };
+  }
+
+  return {
+    status: "found",
+    profile: mapStaffProfileRow(row),
+  };
+}
+
+async function getDatabaseStaffProfileRows() {
   const sql = getPostgresClient();
 
   if (!sql) {
-    return [] as StoredStaffProfile[];
+    return [] as StaffProfileRow[];
   }
 
   await ensureProductionStorageSchema();
-  const rows = await sql<StaffProfileRow[]>`
+  return sql<StaffProfileRow[]>`
     select *
     from staff_profiles
-    order by display_name asc
+    order by is_deleted asc, display_name asc
   `;
-
-  return rows.map(mapStaffProfileRow);
 }
 
-async function getDatabaseStaffProfileById(personId: string) {
+async function getDatabaseStaffProfileByIdLookup(personId: string) {
   const sql = getPostgresClient();
 
   if (!sql) {
-    return null;
+    return { status: "missing" } satisfies StaffProfileDatabaseLookupResult;
   }
 
   await ensureProductionStorageSchema();
@@ -355,14 +383,14 @@ async function getDatabaseStaffProfileById(personId: string) {
     limit 1
   `;
 
-  return rows[0] ? mapStaffProfileRow(rows[0]) : null;
+  return getDatabaseStaffProfileLookupResult(rows[0] ?? null);
 }
 
-async function getDatabaseStaffProfileByEmail(email: string) {
+async function getDatabaseStaffProfileByEmailLookup(email: string) {
   const sql = getPostgresClient();
 
   if (!sql) {
-    return null;
+    return { status: "missing" } satisfies StaffProfileDatabaseLookupResult;
   }
 
   await ensureProductionStorageSchema();
@@ -373,10 +401,13 @@ async function getDatabaseStaffProfileByEmail(email: string) {
     limit 1
   `;
 
-  return rows[0] ? mapStaffProfileRow(rows[0]) : null;
+  return getDatabaseStaffProfileLookupResult(rows[0] ?? null);
 }
 
-async function upsertDatabaseStaffProfile(profile: StoredStaffProfile) {
+async function upsertDatabaseStaffProfile(
+  profile: StoredStaffProfile,
+  options?: { isDeleted?: boolean },
+) {
   const sql = getPostgresClient();
 
   if (!sql) {
@@ -384,6 +415,7 @@ async function upsertDatabaseStaffProfile(profile: StoredStaffProfile) {
   }
 
   await ensureProductionStorageSchema();
+  const now = new Date().toISOString();
   await sql`
     insert into staff_profiles (
       id, display_name, email, email_lower, phone, country, region, regions_json, roles_json,
@@ -391,7 +423,7 @@ async function upsertDatabaseStaffProfile(profile: StoredStaffProfile) {
       registration_label, profile_approved, profile_approval_label, profile_image_name,
       profile_image_url, bank_name, bank_details, personal_number, driver_license_manual,
       driver_license_automatic, allergies, role_profiles_json, profile_comments, documents_json,
-      pending_records_json, created_at, updated_at
+      pending_records_json, is_deleted, created_at, updated_at
     ) values (
       ${profile.id},
       ${profile.displayName},
@@ -422,8 +454,9 @@ async function upsertDatabaseStaffProfile(profile: StoredStaffProfile) {
       ${profile.profileComments},
       ${serializeJson(profile.documents)},
       ${serializeJson(profile.pendingRecords)},
-      ${new Date().toISOString()},
-      ${new Date().toISOString()}
+      ${options?.isDeleted ?? false},
+      ${now},
+      ${now}
     )
     on conflict (id) do update set
       display_name = excluded.display_name,
@@ -454,6 +487,7 @@ async function upsertDatabaseStaffProfile(profile: StoredStaffProfile) {
       profile_comments = excluded.profile_comments,
       documents_json = excluded.documents_json,
       pending_records_json = excluded.pending_records_json,
+      is_deleted = excluded.is_deleted,
       updated_at = excluded.updated_at
   `;
 
@@ -506,6 +540,10 @@ async function ensureStaffStore() {
 }
 
 async function ensureArchivedDocumentsStore() {
+  if (getPostgresClient()) {
+    return;
+  }
+
   await ensureJsonFile(archivedDocumentsStorePath, [] as ArchivedStaffDocumentRecord[]);
 }
 
@@ -523,11 +561,53 @@ async function writeStaffStore(profiles: StoredStaffProfile[]) {
 }
 
 async function readArchivedDocumentsStore() {
+  const sql = getPostgresClient();
+
+  if (sql) {
+    await ensureProductionStorageSchema();
+    const rows = await sql<ArchivedStaffDocumentRow[]>`
+      select *
+      from archived_staff_documents
+      order by archived_at desc, archived_id desc
+    `;
+
+    return rows
+      .map((row) =>
+        parseJsonValue<ArchivedStaffDocumentRecord | null>(row.record_json, null),
+      )
+      .filter((record): record is ArchivedStaffDocumentRecord => Boolean(record));
+  }
+
   await ensureArchivedDocumentsStore();
   return readJsonFile<ArchivedStaffDocumentRecord[]>(archivedDocumentsStorePath, []);
 }
 
 async function writeArchivedDocumentsStore(records: ArchivedStaffDocumentRecord[]) {
+  const sql = getPostgresClient();
+
+  if (sql) {
+    await ensureProductionStorageSchema();
+    await sql`delete from archived_staff_documents`;
+
+    for (const record of records) {
+      await sql`
+        insert into archived_staff_documents (
+          archived_id,
+          source_profile_id,
+          archived_at,
+          record_json
+        ) values (
+          ${record.archivedId},
+          ${record.sourceProfileId},
+          ${record.archivedAt},
+          ${serializeJson(record)}
+        )
+      `;
+    }
+
+    return;
+  }
+
   await writeJsonFile(archivedDocumentsStorePath, records);
 }
 
@@ -535,25 +615,30 @@ export async function getAllStoredStaffProfiles() {
   const seedProfilesSource = isDatabaseConfigured()
     ? createSeedStaffProfiles()
     : await readStaffStore();
-  const [seedProfiles, databaseProfiles] = await Promise.all([
+  const [seedProfiles, databaseRows] = await Promise.all([
     Promise.resolve(seedProfilesSource),
-    getDatabaseStaffProfiles(),
+    getDatabaseStaffProfileRows(),
   ]);
-  const seenIds = new Set<string>();
-  const seenEmails = new Set<string>();
-  const mergedProfiles = [...databaseProfiles, ...seedProfiles].filter((profile) => {
-    const normalizedEmail = profile.email.toLowerCase();
 
-    if (seenIds.has(profile.id) || seenEmails.has(normalizedEmail)) {
-      return false;
-    }
+  if (databaseRows.length === 0) {
+    return seedProfiles;
+  }
 
-    seenIds.add(profile.id);
-    seenEmails.add(normalizedEmail);
-    return true;
-  });
+  const blockedIds = new Set(databaseRows.map((row) => row.id));
+  const blockedEmails = new Set(
+    databaseRows.map((row) => row.email.trim().toLowerCase()),
+  );
+  const databaseProfiles = databaseRows
+    .filter((row) => !row.is_deleted)
+    .map(mapStaffProfileRow);
 
-  return mergedProfiles;
+  return [
+    ...databaseProfiles,
+    ...seedProfiles.filter((profile) => {
+      const normalizedEmail = profile.email.toLowerCase();
+      return !blockedIds.has(profile.id) && !blockedEmails.has(normalizedEmail);
+    }),
+  ];
 }
 
 export async function getArchivedStaffDocuments() {
@@ -561,10 +646,14 @@ export async function getArchivedStaffDocuments() {
 }
 
 export async function getStoredStaffProfileById(personId: string) {
-  const databaseProfile = await getDatabaseStaffProfileById(personId);
+  const databaseLookup = await getDatabaseStaffProfileByIdLookup(personId);
 
-  if (databaseProfile) {
-    return databaseProfile;
+  if (databaseLookup.status === "found") {
+    return databaseLookup.profile;
+  }
+
+  if (databaseLookup.status === "deleted") {
+    return null;
   }
 
   const profiles = isDatabaseConfigured()
@@ -574,10 +663,14 @@ export async function getStoredStaffProfileById(personId: string) {
 }
 
 export async function getStoredStaffProfileByEmail(email: string) {
-  const databaseProfile = await getDatabaseStaffProfileByEmail(email);
+  const databaseLookup = await getDatabaseStaffProfileByEmailLookup(email);
 
-  if (databaseProfile) {
-    return databaseProfile;
+  if (databaseLookup.status === "found") {
+    return databaseLookup.profile;
+  }
+
+  if (databaseLookup.status === "deleted") {
+    return null;
   }
 
   const profiles = isDatabaseConfigured()
@@ -702,16 +795,34 @@ function buildUpdatedStoredStaffProfile(
   });
 }
 
+function buildDeletedStoredStaffProfile(profile: StoredStaffProfile) {
+  return normalizeStoredStaffProfile({
+    ...profile,
+    documents: [],
+    pendingRecords: [],
+    approvalStatus: "Archived",
+    registrationStatus: "DEACTIVATED",
+    registrationLabel: getRegistrationLabel("DEACTIVATED"),
+    profileApproved: false,
+    profileApprovalLabel: getProfileApprovalLabel(false),
+  });
+}
+
 export async function updateStoredStaffProfile(
   personId: string,
   updates: StaffProfileUpdate,
 ) {
-  const databaseProfile = await getDatabaseStaffProfileById(personId);
+  const databaseLookup = await getDatabaseStaffProfileByIdLookup(personId);
+
+  if (databaseLookup.status === "deleted") {
+    return null;
+  }
+
   const seedProfile = isDatabaseConfigured()
     ? createSeedStaffProfiles().find((profile) => profile.id === personId) ?? null
     : null;
-
-  const databaseBackedProfile = databaseProfile ?? seedProfile;
+  const databaseBackedProfile =
+    databaseLookup.status === "found" ? databaseLookup.profile : seedProfile;
 
   if (databaseBackedProfile) {
     const updatedProfile = buildUpdatedStoredStaffProfile(databaseBackedProfile, updates);
@@ -794,19 +905,45 @@ export async function createStoredStaffProfile(input: NewStaffProfileInput) {
 }
 
 export async function deleteStoredStaffProfile(personId: string) {
-  const profiles = await readStaffStore();
-  const profileIndex = profiles.findIndex((profile) => profile.id === personId);
+  const databaseLookup = await getDatabaseStaffProfileByIdLookup(personId);
 
-  if (profileIndex === -1) {
+  if (databaseLookup.status === "deleted") {
     return null;
   }
 
-  const profile = profiles[profileIndex];
+  const sql = getPostgresClient();
+  const seedProfile =
+    databaseLookup.status === "missing" && isDatabaseConfigured()
+      ? createSeedStaffProfiles().find((profile) => profile.id === personId) ?? null
+      : null;
+  const fileProfiles =
+    databaseLookup.status === "missing" && !isDatabaseConfigured()
+      ? await readStaffStore()
+      : null;
+  const profile =
+    databaseLookup.status === "found"
+      ? databaseLookup.profile
+      : seedProfile ?? fileProfiles?.find((staffProfile) => staffProfile.id === personId) ?? null;
+
+  if (!profile) {
+    return null;
+  }
+
   const archivedAt = new Date().toISOString();
-  const { getStoredStaffDocuments } = await import("@/lib/staff-document-store");
-  const [archivedDocuments, generatedDocuments] = await Promise.all([
+  const [
+    archivedDocuments,
+    generatedDocuments,
+    { removeStoredStaffDocumentsForPerson },
+    { deleteStaffAppAccountsByLinkedStaffProfileId },
+    { deleteStaffOnboardingRecordsByStaffProfileId },
+  ] = await Promise.all([
     readArchivedDocumentsStore(),
-    getStoredStaffDocuments(personId),
+    import("@/lib/staff-document-store").then(({ getStoredStaffDocuments }) =>
+      getStoredStaffDocuments(personId),
+    ),
+    import("@/lib/staff-document-store"),
+    import("@/lib/staff-app-store"),
+    import("@/lib/staff-onboarding-store"),
   ]);
 
   const archivedProfileDocuments: ArchivedStaffDocumentRecord[] = profile.documents.map(
@@ -844,17 +981,40 @@ export async function deleteStoredStaffProfile(personId: string) {
       documentKind: document.documentKind,
     }),
   );
+  const nextArchivedDocuments = [
+    ...archivedProfileDocuments,
+    ...archivedGeneratedDocuments,
+    ...archivedDocuments,
+  ];
 
-  profiles.splice(profileIndex, 1);
+  if (sql) {
+    await Promise.all([
+      upsertDatabaseStaffProfile(buildDeletedStoredStaffProfile(profile), {
+        isDeleted: true,
+      }),
+      writeArchivedDocumentsStore(nextArchivedDocuments),
+      removeStoredStaffDocumentsForPerson(personId).catch(() => 0),
+      deleteStaffAppAccountsByLinkedStaffProfileId(personId),
+      deleteStaffOnboardingRecordsByStaffProfileId(personId),
+    ]);
+  } else {
+    const profiles = fileProfiles ?? (await readStaffStore());
+    const profileIndex = profiles.findIndex((staffProfile) => staffProfile.id === personId);
 
-  await Promise.all([
-    writeStaffStore(profiles),
-    writeArchivedDocumentsStore([
-      ...archivedProfileDocuments,
-      ...archivedGeneratedDocuments,
-      ...archivedDocuments,
-    ]),
-  ]);
+    if (profileIndex === -1) {
+      return null;
+    }
+
+    profiles.splice(profileIndex, 1);
+
+    await Promise.all([
+      writeStaffStore(profiles),
+      writeArchivedDocumentsStore(nextArchivedDocuments),
+      removeStoredStaffDocumentsForPerson(personId).catch(() => 0),
+      deleteStaffAppAccountsByLinkedStaffProfileId(personId),
+      deleteStaffOnboardingRecordsByStaffProfileId(personId),
+    ]);
+  }
 
   return {
     deletedProfile: profile,

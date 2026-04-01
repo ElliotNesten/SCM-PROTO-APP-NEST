@@ -8138,7 +8138,8 @@ a.queue-card:hover {
   background: rgba(248, 250, 255, 0.92);
   color: #213154;
   text-align: left;
-  cursor: pointer;
+  min-height: 100%;
+  cursor: default;
   transition:
     transform 160ms ease,
     border-color 160ms ease,
@@ -8183,6 +8184,15 @@ a.queue-card:hover {
   line-height: 1.45;
 }
 
+.system-settings-overview-card-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: auto;
+}
+
 .system-settings-overview-keywords,
 .system-settings-hub-section-keywords {
   display: flex;
@@ -8206,6 +8216,171 @@ a.queue-card:hover {
 .system-settings-overview-card.active .system-settings-overview-chip {
   background: rgba(255, 255, 255, 0.14);
   color: #fff;
+}
+
+.system-settings-overview-card.active .system-settings-hub-summary-pill {
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+}
+
+.system-settings-open-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.45rem;
+  padding: 0.45rem 0.9rem;
+  border: 1px solid rgba(193, 205, 241, 0.95);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.96);
+  color: #31467c;
+  font: inherit;
+  font-weight: 800;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    transform 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    background 160ms ease,
+    color 160ms ease;
+}
+
+.system-settings-open-button:hover {
+  transform: translateY(-1px);
+  border-color: rgba(126, 145, 218, 0.95);
+  box-shadow: 0 12px 24px rgba(80, 94, 147, 0.14);
+}
+
+.system-settings-open-button.active {
+  border-color: rgba(255, 255, 255, 0.34);
+  background: rgba(255, 255, 255, 0.96);
+  color: #30457d;
+}
+
+.system-settings-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 180;
+  display: grid;
+  place-items: center;
+  padding: 1.25rem;
+  background: rgba(24, 33, 57, 0.4);
+  backdrop-filter: blur(10px);
+}
+
+.system-settings-modal {
+  width: min(1180px, 100%);
+  max-height: calc(100vh - 2.5rem);
+}
+
+.system-settings-modal-shell {
+  display: grid;
+  gap: 1rem;
+  max-height: inherit;
+  padding: 1.15rem;
+  border: 1px solid rgba(213, 221, 247, 0.96);
+  border-radius: 1.5rem;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.99), rgba(244, 247, 255, 0.97));
+  box-shadow: 0 30px 70px rgba(32, 43, 78, 0.24);
+  overflow: hidden;
+}
+
+.system-settings-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.system-settings-modal-copy {
+  display: grid;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.system-settings-modal-copy h2 {
+  margin: 0;
+  font-size: 1.55rem;
+  letter-spacing: -0.03em;
+}
+
+.system-settings-modal-copy p {
+  margin: 0;
+  color: #647493;
+  line-height: 1.55;
+}
+
+.system-settings-modal-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+.system-settings-modal-close {
+  display: inline-grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border: 1px solid rgba(206, 216, 245, 0.95);
+  border-radius: 999px;
+  background: rgba(248, 250, 255, 0.96);
+  color: #31467d;
+  cursor: pointer;
+  transition:
+    transform 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    background 160ms ease;
+}
+
+.system-settings-modal-close:hover {
+  transform: translateY(-1px);
+  border-color: rgba(122, 142, 219, 0.95);
+  background: rgba(255, 255, 255, 0.99);
+  box-shadow: 0 14px 26px rgba(77, 91, 146, 0.16);
+}
+
+.system-settings-modal-close svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.system-settings-modal-keywords {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.system-settings-modal-body {
+  display: grid;
+  gap: 1rem;
+  max-height: calc(100vh - 11rem);
+  overflow: auto;
+  padding-right: 0.2rem;
+}
+
+.system-settings-modal-body > .system-settings-layout {
+  gap: 1rem;
+}
+
+.system-settings-modal-body > .card {
+  padding: 0;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+.system-settings-modal-body > .system-settings-layout > .card {
+  box-shadow: var(--shadow);
+}
+
+.system-settings-modal-body .system-settings-policy-card,
+.system-settings-modal-body .system-settings-text-mode-card,
+.system-settings-modal-body .system-settings-scm-info-shell {
+  margin-bottom: 0;
 }
 
 .system-settings-section-list {
@@ -9222,6 +9397,13 @@ a.queue-card:hover {
     grid-template-columns: 1fr;
   }
 
+  .system-settings-overview-card-foot,
+  .system-settings-modal-header,
+  .system-settings-modal-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
   .system-settings-command-foot,
   .system-settings-hub-section-toggle {
     flex-direction: column;
@@ -9230,6 +9412,27 @@ a.queue-card:hover {
 
   .system-settings-command-actions {
     justify-content: flex-start;
+  }
+
+  .system-settings-modal-backdrop {
+    padding: 0.75rem;
+  }
+
+  .system-settings-modal {
+    width: 100%;
+    max-height: calc(100vh - 1.5rem);
+  }
+
+  .system-settings-modal-shell {
+    padding: 1rem;
+  }
+
+  .system-settings-modal-close {
+    align-self: flex-end;
+  }
+
+  .system-settings-modal-body {
+    max-height: calc(100vh - 13rem);
   }
 
   .system-settings-hub-section-meta {

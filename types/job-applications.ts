@@ -47,8 +47,10 @@ export interface StoredStaffApplication {
 export interface PasswordSetupTokenRecord {
   id: string;
   email: string;
+  subjectType?: "staffApp" | "scmStaff";
   staffProfileId: string;
   staffAppAccountId: string;
+  scmStaffProfileId?: string | null;
   applicationId: string | null;
   tokenHash: string;
   createdAt: string;

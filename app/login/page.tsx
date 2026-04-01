@@ -119,7 +119,9 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
 
                 <div className="login-assistance">
                   <span className="login-forgot-link">Forgot password?</span>
-                  <span className="login-forgot-copy">Contact a Super Admin to reset your access.</span>
+                  <span className="login-forgot-copy">
+                    Contact a Super Admin to resend activation or reset your access.
+                  </span>
                 </div>
 
                 <button type="submit" className="button login-submit-button">
@@ -128,8 +130,8 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
 
                 <div className="login-footnote">
                   <p className="muted">
-                    Existing seeded accounts use a demo password based on first name + <code>123</code>{" "}
-                    until it is changed in the SCM Staff profile.
+                    Legacy seeded accounts may still use a demo password based on first name +
+                    <code>123</code> until they are changed or replaced by an activation invite.
                   </p>
                 </div>
               </form>

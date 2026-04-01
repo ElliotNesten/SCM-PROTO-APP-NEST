@@ -10,6 +10,7 @@ export async function GET(request: Request) {
   return NextResponse.json({
     ok: verification.state === "valid",
     state: verification.state,
+    subjectType: verification.record?.subjectType ?? "staffApp",
     email: verification.record?.email ?? null,
     expiresAt: verification.record?.expiresAt ?? null,
   });

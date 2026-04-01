@@ -182,3 +182,15 @@ export async function removeStoredStaffDocumentsForGig(gigId: string) {
   await writeStaffDocumentStore(nextDocuments);
   return currentDocuments.length - nextDocuments.length;
 }
+
+export async function removeStoredStaffDocumentsForPerson(personId: string) {
+  const currentDocuments = await readStaffDocumentStore();
+  const nextDocuments = currentDocuments.filter((document) => document.userId !== personId);
+
+  if (nextDocuments.length === currentDocuments.length) {
+    return 0;
+  }
+
+  await writeStaffDocumentStore(nextDocuments);
+  return currentDocuments.length - nextDocuments.length;
+}

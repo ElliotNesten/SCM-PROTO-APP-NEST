@@ -1,3 +1,8 @@
+import { createPasswordHash } from "@/lib/password-utils";
+import {
+  getStoredScmStaffProfileById,
+  updateStoredScmStaffProfile,
+} from "@/lib/scm-staff-store";
 import { activateStaffAppAccountById, getStaffAppAccountById } from "@/lib/staff-app-store";
 import {
   consumePasswordSetupToken,
@@ -36,6 +41,44 @@ export async function activateStaffAccountWithPassword(input: {
     };
   }
 
+  const subjectType = verification.record.subjectType ?? "staffApp";
+
+  if (subjectType === "scmStaff") {
+    const scmStaffProfileId =
+      verification.record.scmStaffProfileId ?? verification.record.staffProfileId;
+    const profile = await getStoredScmStaffProfileById(scmStaffProfileId);
+
+    if (!profile) {
+      return {
+        ok: false as const,
+        error: "The SCM Staff account connected to this token could not be found.",
+        status: 404,
+      };
+    }
+
+    const updatedProfile = await updateStoredScmStaffProfile(profile.id, {
+      passwordHash: createPasswordHash(normalizedPassword),
+      passwordPlaintext: "",
+    });
+
+    if (!updatedProfile) {
+      return {
+        ok: false as const,
+        error: "The SCM Staff account connected to this token could not be activated.",
+        status: 404,
+      };
+    }
+
+    await consumePasswordSetupToken(input.token);
+
+    return {
+      ok: true as const,
+      subjectType: "scmStaff" as const,
+      profile: updatedProfile,
+      tokenRecord: verification.record,
+    };
+  }
+
   const account = await getStaffAppAccountById(verification.record.staffAppAccountId);
 
   if (!account) {
@@ -66,6 +109,7 @@ export async function activateStaffAccountWithPassword(input: {
 
   return {
     ok: true as const,
+    subjectType: "staffApp" as const,
     account: activatedAccount,
     tokenRecord: verification.record,
   };

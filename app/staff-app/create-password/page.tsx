@@ -25,6 +25,7 @@ export default async function CreatePasswordPage({
           <CreatePasswordForm
             token={token}
             verificationState={verification.state}
+            subjectType={verification.record?.subjectType ?? "staffApp"}
             email={verification.record?.email ?? ""}
             expiresAt={verification.record?.expiresAt ?? null}
           />

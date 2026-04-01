@@ -91,6 +91,7 @@ export function ScmStaffProfileEditor({
   allowDelete = false,
   canManageAdministrativeFields = true,
   canEditRole = true,
+  initialStatusMessage = "",
 }: {
   initialProfile: StoredScmStaffProfile;
   backHref?: string;
@@ -98,6 +99,7 @@ export function ScmStaffProfileEditor({
   allowDelete?: boolean;
   canManageAdministrativeFields?: boolean;
   canEditRole?: boolean;
+  initialStatusMessage?: string;
 }) {
   const router = useRouter();
   const [profile, setProfile] = useState(initialProfile);
@@ -105,7 +107,7 @@ export function ScmStaffProfileEditor({
   const [uploadingImage, setUploadingImage] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [saveMessage, setSaveMessage] = useState("");
+  const [saveMessage, setSaveMessage] = useState(initialStatusMessage);
   const [passwordDraft, setPasswordDraft] = useState(
     initialProfile.passwordPlaintext ?? "",
   );
@@ -407,7 +409,7 @@ export function ScmStaffProfileEditor({
                   <input
                     type={showPasswordDraft ? "text" : "password"}
                     value={passwordDraft}
-                    placeholder="Password used to log in"
+                    placeholder="Leave blank to keep the current password"
                     onChange={(event) => setPasswordDraft(event.currentTarget.value)}
                   />
                   <button

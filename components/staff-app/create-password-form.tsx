@@ -15,11 +15,13 @@ function formatExpiryTimestamp(value: string) {
 export function CreatePasswordForm({
   token,
   verificationState,
+  subjectType,
   email,
   expiresAt,
 }: {
   token: string;
   verificationState: VerificationState;
+  subjectType: "staffApp" | "scmStaff";
   email: string;
   expiresAt: string | null;
 }) {
@@ -85,7 +87,7 @@ export function CreatePasswordForm({
           This password link is{" "}
           {verificationState === "expired" ? "expired" : "no longer valid"}. Email
           {" "}
-          INFO@scm.se or contact your nearest manager to receive a new link.
+          INFO@scm.se or contact a Super Admin to receive a new link.
         </p>
       </div>
     );
@@ -97,8 +99,10 @@ export function CreatePasswordForm({
         <p className="staff-app-kicker">SCM activation</p>
         <h1>Create your password</h1>
         <p>
-          The account for <strong>{email}</strong> will be activated as soon as you save a new
-          password.
+          {subjectType === "scmStaff"
+            ? "Your SCM Staff account"
+            : "The account"}{" "}
+          for <strong>{email}</strong> will be activated as soon as you save a new password.
           {expiresAt ? (
             <>
               {" "}
@@ -132,7 +136,11 @@ export function CreatePasswordForm({
         {errorMessage ? <p className="staff-app-inline-alert danger">{errorMessage}</p> : null}
 
         <button type="submit" className="staff-app-button" disabled={isSubmitting}>
-          {isSubmitting ? "Activating..." : "Create my password"}
+          {isSubmitting
+            ? "Activating..."
+            : subjectType === "scmStaff"
+              ? "Activate SCM Staff"
+              : "Create my password"}
         </button>
       </form>
     </div>

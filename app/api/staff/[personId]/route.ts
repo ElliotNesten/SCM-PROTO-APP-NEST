@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 
 import {
   deleteStoredStaffProfile,
@@ -180,6 +181,10 @@ export async function DELETE(_request: Request, context: RouteContext) {
   if (!deletionResult) {
     return NextResponse.json({ error: "Staff profile not found." }, { status: 404 });
   }
+
+  revalidatePath("/people");
+  revalidatePath(`/people/${personId}`);
+  revalidatePath("/dashboard");
 
   return NextResponse.json({
     ok: true,

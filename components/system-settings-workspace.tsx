@@ -2,8 +2,8 @@
 
 import {
   useDeferredValue,
+  useEffect,
   useMemo,
-  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -37,19 +37,11 @@ function SearchIcon() {
   );
 }
 
-function SectionChevron({ open }: { open: boolean }) {
+function CloseIcon() {
   return (
-    <svg
-      viewBox="0 0 20 20"
-      aria-hidden="true"
-      className={
-        open
-          ? "system-settings-hub-chevron open"
-          : "system-settings-hub-chevron"
-      }
-    >
+    <svg viewBox="0 0 20 20" aria-hidden="true">
       <path
-        d="m5 7 5 5 5-5"
+        d="M5 5 15 15M15 5 5 15"
         fill="none"
         stroke="currentColor"
         strokeLinecap="round"
@@ -84,9 +76,8 @@ export function SystemSettingsWorkspace({
 }: {
   sections: SystemSettingsWorkspaceSection[];
 }) {
-  const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
   const [query, setQuery] = useState("");
-  const [expandedSectionIds, setExpandedSectionIds] = useState<string[]>([]);
+  const [activeSectionId, setActiveSectionId] = useState<string | null>(null);
 
   const deferredQuery = useDeferredValue(query);
   const normalizedQuery = useMemo(
@@ -97,70 +88,48 @@ export function SystemSettingsWorkspace({
     () => sections.filter((section) => matchesSection(section, normalizedQuery)),
     [sections, normalizedQuery],
   );
-  const visibleSectionIds = useMemo(
-    () => visibleSections.map((section) => section.id),
-    [visibleSections],
+  const activeSection = useMemo(
+    () => sections.find((section) => section.id === activeSectionId) ?? null,
+    [activeSectionId, sections],
   );
   const hasQuery = normalizedQuery.length > 0;
-  const expandedVisibleCount = visibleSectionIds.filter((sectionId) =>
-    expandedSectionIds.includes(sectionId),
-  ).length;
 
-  function registerSectionRef(sectionId: string, element: HTMLElement | null) {
-    sectionRefs.current[sectionId] = element;
-  }
-
-  function scrollToSection(sectionId: string) {
-    const sectionElement = sectionRefs.current[sectionId];
-
-    if (!sectionElement) {
+  useEffect(() => {
+    if (!activeSection) {
       return;
     }
 
-    sectionElement.scrollIntoView({
-      behavior: "smooth",
-      block: "start",
-    });
-  }
+    const previousOverflow = document.body.style.overflow;
 
-  function expandSection(sectionId: string) {
-    setExpandedSectionIds((currentIds) => {
-      if (currentIds.includes(sectionId)) {
-        return currentIds;
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setActiveSectionId(null);
       }
+    }
 
-      return [...currentIds, sectionId];
-    });
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [activeSection]);
+
+  function openSection(sectionId: string) {
+    setActiveSectionId(sectionId);
   }
 
-  function handleOverviewClick(sectionId: string) {
-    expandSection(sectionId);
-    requestAnimationFrame(() => {
-      scrollToSection(sectionId);
-    });
+  function closeSection() {
+    setActiveSectionId(null);
   }
 
-  function toggleSection(sectionId: string) {
-    if (hasQuery) {
-      scrollToSection(sectionId);
+  function openFirstVisibleSection() {
+    if (!visibleSections[0]) {
       return;
     }
 
-    setExpandedSectionIds((currentIds) =>
-      currentIds.includes(sectionId)
-        ? currentIds.filter((currentId) => currentId !== sectionId)
-        : [...currentIds, sectionId],
-    );
-  }
-
-  function expandVisibleSections() {
-    setExpandedSectionIds((currentIds) =>
-      Array.from(new Set([...currentIds, ...visibleSectionIds])),
-    );
-  }
-
-  function collapseAllSections() {
-    setExpandedSectionIds([]);
+    setActiveSectionId(visibleSections[0].id);
   }
 
   return (
@@ -171,7 +140,7 @@ export function SystemSettingsWorkspace({
           <h2>Find the exact change faster</h2>
           <p>
             Search by wage, policy, email, arena, template, guide, or text copy.
-            Open only the section you need and keep the rest compact.
+            Open the setting you need in a focused popup window.
           </p>
         </div>
 
@@ -200,22 +169,11 @@ export function SystemSettingsWorkspace({
             </button>
             <button
               type="button"
-              className="button ghost"
-              onClick={collapseAllSections}
-              disabled={expandedSectionIds.length === 0 || hasQuery}
-            >
-              Collapse all
-            </button>
-            <button
-              type="button"
               className="button"
-              onClick={expandVisibleSections}
-              disabled={
-                visibleSections.length === 0 ||
-                (!hasQuery && expandedVisibleCount === visibleSections.length)
-              }
+              onClick={openFirstVisibleSection}
+              disabled={visibleSections.length === 0}
             >
-              Expand visible
+              {hasQuery ? "Open first match" : "Open first card"}
             </button>
           </div>
         </div>
@@ -225,6 +183,9 @@ export function SystemSettingsWorkspace({
             {hasQuery
               ? `${visibleSections.length} of ${sections.length} settings sections match "${query.trim()}".`
               : `Showing ${sections.length} settings areas on one overview page.`}
+          </span>
+          <span className="helper-caption">
+            Click <code>Open settings</code> to edit inside a popup window.
           </span>
         </div>
       </section>
@@ -239,103 +200,108 @@ export function SystemSettingsWorkspace({
           </div>
         </section>
       ) : (
-        <>
-          <div className="system-settings-overview-grid">
-            {visibleSections.map((section) => {
-              const isExpanded = hasQuery || expandedSectionIds.includes(section.id);
+        <div className="system-settings-overview-grid">
+          {visibleSections.map((section) => {
+            const isActive = activeSection?.id === section.id;
 
-              return (
-                <button
-                  key={section.id}
-                  type="button"
-                  className={
-                    isExpanded
-                      ? "system-settings-overview-card active"
-                      : "system-settings-overview-card"
-                  }
-                  onClick={() => handleOverviewClick(section.id)}
-                >
-                  <span className="system-settings-overview-eyebrow">
-                    {section.eyebrow}
-                  </span>
-                  <strong>{section.title}</strong>
-                  <p>{section.summary}</p>
-                  <div className="system-settings-overview-keywords">
-                    {section.keywords.slice(0, 3).map((keyword) => (
-                      <span
-                        key={`${section.id}-${keyword}`}
-                        className="system-settings-overview-chip"
-                      >
-                        {keyword}
-                      </span>
-                    ))}
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-
-          <div className="system-settings-section-list">
-            {visibleSections.map((section) => {
-              const isExpanded = hasQuery || expandedSectionIds.includes(section.id);
-
-              return (
-                <section
-                  key={section.id}
-                  id={`system-settings-${section.id}`}
-                  ref={(element) => registerSectionRef(section.id, element)}
-                  className={
-                    isExpanded
-                      ? "system-settings-hub-section open"
-                      : "system-settings-hub-section"
-                  }
-                >
+            return (
+              <article
+                key={section.id}
+                className={
+                  isActive
+                    ? "system-settings-overview-card active"
+                    : "system-settings-overview-card"
+                }
+              >
+                <span className="system-settings-overview-eyebrow">
+                  {section.eyebrow}
+                </span>
+                <strong>{section.title}</strong>
+                <p>{section.summary}</p>
+                <div className="system-settings-overview-keywords">
+                  {section.keywords.slice(0, 3).map((keyword) => (
+                    <span
+                      key={`${section.id}-${keyword}`}
+                      className="system-settings-overview-chip"
+                    >
+                      {keyword}
+                    </span>
+                  ))}
+                </div>
+                <div className="system-settings-overview-card-foot">
+                  <span className="system-settings-hub-summary-pill">Opens in popup</span>
                   <button
                     type="button"
                     className={
-                      isExpanded
-                        ? "system-settings-hub-section-toggle open"
-                        : "system-settings-hub-section-toggle"
+                      isActive
+                        ? "system-settings-open-button active"
+                        : "system-settings-open-button"
                     }
-                    onClick={() => toggleSection(section.id)}
-                    aria-expanded={isExpanded}
+                    onClick={() => openSection(section.id)}
                   >
-                    <span className="system-settings-hub-section-copy">
-                      <small>{section.eyebrow}</small>
-                      <strong>{section.title}</strong>
-                      <span>{section.description}</span>
-                    </span>
-
-                    <span className="system-settings-hub-section-meta">
-                      <span className="system-settings-hub-summary-pill">
-                        {section.summary}
-                      </span>
-                      <SectionChevron open={isExpanded} />
-                    </span>
+                    Open settings
                   </button>
-
-                  {isExpanded ? (
-                    <div className="system-settings-hub-section-body">
-                      {section.content}
-                    </div>
-                  ) : (
-                    <div className="system-settings-hub-section-keywords">
-                      {section.keywords.map((keyword) => (
-                        <span
-                          key={`${section.id}-keyword-${keyword}`}
-                          className="system-settings-overview-chip"
-                        >
-                          {keyword}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </section>
-              );
-            })}
-          </div>
-        </>
+                </div>
+              </article>
+            );
+          })}
+        </div>
       )}
+
+      {activeSection ? (
+        <div
+          className="system-settings-modal-backdrop"
+          role="presentation"
+          onClick={closeSection}
+        >
+          <section
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={`system-settings-modal-title-${activeSection.id}`}
+            className="system-settings-modal"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="system-settings-modal-shell">
+              <div className="system-settings-modal-header">
+                <div className="system-settings-modal-copy">
+                  <p className="eyebrow">{activeSection.eyebrow}</p>
+                  <h2 id={`system-settings-modal-title-${activeSection.id}`}>
+                    {activeSection.title}
+                  </h2>
+                  <p>{activeSection.description}</p>
+                </div>
+
+                <div className="system-settings-modal-actions">
+                  <span className="system-settings-hub-summary-pill">
+                    {activeSection.summary}
+                  </span>
+                  <button
+                    type="button"
+                    className="system-settings-modal-close"
+                    onClick={closeSection}
+                    aria-label={`Close ${activeSection.title}`}
+                  >
+                    <CloseIcon />
+                  </button>
+                </div>
+              </div>
+
+              <div className="system-settings-modal-keywords">
+                {activeSection.keywords.map((keyword) => (
+                  <span
+                    key={`${activeSection.id}-modal-${keyword}`}
+                    className="system-settings-overview-chip"
+                  >
+                    {keyword}
+                  </span>
+                ))}
+              </div>
+
+              <div className="system-settings-modal-body">{activeSection.content}</div>
+            </div>
+          </section>
+        </div>
+      ) : null}
     </div>
   );
 }

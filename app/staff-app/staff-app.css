@@ -62,6 +62,8 @@
 }
 
 .staff-app-topbar.scm-ops {
+  /* SCM views should scroll away with the page instead of pinning over live content. */
+  position: static;
   background: transparent;
   backdrop-filter: none;
   padding-bottom: 1.15rem;

@@ -8,6 +8,7 @@ import {
   isSuperAdminRole,
 } from "@/lib/auth-session";
 import {
+  PublicUploadStorageError,
   deleteStoredPublicUpload,
   storePublicUpload,
 } from "@/lib/public-file-storage";
@@ -127,82 +128,97 @@ export async function POST(request: Request) {
   const baseName = sanitizeFileBaseName(path.parse(uploadedEntry.name).name) || "scm-guide";
   const uniqueSuffix = randomUUID().slice(0, 8);
   const storageFileName = `${baseName}-${uniqueSuffix}.pdf`;
-  const pdfUrl = await storePublicUpload({
-    blobPath: `system-scm-info-pdfs/${storageFileName}`,
-    file: uploadedEntry,
-    localDirectory: scmInfoPdfRootDirectory,
-    localFileName: storageFileName,
-    localUrlPath: `/system-scm-info-pdfs/${storageFileName}`,
-  });
-  let updatedPdfs = existingPdfs;
+  try {
+    const pdfUrl = await storePublicUpload({
+      blobPath: `system-scm-info-pdfs/${storageFileName}`,
+      file: uploadedEntry,
+      localDirectory: scmInfoPdfRootDirectory,
+      localFileName: storageFileName,
+      localUrlPath: `/system-scm-info-pdfs/${storageFileName}`,
+    });
+    let updatedPdfs = existingPdfs;
 
-  if (targetType === "section") {
-    const currentAsset = existingPdfs.sectionPdfs[sectionId][slotIndex];
-    updatedPdfs = await updateSystemScmInfoSectionPdf(sectionId, slotIndex, {
-      pdfUrl,
-      fileName: uploadedEntry.name,
-      uploadedAt: new Date().toISOString(),
-      uploadedBy: currentProfile.displayName,
-      buttonLabel:
-        buttonLabel || currentAsset?.buttonLabel || path.parse(uploadedEntry.name).name,
-    });
-    await deleteStoredPublicUpload({
-      fileUrl: currentAsset?.pdfUrl,
-      localUrlPrefix: "/system-scm-info-pdfs/",
-      localRootDirectory: scmInfoPdfRootDirectory,
-    });
-  } else if (targetType === "item") {
-    if (!isStaffAppScmInfoItemPdfSectionKey(sectionId)) {
+    if (targetType === "section") {
+      const currentAsset = existingPdfs.sectionPdfs[sectionId][slotIndex];
+      updatedPdfs = await updateSystemScmInfoSectionPdf(sectionId, slotIndex, {
+        pdfUrl,
+        fileName: uploadedEntry.name,
+        uploadedAt: new Date().toISOString(),
+        uploadedBy: currentProfile.displayName,
+        buttonLabel:
+          buttonLabel || currentAsset?.buttonLabel || path.parse(uploadedEntry.name).name,
+      });
+      await deleteStoredPublicUpload({
+        fileUrl: currentAsset?.pdfUrl,
+        localUrlPrefix: "/system-scm-info-pdfs/",
+        localRootDirectory: scmInfoPdfRootDirectory,
+      });
+    } else if (targetType === "item") {
+      if (!isStaffAppScmInfoItemPdfSectionKey(sectionId)) {
+        await deleteStoredPublicUpload({
+          fileUrl: pdfUrl,
+          localUrlPrefix: "/system-scm-info-pdfs/",
+          localRootDirectory: scmInfoPdfRootDirectory,
+        });
+        return NextResponse.json(
+          { error: "This SCM guide section does not support entry PDFs." },
+          { status: 400 },
+        );
+      }
+
+      const itemIndex = Number.parseInt(itemIndexRaw, 10);
+
+      if (!Number.isInteger(itemIndex) || itemIndex < 0) {
+        await deleteStoredPublicUpload({
+          fileUrl: pdfUrl,
+          localUrlPrefix: "/system-scm-info-pdfs/",
+          localRootDirectory: scmInfoPdfRootDirectory,
+        });
+        return NextResponse.json({ error: "Choose a valid guide entry." }, { status: 400 });
+      }
+
+      const itemKey = getSystemScmInfoItemPdfKey(sectionId, itemIndex);
+      const currentAsset = existingPdfs.itemPdfs[itemKey]?.[slotIndex];
+      updatedPdfs = await updateSystemScmInfoItemPdf(sectionId, itemIndex, slotIndex, {
+        pdfUrl,
+        fileName: uploadedEntry.name,
+        uploadedAt: new Date().toISOString(),
+        uploadedBy: currentProfile.displayName,
+        buttonLabel:
+          buttonLabel || currentAsset?.buttonLabel || path.parse(uploadedEntry.name).name,
+      });
+      await deleteStoredPublicUpload({
+        fileUrl: currentAsset?.pdfUrl,
+        localUrlPrefix: "/system-scm-info-pdfs/",
+        localRootDirectory: scmInfoPdfRootDirectory,
+      });
+    } else {
       await deleteStoredPublicUpload({
         fileUrl: pdfUrl,
         localUrlPrefix: "/system-scm-info-pdfs/",
         localRootDirectory: scmInfoPdfRootDirectory,
       });
       return NextResponse.json(
-        { error: "This SCM guide section does not support entry PDFs." },
+        { error: "Choose where the PDF should be attached." },
         { status: 400 },
       );
     }
 
-    const itemIndex = Number.parseInt(itemIndexRaw, 10);
-
-    if (!Number.isInteger(itemIndex) || itemIndex < 0) {
-      await deleteStoredPublicUpload({
-        fileUrl: pdfUrl,
-        localUrlPrefix: "/system-scm-info-pdfs/",
-        localRootDirectory: scmInfoPdfRootDirectory,
-      });
-      return NextResponse.json({ error: "Choose a valid guide entry." }, { status: 400 });
+    return NextResponse.json({
+      ok: true,
+      pdfs: updatedPdfs,
+    });
+  } catch (error) {
+    if (error instanceof PublicUploadStorageError) {
+      return NextResponse.json({ error: error.message }, { status: 503 });
     }
 
-    const itemKey = getSystemScmInfoItemPdfKey(sectionId, itemIndex);
-    const currentAsset = existingPdfs.itemPdfs[itemKey]?.[slotIndex];
-    updatedPdfs = await updateSystemScmInfoItemPdf(sectionId, itemIndex, slotIndex, {
-      pdfUrl,
-      fileName: uploadedEntry.name,
-      uploadedAt: new Date().toISOString(),
-      uploadedBy: currentProfile.displayName,
-      buttonLabel:
-        buttonLabel || currentAsset?.buttonLabel || path.parse(uploadedEntry.name).name,
-    });
-    await deleteStoredPublicUpload({
-      fileUrl: currentAsset?.pdfUrl,
-      localUrlPrefix: "/system-scm-info-pdfs/",
-      localRootDirectory: scmInfoPdfRootDirectory,
-    });
-  } else {
-    await deleteStoredPublicUpload({
-      fileUrl: pdfUrl,
-      localUrlPrefix: "/system-scm-info-pdfs/",
-      localRootDirectory: scmInfoPdfRootDirectory,
-    });
-    return NextResponse.json({ error: "Choose where the PDF should be attached." }, { status: 400 });
+    console.error("Could not upload SCM info PDF", error);
+    return NextResponse.json(
+      { error: "Could not upload the SCM guide PDF right now." },
+      { status: 500 },
+    );
   }
-
-  return NextResponse.json({
-    ok: true,
-    pdfs: updatedPdfs,
-  });
 }
 
 export async function PATCH(request: Request) {

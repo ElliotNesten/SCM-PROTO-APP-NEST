@@ -4,6 +4,7 @@ import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
 import type { ArenaCatalogEntry } from "@/data/predefined-arenas";
+import type { PublicUploadStorageStatus } from "@/lib/public-file-storage";
 import { scandinavianCountryOptions } from "@/lib/scandinavian-countries";
 import {
   createEmptyStaffAppScmInfoPdfSlots,
@@ -42,7 +43,6 @@ const editorSections: Array<{
   { id: "checklists", label: "Checklists" },
   { id: "platformInfo", label: "SCM Info" },
   { id: "policy", label: "Policy" },
-  { id: "cashCard", label: "Cash & Card Terminal Info" },
   { id: "arenaInfo", label: "Arena Info" },
 ];
 
@@ -241,6 +241,7 @@ function SystemSettingsScmInfoPdfRows({
   onUpload,
   onDelete,
   buildUploadKey,
+  uploadEnabled,
 }: {
   title: string;
   slots: StaffAppScmInfoPdfAsset[];
@@ -253,6 +254,7 @@ function SystemSettingsScmInfoPdfRows({
   onUpload: (slotIndex: number, file: File) => void;
   onDelete: (slotIndex: number) => void;
   buildUploadKey: (slotIndex: number) => string;
+  uploadEnabled: boolean;
 }) {
   return (
     <div className="system-settings-scm-info-card">
@@ -288,6 +290,7 @@ function SystemSettingsScmInfoPdfRows({
                 className="gig-image-input"
                 type="file"
                 accept=".pdf,application/pdf"
+                disabled={!uploadEnabled}
                 onChange={(event) => {
                   const nextFile = event.currentTarget.files?.[0] ?? null;
 
@@ -304,9 +307,15 @@ function SystemSettingsScmInfoPdfRows({
                   type="button"
                   className="button ghost system-settings-scm-info-mini-button"
                   onClick={() => onTriggerUpload(uploadKey)}
-                  disabled={isUploading || isDeleting || isPending}
+                  disabled={!uploadEnabled || isUploading || isDeleting || isPending}
                 >
-                  {isUploading ? "Uploading..." : slot.pdfUrl ? "Replace" : "Upload"}
+                  {!uploadEnabled
+                    ? "Unavailable"
+                    : isUploading
+                      ? "Uploading..."
+                      : slot.pdfUrl
+                        ? "Replace"
+                        : "Upload"}
                 </button>
 
                 {slot.pdfUrl ? (
@@ -342,9 +351,11 @@ function SystemSettingsScmInfoPdfRows({
 export function SystemSettingsScmInfoEditor({
   initialSettings,
   initialPdfs,
+  uploadStatus,
 }: {
   initialSettings: StaffAppScmInfoSettings;
   initialPdfs: SystemScmInfoPdfSettings;
+  uploadStatus: PublicUploadStorageStatus;
 }) {
   const router = useRouter();
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
@@ -358,6 +369,7 @@ export function SystemSettingsScmInfoEditor({
   const [openPanel, setOpenPanel] = useState<OpenPanelKey>("summary");
   const [editingField, setEditingField] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const uploadDisabled = !uploadStatus.available;
 
   const activeSectionMeta = editorSections.find((section) => section.id === activeSection)!;
   const activeSectionPagePdfs =
@@ -541,6 +553,11 @@ export function SystemSettingsScmInfoEditor({
   }
 
   function triggerUpload(key: string) {
+    if (uploadDisabled) {
+      setFeedbackMessage(uploadStatus.message);
+      return;
+    }
+
     fileInputRefs.current[key]?.click();
   }
 
@@ -561,6 +578,11 @@ export function SystemSettingsScmInfoEditor({
         },
     file: File,
   ) {
+    if (uploadDisabled) {
+      setFeedbackMessage(uploadStatus.message);
+      return;
+    }
+
     const uploadKey =
       target.targetType === "section"
         ? buildSectionUploadKey(target.sectionId, target.slotIndex)
@@ -726,6 +748,12 @@ export function SystemSettingsScmInfoEditor({
 
     return (
       <div className="system-settings-scm-info-stack">
+        {uploadDisabled ? (
+          <div className="note-block tone-warn">
+            <p>{uploadStatus.message}</p>
+          </div>
+        ) : null}
+
         <SystemSettingsScmInfoPdfRows
           title={`${activeSectionMeta.label} Page PDFs`}
           slots={activeSectionPagePdfs}
@@ -754,6 +782,7 @@ export function SystemSettingsScmInfoEditor({
             })
           }
           buildUploadKey={(slotIndex) => buildSectionUploadKey(activeSection, slotIndex)}
+          uploadEnabled={!uploadDisabled}
         />
 
         {isEditableGuideSection(activeSection)
@@ -794,6 +823,7 @@ export function SystemSettingsScmInfoEditor({
                   buildUploadKey={(slotIndex) =>
                     buildItemUploadKey(activeSection, index, slotIndex)
                   }
+                  uploadEnabled={!uploadDisabled}
                 />
               );
             })

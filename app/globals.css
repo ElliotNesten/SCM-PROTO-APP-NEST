@@ -8294,8 +8294,10 @@ a.queue-card:hover {
   position: fixed;
   inset: 0;
   z-index: 180;
-  display: grid;
-  place-items: center;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  overflow: auto;
   padding: 1.25rem;
   background: rgba(24, 33, 57, 0.4);
   backdrop-filter: blur(10px);
@@ -8303,7 +8305,8 @@ a.queue-card:hover {
 
 .system-settings-modal {
   width: min(1180px, 100%);
-  max-height: calc(100vh - 2.5rem);
+  max-height: calc(100dvh - 2.5rem);
+  margin: 0 auto;
 }
 
 .system-settings-modal-shell {
@@ -8389,7 +8392,7 @@ a.queue-card:hover {
 .system-settings-modal-body {
   display: grid;
   gap: 1rem;
-  max-height: calc(100vh - 11rem);
+  max-height: calc(100dvh - 11rem);
   overflow: auto;
   padding-right: 0.2rem;
 }

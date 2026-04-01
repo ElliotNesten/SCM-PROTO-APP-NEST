@@ -8,6 +8,7 @@ import {
   isSuperAdminRole,
 } from "@/lib/auth-session";
 import {
+  PublicUploadStorageError,
   deleteStoredPublicUpload,
   storePublicUpload,
 } from "@/lib/public-file-storage";
@@ -85,27 +86,40 @@ export async function POST(request: Request) {
   const baseName = sanitizeFileBaseName(path.parse(uploadedEntry.name).name) || "scm-policy";
   const uniqueSuffix = randomUUID().slice(0, 8);
   const storageFileName = `${baseName}-${uniqueSuffix}.pdf`;
-  const policyUrl = await storePublicUpload({
-    blobPath: `system-policies/${storageFileName}`,
-    file: uploadedEntry,
-    localDirectory: policyRootDirectory,
-    localFileName: storageFileName,
-    localUrlPath: `/system-policies/${storageFileName}`,
-  });
-  const updatedPolicy = await updateSystemPolicySettings({
-    policyUrl,
-    fileName: uploadedEntry.name,
-    uploadedAt: new Date().toISOString(),
-    uploadedBy: currentProfile.displayName,
-  });
-  await deleteStoredPublicUpload({
-    fileUrl: existingPolicy.policyUrl,
-    localUrlPrefix: "/system-policies/",
-    localRootDirectory: policyRootDirectory,
-  });
 
-  return NextResponse.json({
-    ok: true,
-    policy: updatedPolicy,
-  });
+  try {
+    const policyUrl = await storePublicUpload({
+      blobPath: `system-policies/${storageFileName}`,
+      file: uploadedEntry,
+      localDirectory: policyRootDirectory,
+      localFileName: storageFileName,
+      localUrlPath: `/system-policies/${storageFileName}`,
+    });
+    const updatedPolicy = await updateSystemPolicySettings({
+      policyUrl,
+      fileName: uploadedEntry.name,
+      uploadedAt: new Date().toISOString(),
+      uploadedBy: currentProfile.displayName,
+    });
+    await deleteStoredPublicUpload({
+      fileUrl: existingPolicy.policyUrl,
+      localUrlPrefix: "/system-policies/",
+      localRootDirectory: policyRootDirectory,
+    });
+
+    return NextResponse.json({
+      ok: true,
+      policy: updatedPolicy,
+    });
+  } catch (error) {
+    if (error instanceof PublicUploadStorageError) {
+      return NextResponse.json({ error: error.message }, { status: 503 });
+    }
+
+    console.error("Could not upload SCM policy PDF", error);
+    return NextResponse.json(
+      { error: "Could not upload the SCM policy PDF right now." },
+      { status: 500 },
+    );
+  }
 }

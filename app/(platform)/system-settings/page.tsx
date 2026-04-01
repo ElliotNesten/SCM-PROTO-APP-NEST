@@ -13,6 +13,7 @@ import { requireSuperAdminProfile } from "@/lib/auth-session";
 import { getSystemPolicySettings } from "@/lib/system-policy-store";
 import { getSystemCompensationSettings } from "@/lib/system-compensation-store";
 import { getApprovedApplicationEmailTemplate } from "@/lib/system-email-template-store";
+import { getPublicUploadStorageStatus } from "@/lib/public-file-storage";
 import { getSystemScmInfoPdfSettings } from "@/lib/system-scm-info-pdf-store";
 import { getSystemScmInfoSettings } from "@/lib/system-scm-info-store";
 import { getSystemPdfTemplates } from "@/lib/system-template-store";
@@ -36,6 +37,7 @@ export default async function SystemSettingsPage() {
       getSystemScmInfoPdfSettings(),
     ]);
   const postmarkStatus = getPostmarkConfigurationStatus();
+  const publicUploadStorage = getPublicUploadStorageStatus();
 
   return (
     <>
@@ -85,7 +87,12 @@ export default async function SystemSettingsPage() {
               "Replace the live policy PDF that opens inside the staff app.",
             summary: "Policy upload and current live file",
             keywords: ["policy", "pdf", "upload", "staff app", "document"],
-            content: <SystemSettingsPolicyUploader initialPolicy={policySettings} />,
+            content: (
+              <SystemSettingsPolicyUploader
+                initialPolicy={policySettings}
+                uploadStatus={publicUploadStorage}
+              />
+            ),
           },
           {
             id: "compensation",
@@ -111,6 +118,7 @@ export default async function SystemSettingsPage() {
               <SystemSettingsScmInfoEditor
                 initialSettings={scmInfoSettings}
                 initialPdfs={scmInfoPdfSettings}
+                uploadStatus={publicUploadStorage}
               />
             ),
           },

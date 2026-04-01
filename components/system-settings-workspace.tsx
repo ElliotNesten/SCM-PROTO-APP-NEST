@@ -3,11 +3,12 @@
 import {
   useDeferredValue,
   useEffect,
-  type KeyboardEvent,
   useMemo,
   useState,
+  type KeyboardEvent as ReactKeyboardEvent,
   type ReactNode,
 } from "react";
+import { createPortal } from "react-dom";
 
 type SystemSettingsWorkspaceSection = {
   id: string;
@@ -79,6 +80,7 @@ export function SystemSettingsWorkspace({
 }) {
   const [query, setQuery] = useState("");
   const [activeSectionId, setActiveSectionId] = useState<string | null>(null);
+  const [portalRoot, setPortalRoot] = useState<HTMLElement | null>(null);
 
   const deferredQuery = useDeferredValue(query);
   const normalizedQuery = useMemo(
@@ -96,13 +98,17 @@ export function SystemSettingsWorkspace({
   const hasQuery = normalizedQuery.length > 0;
 
   useEffect(() => {
+    setPortalRoot(document.body);
+  }, []);
+
+  useEffect(() => {
     if (!activeSection) {
       return;
     }
 
     const previousOverflow = document.body.style.overflow;
 
-    function handleKeyDown(event: KeyboardEvent) {
+    function handleKeyDown(event: globalThis.KeyboardEvent) {
       if (event.key === "Escape") {
         setActiveSectionId(null);
       }
@@ -126,7 +132,7 @@ export function SystemSettingsWorkspace({
   }
 
   function handleSectionCardKeyDown(
-    event: KeyboardEvent<HTMLElement>,
+    event: ReactKeyboardEvent<HTMLElement>,
     sectionId: string,
   ) {
     if (event.key !== "Enter" && event.key !== " ") {
@@ -144,6 +150,65 @@ export function SystemSettingsWorkspace({
 
     setActiveSectionId(visibleSections[0].id);
   }
+
+  const activeSectionModal =
+    activeSection && portalRoot
+      ? createPortal(
+          <div
+            className="system-settings-modal-backdrop"
+            role="presentation"
+            onClick={closeSection}
+          >
+            <section
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby={`system-settings-modal-title-${activeSection.id}`}
+              className="system-settings-modal"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <div className="system-settings-modal-shell">
+                <div className="system-settings-modal-header">
+                  <div className="system-settings-modal-copy">
+                    <p className="eyebrow">{activeSection.eyebrow}</p>
+                    <h2 id={`system-settings-modal-title-${activeSection.id}`}>
+                      {activeSection.title}
+                    </h2>
+                    <p>{activeSection.description}</p>
+                  </div>
+
+                  <div className="system-settings-modal-actions">
+                    <span className="system-settings-hub-summary-pill">
+                      {activeSection.summary}
+                    </span>
+                    <button
+                      type="button"
+                      className="system-settings-modal-close"
+                      onClick={closeSection}
+                      aria-label={`Close ${activeSection.title}`}
+                    >
+                      <CloseIcon />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="system-settings-modal-keywords">
+                  {activeSection.keywords.map((keyword) => (
+                    <span
+                      key={`${activeSection.id}-modal-${keyword}`}
+                      className="system-settings-overview-chip"
+                    >
+                      {keyword}
+                    </span>
+                  ))}
+                </div>
+
+                <div className="system-settings-modal-body">{activeSection.content}</div>
+              </div>
+            </section>
+          </div>,
+          portalRoot,
+        )
+      : null;
 
   return (
     <div className="system-settings-workspace">
@@ -265,60 +330,7 @@ export function SystemSettingsWorkspace({
         </div>
       )}
 
-      {activeSection ? (
-        <div
-          className="system-settings-modal-backdrop"
-          role="presentation"
-          onClick={closeSection}
-        >
-          <section
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby={`system-settings-modal-title-${activeSection.id}`}
-            className="system-settings-modal"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <div className="system-settings-modal-shell">
-              <div className="system-settings-modal-header">
-                <div className="system-settings-modal-copy">
-                  <p className="eyebrow">{activeSection.eyebrow}</p>
-                  <h2 id={`system-settings-modal-title-${activeSection.id}`}>
-                    {activeSection.title}
-                  </h2>
-                  <p>{activeSection.description}</p>
-                </div>
-
-                <div className="system-settings-modal-actions">
-                  <span className="system-settings-hub-summary-pill">
-                    {activeSection.summary}
-                  </span>
-                  <button
-                    type="button"
-                    className="system-settings-modal-close"
-                    onClick={closeSection}
-                    aria-label={`Close ${activeSection.title}`}
-                  >
-                    <CloseIcon />
-                  </button>
-                </div>
-              </div>
-
-              <div className="system-settings-modal-keywords">
-                {activeSection.keywords.map((keyword) => (
-                  <span
-                    key={`${activeSection.id}-modal-${keyword}`}
-                    className="system-settings-overview-chip"
-                  >
-                    {keyword}
-                  </span>
-                ))}
-              </div>
-
-              <div className="system-settings-modal-body">{activeSection.content}</div>
-            </div>
-          </section>
-        </div>
-      ) : null}
+      {activeSectionModal}
     </div>
   );
 }

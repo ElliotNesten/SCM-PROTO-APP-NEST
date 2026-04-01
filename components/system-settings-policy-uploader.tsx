@@ -3,6 +3,8 @@
 import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
+import type { PublicUploadStorageStatus } from "@/lib/public-file-storage";
+
 type SystemPolicySettingsSummary = {
   policyUrl: string;
   fileName: string;
@@ -33,8 +35,10 @@ function formatUploadedAt(value: string) {
 
 export function SystemSettingsPolicyUploader({
   initialPolicy,
+  uploadStatus,
 }: {
   initialPolicy: SystemPolicySettingsSummary;
+  uploadStatus: PublicUploadStorageStatus;
 }) {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -42,8 +46,14 @@ export function SystemSettingsPolicyUploader({
   const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const uploadDisabled = !uploadStatus.available;
 
   async function uploadPolicy(file: File) {
+    if (uploadDisabled) {
+      setFeedbackMessage(uploadStatus.message);
+      return;
+    }
+
     setIsUploading(true);
     setFeedbackMessage(null);
 
@@ -107,12 +117,19 @@ export function SystemSettingsPolicyUploader({
         </div>
       </div>
 
+      {uploadDisabled ? (
+        <div className="note-block tone-warn">
+          <p>{uploadStatus.message}</p>
+        </div>
+      ) : null}
+
       <div className="system-settings-policy-actions">
         <input
           ref={fileInputRef}
           className="gig-image-input"
           type="file"
           accept=".pdf,application/pdf"
+          disabled={uploadDisabled}
           onChange={(event) => {
             const nextFile = event.currentTarget.files?.[0] ?? null;
 
@@ -128,10 +145,21 @@ export function SystemSettingsPolicyUploader({
           <button
             type="button"
             className="button ghost"
-            onClick={() => fileInputRef.current?.click()}
-            disabled={isUploading || isPending}
+            onClick={() => {
+              if (uploadDisabled) {
+                setFeedbackMessage(uploadStatus.message);
+                return;
+              }
+
+              fileInputRef.current?.click();
+            }}
+            disabled={uploadDisabled || isUploading || isPending}
           >
-            {isUploading || isPending ? "Uploading..." : "Upload PDF"}
+            {uploadDisabled
+              ? "Uploads unavailable"
+              : isUploading || isPending
+                ? "Uploading..."
+                : "Upload PDF"}
           </button>
 
           <a

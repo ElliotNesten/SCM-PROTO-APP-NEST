@@ -137,7 +137,7 @@ function StaffAppGuideTileIcon({
 
 type StaffAppGuideCard = {
   href: string;
-  kind: "roles" | "checklists" | "info" | "policy" | "cash" | "arena";
+  kind: "roles" | "checklists" | "info" | "policy" | "arena";
   settingsKey: StaffAppScmInfoSectionKey;
   external?: boolean;
 };
@@ -163,11 +163,6 @@ const guideCards: StaffAppGuideCard[] = [
     kind: "policy" as const,
     settingsKey: "policy",
     external: true,
-  },
-  {
-    href: "/staff-app/scm-info/cash-card",
-    kind: "cash" as const,
-    settingsKey: "cashCard",
   },
   {
     href: "/staff-app/scm-info/arena-info",

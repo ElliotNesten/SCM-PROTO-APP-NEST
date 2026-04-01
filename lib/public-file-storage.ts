@@ -17,8 +17,50 @@ type DeleteStoredPublicUploadOptions = {
   localRootDirectory: string;
 };
 
+export type PublicUploadStorageStatus = {
+  available: boolean;
+  mode: "blob" | "local" | "unavailable";
+  message: string;
+};
+
+export class PublicUploadStorageError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "PublicUploadStorageError";
+  }
+}
+
 export function isBlobConfigured() {
   return Boolean(process.env.BLOB_READ_WRITE_TOKEN?.trim());
+}
+
+function isVercelHostedRuntime() {
+  return Boolean(process.env.VERCEL?.trim());
+}
+
+export function getPublicUploadStorageStatus(): PublicUploadStorageStatus {
+  if (isBlobConfigured()) {
+    return {
+      available: true,
+      mode: "blob",
+      message: "",
+    };
+  }
+
+  if (!isVercelHostedRuntime()) {
+    return {
+      available: true,
+      mode: "local",
+      message: "",
+    };
+  }
+
+  return {
+    available: false,
+    mode: "unavailable",
+    message:
+      "Uploads are disabled in this Vercel deployment because BLOB_READ_WRITE_TOKEN is missing. Add Vercel Blob storage to enable file uploads.",
+  };
 }
 
 function isBlobUrl(fileUrl: string) {
@@ -37,7 +79,13 @@ export async function storePublicUpload({
   localFileName,
   localUrlPath,
 }: StorePublicUploadOptions) {
-  if (isBlobConfigured()) {
+  const storageStatus = getPublicUploadStorageStatus();
+
+  if (!storageStatus.available) {
+    throw new PublicUploadStorageError(storageStatus.message);
+  }
+
+  if (storageStatus.mode === "blob") {
     const blob = await put(blobPath, file, {
       access: "public",
       addRandomSuffix: false,

@@ -35,6 +35,7 @@ const storeDirectory = path.join(process.cwd(), "data");
 const storePath = path.join(storeDirectory, "gig-store.json");
 const globalForGigStore = globalThis as typeof globalThis & {
   __scmGigBootstrapPromise?: Promise<void>;
+  __scmGigSnapshot?: Gig[];
 };
 
 type GigRow = {
@@ -429,6 +430,42 @@ function normalizeStoredGig(gig: Gig) {
   };
 }
 
+// Keep the latest successful gig snapshot in memory so transient DB fallbacks
+// do not bounce the UI back to stale bundled data between requests.
+function cloneGigSnapshot(gigs: Gig[]) {
+  return sortGigs(gigs).map((gig) => normalizeStoredGig(gig).gig);
+}
+
+function getCachedGigSnapshot() {
+  const snapshot = globalForGigStore.__scmGigSnapshot;
+  return snapshot ? cloneGigSnapshot(snapshot) : null;
+}
+
+function setCachedGigSnapshot(gigs: Gig[]) {
+  globalForGigStore.__scmGigSnapshot = cloneGigSnapshot(gigs);
+}
+
+function upsertGigIntoCache(gig: Gig) {
+  const current = getCachedGigSnapshot() ?? [];
+  const next = current.filter((item) => item.id !== gig.id);
+  next.push(gig);
+  setCachedGigSnapshot(next);
+}
+
+function removeGigFromCache(gigId: string) {
+  const current = getCachedGigSnapshot();
+
+  if (!current) {
+    return;
+  }
+
+  setCachedGigSnapshot(current.filter((gig) => gig.id !== gigId));
+}
+
+function getCachedGigById(gigId: string) {
+  return getCachedGigSnapshot()?.find((gig) => gig.id === gigId) ?? null;
+}
+
 async function ensureGigStore() {
   try {
     await fs.access(storePath);
@@ -614,6 +651,42 @@ async function writeGigStore(gigs: Gig[]) {
   await fs.writeFile(storePath, JSON.stringify(gigs, null, 2), "utf8");
 }
 
+async function syncGigToFallbackStore(gig: Gig) {
+  try {
+    const gigs = await readGigStore();
+    const gigIndex = gigs.findIndex((item) => item.id === gig.id);
+
+    if (gigIndex === -1) {
+      gigs.push(gig);
+    } else {
+      gigs[gigIndex] = gig;
+    }
+
+    await writeGigStore(sortGigs(gigs));
+  } catch (error) {
+    if (!shouldIgnoreReadOnlyStoreWriteError(error)) {
+      throw error;
+    }
+  }
+}
+
+async function removeGigFromFallbackStore(gigId: string) {
+  try {
+    const gigs = await readGigStore();
+    const nextGigs = gigs.filter((gig) => gig.id !== gigId);
+
+    if (nextGigs.length === gigs.length) {
+      return;
+    }
+
+    await writeGigStore(nextGigs);
+  } catch (error) {
+    if (!shouldIgnoreReadOnlyStoreWriteError(error)) {
+      throw error;
+    }
+  }
+}
+
 async function getFallbackStoredGigs() {
   try {
     const fileBackedGigs = await readGigStore();
@@ -666,13 +739,27 @@ async function getMergedStoredGigs() {
   const fallbackGigs = await getFallbackStoredGigs();
 
   if (!isDatabaseConfigured()) {
+    setCachedGigSnapshot(fallbackGigs);
     return fallbackGigs;
   }
 
   await bootstrapDatabaseGigsFromFallback(fallbackGigs);
-  const databaseGigs = await getDatabaseGigs();
 
-  return databaseGigs.length > 0 ? sortGigs(databaseGigs) : fallbackGigs;
+  try {
+    const databaseGigs = await getDatabaseGigs();
+    const resolvedGigs = databaseGigs.length > 0 ? sortGigs(databaseGigs) : fallbackGigs;
+    setCachedGigSnapshot(resolvedGigs);
+    return resolvedGigs;
+  } catch {
+    const cachedSnapshot = getCachedGigSnapshot();
+
+    if (cachedSnapshot) {
+      return cachedSnapshot;
+    }
+
+    setCachedGigSnapshot(fallbackGigs);
+    return fallbackGigs;
+  }
 }
 
 async function updateStoredGigRecord<T>(
@@ -695,6 +782,8 @@ async function updateStoredGigRecord<T>(
     }
 
     await upsertDatabaseGig(updated.gig);
+    upsertGigIntoCache(updated.gig);
+    await syncGigToFallbackStore(updated.gig);
     return updated.result;
   }
 
@@ -713,6 +802,7 @@ async function updateStoredGigRecord<T>(
 
   gigs[gigIndex] = updated.gig;
   await writeGigStore(gigs);
+  setCachedGigSnapshot(gigs);
   return updated.result;
 }
 
@@ -741,23 +831,51 @@ export async function getStoredGigById(gigId: string) {
   try {
     if (!isDatabaseConfigured()) {
       const gigs = await readGigStore();
+      setCachedGigSnapshot(gigs);
       return gigs.find((gig) => gig.id === gigId);
     }
 
     const fallbackGigs = await getFallbackStoredGigs();
     await bootstrapDatabaseGigsFromFallback(fallbackGigs);
 
-    const databaseGig = await getDatabaseGigById(gigId);
+    try {
+      const databaseGig = await getDatabaseGigById(gigId);
 
-    if (databaseGig) {
-      return databaseGig;
+      if (databaseGig) {
+        upsertGigIntoCache(databaseGig);
+        return databaseGig;
+      }
+    } catch {
+      const cachedGig = getCachedGigById(gigId);
+
+      if (cachedGig) {
+        return cachedGig;
+      }
     }
 
-    return fallbackGigs.find((gig) => gig.id === gigId);
+    const fallbackGig = fallbackGigs.find((gig) => gig.id === gigId) ?? null;
+
+    if (fallbackGig) {
+      upsertGigIntoCache(fallbackGig);
+    }
+
+    return fallbackGig;
   } catch (error) {
     logGigStoreFallback(`getStoredGigById(${gigId})`, error);
+    const cachedGig = getCachedGigById(gigId);
+
+    if (cachedGig) {
+      return cachedGig;
+    }
+
     const fallbackGigs = await getFallbackStoredGigs();
-    return fallbackGigs.find((gig) => gig.id === gigId) ?? null;
+    const fallbackGig = fallbackGigs.find((gig) => gig.id === gigId) ?? null;
+
+    if (fallbackGig) {
+      upsertGigIntoCache(fallbackGig);
+    }
+
+    return fallbackGig;
   }
 }
 
@@ -893,7 +1011,14 @@ export async function deleteStoredGig(gigId: string) {
   const sql = getPostgresClient();
 
   if (sql) {
-    return deleteDatabaseGig(gigId);
+    const deletedGig = await deleteDatabaseGig(gigId);
+
+    if (deletedGig) {
+      removeGigFromCache(gigId);
+      await removeGigFromFallbackStore(gigId);
+    }
+
+    return deletedGig;
   }
 
   const gigs = await readGigStore();
@@ -906,6 +1031,7 @@ export async function deleteStoredGig(gigId: string) {
   const deletedGig = gigs[gigIndex];
   gigs.splice(gigIndex, 1);
   await writeGigStore(gigs);
+  setCachedGigSnapshot(gigs);
 
   return deletedGig;
 }
@@ -953,12 +1079,15 @@ export async function createStoredGig(input: NewGigInput) {
 
   if (sql) {
     await upsertDatabaseGig(createdGig);
+    upsertGigIntoCache(createdGig);
+    await syncGigToFallbackStore(createdGig);
     return createdGig;
   }
 
   const gigs = await readGigStore();
   gigs.push(createdGig);
   await writeGigStore(gigs);
+  setCachedGigSnapshot(gigs);
   return createdGig;
 }
 

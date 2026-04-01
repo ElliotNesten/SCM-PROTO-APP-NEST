@@ -432,7 +432,11 @@ export function GigTimeReportPanel({
     });
   }
 
-  async function saveManualTimes(shift: Shift, staffId: string) {
+  async function saveManualTimes(
+    shift: Shift,
+    staffId: string,
+    options?: { timeReportApproved?: boolean },
+  ) {
     if (isTimeReportLocked) {
       setTimeReportError("The full time report has already been approved and is locked.");
       return;
@@ -440,6 +444,7 @@ export function GigTimeReportPanel({
 
     const shiftId = shift.id;
     const assignmentKey = buildAssignmentKey(shiftId, staffId);
+    const approvalKey = `${shiftId}:${staffId}:timeReportApproved`;
     const checkoutDayOffset = getCheckoutDayOffset(
       shift,
       timeDraft.checkedIn,
@@ -459,6 +464,9 @@ export function GigTimeReportPanel({
     }
 
     setPendingTimeKey(assignmentKey);
+    if (options?.timeReportApproved !== undefined) {
+      setPendingApprovalKey(approvalKey);
+    }
     setTimeReportError(null);
 
     const response = await fetch(`/api/gigs/${gigId}/shifts/${shiftId}`, {
@@ -470,6 +478,7 @@ export function GigTimeReportPanel({
         staffId,
         checkedIn: checkedIn ?? null,
         checkedOut: checkedOut ?? null,
+        timeReportApproved: options?.timeReportApproved,
       }),
     });
 
@@ -478,14 +487,23 @@ export function GigTimeReportPanel({
       | null;
 
     if (!response.ok || !payload?.shift) {
-      setTimeReportError(payload?.error ?? "Could not save the manual times.");
+      setTimeReportError(
+        payload?.error ??
+          (options?.timeReportApproved !== undefined
+            ? `Could not ${
+                options.timeReportApproved ? "save and approve" : "save and disapprove"
+              } the time report.`
+            : "Could not save the manual times."),
+      );
       setPendingTimeKey(null);
+      setPendingApprovalKey(null);
       return;
     }
 
     replaceShiftItem(payload.shift, true);
     clearFinalTimeReportApprovalState();
     setPendingTimeKey(null);
+    setPendingApprovalKey(null);
     setEditingAssignmentKey(null);
     setTimeDraft({
       checkedIn: "",
@@ -697,6 +715,9 @@ export function GigTimeReportPanel({
                         const rowHasCompleteTimes = hasCompleteTimeEntry(assignment);
                         const isEditing = editingAssignmentKey === assignmentKey;
                         const isSavingTimes = pendingTimeKey === assignmentKey;
+                        const effectiveRowHasCompleteTimes = isEditing
+                          ? Boolean(timeDraft.checkedIn.trim() && timeDraft.checkedOut.trim())
+                          : rowHasCompleteTimes;
                         const checkoutDateLabel = formatGigDateLabel(
                           addDaysToIsoDate(
                             gigDate,
@@ -725,11 +746,11 @@ export function GigTimeReportPanel({
                             <div className="booking-board-secondary booking-board-time-edit-cell">
                               {isEditing ? (
                                 <div className="booking-board-inline-actions">
-                                  <button
-                                    type="button"
-                                    className="button ghost booking-board-approve-row"
-                                    disabled={isTimeReportLocked || isSavingTimes || isPending}
-                                    onClick={() => {
+                                <button
+                                  type="button"
+                                  className="button ghost booking-board-approve-row"
+                                  disabled={isTimeReportLocked || isSavingTimes || isPending}
+                                  onClick={() => {
                                       void saveManualTimes(shift, assignment.staffId);
                                     }}
                                   >
@@ -873,13 +894,19 @@ export function GigTimeReportPanel({
                                   className="button ghost booking-board-approve-row"
                                   disabled={
                                     isTimeReportLocked ||
-                                    !rowHasCompleteTimes ||
-                                    isEditing ||
+                                    !effectiveRowHasCompleteTimes ||
                                     isSavingTimes ||
                                     pendingApprovalKey === approvalKey ||
                                     isPending
                                   }
                                   onClick={() => {
+                                    if (isEditing) {
+                                      void saveManualTimes(shift, assignment.staffId, {
+                                        timeReportApproved: !rowApproved,
+                                      });
+                                      return;
+                                    }
+
                                     void setTimeReportApproval(
                                       shift.id,
                                       assignment.staffId,
@@ -887,7 +914,7 @@ export function GigTimeReportPanel({
                                     );
                                   }}
                                 >
-                                  {pendingApprovalKey === approvalKey
+                                  {pendingApprovalKey === approvalKey || isSavingTimes
                                     ? "Saving..."
                                     : rowApproved
                                       ? "Disapprove"

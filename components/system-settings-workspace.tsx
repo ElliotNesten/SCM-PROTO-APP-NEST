@@ -95,7 +95,6 @@ export function SystemSettingsWorkspace({
     () => sections.find((section) => section.id === activeSectionId) ?? null,
     [activeSectionId, sections],
   );
-  const hasQuery = normalizedQuery.length > 0;
 
   useEffect(() => {
     setPortalRoot(document.body);
@@ -141,14 +140,6 @@ export function SystemSettingsWorkspace({
 
     event.preventDefault();
     openSection(sectionId);
-  }
-
-  function openFirstVisibleSection() {
-    if (!visibleSections[0]) {
-      return;
-    }
-
-    setActiveSectionId(visibleSections[0].id);
   }
 
   const activeSectionModal =
@@ -237,39 +228,6 @@ export function SystemSettingsWorkspace({
         >
           Clear search
         </button>
-      </section>
-
-      <section className="card system-settings-command-card">
-        <div className="system-settings-command-copy">
-          <p className="eyebrow">SETTINGS OVERVIEW</p>
-          <h2>Find the exact change faster</h2>
-          <p>
-            Search by wage, policy, email, arena, template, guide, or text copy.
-            Open the setting you need in a focused popup window.
-          </p>
-        </div>
-
-        <div className="system-settings-command-actions">
-          <button
-            type="button"
-            className="button"
-            onClick={openFirstVisibleSection}
-            disabled={visibleSections.length === 0}
-          >
-            {hasQuery ? "Open first match" : "Open first card"}
-          </button>
-        </div>
-
-        <div className="system-settings-command-foot">
-          <span className="helper-caption">
-            {hasQuery
-              ? `${visibleSections.length} of ${sections.length} settings sections match "${query.trim()}".`
-              : `Showing ${sections.length} settings areas on one overview page.`}
-          </span>
-          <span className="helper-caption">
-            Click any settings card to edit inside a popup window.
-          </span>
-        </div>
       </section>
 
       {visibleSections.length === 0 ? (

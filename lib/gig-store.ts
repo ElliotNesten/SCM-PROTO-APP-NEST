@@ -32,6 +32,9 @@ import type {
 
 const storeDirectory = path.join(process.cwd(), "data");
 const storePath = path.join(storeDirectory, "gig-store.json");
+const globalForGigStore = globalThis as typeof globalThis & {
+  __scmGigBootstrapPromise?: Promise<void>;
+};
 
 type GigRow = {
   id: string;
@@ -434,6 +437,31 @@ function getSeedStoredGigs() {
   return seedGigs.map((gig) => normalizeStoredGig(gig).gig);
 }
 
+function sortGigs(gigs: Gig[]) {
+  return [...gigs].sort((left, right) => {
+    const dateOrder = left.date.localeCompare(right.date);
+
+    if (dateOrder !== 0) {
+      return dateOrder;
+    }
+
+    return left.artist.localeCompare(right.artist);
+  });
+}
+
+function mergeUniqueGigs(...collections: Gig[][]) {
+  const seenIds = new Set<string>();
+
+  return collections.flat().filter((gig) => {
+    if (seenIds.has(gig.id)) {
+      return false;
+    }
+
+    seenIds.add(gig.id);
+    return true;
+  });
+}
+
 function mapGigRow(row: GigRow) {
   const parsedGig = parseJsonValue<Gig>(row.gig_json, {
     id: row.id,
@@ -581,23 +609,65 @@ async function writeGigStore(gigs: Gig[]) {
   await fs.writeFile(storePath, JSON.stringify(gigs, null, 2), "utf8");
 }
 
-async function getMergedStoredGigs() {
-  const [databaseGigs, seedOrLocalGigs] = await Promise.all([
-    getDatabaseGigs(),
-    isDatabaseConfigured() ? Promise.resolve(getSeedStoredGigs()) : readGigStore(),
-  ]);
-  const seenIds = new Set<string>();
+async function getFallbackStoredGigs() {
+  try {
+    const fileBackedGigs = await readGigStore();
+    return sortGigs(mergeUniqueGigs(fileBackedGigs, getSeedStoredGigs()));
+  } catch {
+    return sortGigs(getSeedStoredGigs());
+  }
+}
 
-  return [...databaseGigs, ...seedOrLocalGigs]
-    .filter((gig) => {
-      if (seenIds.has(gig.id)) {
-        return false;
+async function bootstrapDatabaseGigsFromFallback(fallbackGigs: Gig[]) {
+  const sql = getPostgresClient();
+
+  if (!sql || fallbackGigs.length === 0) {
+    return;
+  }
+
+  if (!globalForGigStore.__scmGigBootstrapPromise) {
+    globalForGigStore.__scmGigBootstrapPromise = (async () => {
+      await ensureProductionStorageSchema();
+      const existingRows = await sql<{ id: string }[]>`
+        select id
+        from gigs
+      `;
+      const existingIds = new Set(existingRows.map((row) => row.id));
+      const missingGigs = fallbackGigs.filter((gig) => !existingIds.has(gig.id));
+
+      for (const gig of missingGigs) {
+        await sql`
+          insert into gigs (id, artist, date, country, status, gig_json, created_at, updated_at)
+          values (
+            ${gig.id},
+            ${gig.artist},
+            ${gig.date},
+            ${gig.country},
+            ${gig.status},
+            ${serializeJson(gig)},
+            ${new Date().toISOString()},
+            ${new Date().toISOString()}
+          )
+          on conflict (id) do nothing
+        `;
       }
+    })();
+  }
 
-      seenIds.add(gig.id);
-      return true;
-    })
-    .sort((left, right) => left.date.localeCompare(right.date));
+  await globalForGigStore.__scmGigBootstrapPromise;
+}
+
+async function getMergedStoredGigs() {
+  const fallbackGigs = await getFallbackStoredGigs();
+
+  if (!isDatabaseConfigured()) {
+    return fallbackGigs;
+  }
+
+  await bootstrapDatabaseGigsFromFallback(fallbackGigs);
+  const databaseGigs = await getDatabaseGigs();
+
+  return databaseGigs.length > 0 ? sortGigs(databaseGigs) : fallbackGigs;
 }
 
 async function updateStoredGigRecord<T>(
@@ -658,14 +728,21 @@ export async function getAllStoredGigs() {
 }
 
 export async function getStoredGigById(gigId: string) {
+  if (!isDatabaseConfigured()) {
+    const gigs = await readGigStore();
+    return gigs.find((gig) => gig.id === gigId);
+  }
+
+  const fallbackGigs = await getFallbackStoredGigs();
+  await bootstrapDatabaseGigsFromFallback(fallbackGigs);
+
   const databaseGig = await getDatabaseGigById(gigId);
 
   if (databaseGig) {
     return databaseGig;
   }
 
-  const gigs = isDatabaseConfigured() ? getSeedStoredGigs() : await readGigStore();
-  return gigs.find((gig) => gig.id === gigId);
+  return fallbackGigs.find((gig) => gig.id === gigId);
 }
 
 export async function setStoredGigTimeReportFinalApproval(

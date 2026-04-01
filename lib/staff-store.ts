@@ -643,79 +643,10 @@ type StaffProfileUpdate = Partial<
   >
 >;
 
-export async function updateStoredStaffProfile(
-  personId: string,
+function buildUpdatedStoredStaffProfile(
+  existingProfile: StoredStaffProfile,
   updates: StaffProfileUpdate,
 ) {
-  const databaseProfile = await getDatabaseStaffProfileById(personId);
-
-  if (databaseProfile) {
-    const existingProfile = databaseProfile;
-    const nextRegistrationStatus =
-      updates.registrationStatus ?? existingProfile.registrationStatus;
-    const nextProfileApproved =
-      updates.profileApproved ?? existingProfile.profileApproved;
-    const requestedRegions =
-      updates.regions !== undefined ? normalizeRegions(updates.regions) : undefined;
-    const existingRegions = normalizeRegions(existingProfile.regions ?? [existingProfile.region]);
-    const nextRegions = requestedRegions ?? existingRegions;
-    const nextRegion =
-      updates.region !== undefined
-        ? updates.region.trim()
-        : nextRegions[0] ?? existingProfile.region;
-    const nextRoleProfiles = normalizeRoleProfiles(
-      updates.roleProfiles ?? existingProfile.roleProfiles,
-      updates.roles ?? existingProfile.roles,
-      updates.priority ?? existingProfile.priority,
-      updates.profileComments ?? existingProfile.profileComments,
-    );
-    const updatedProfile = normalizeStoredStaffProfile({
-      ...existingProfile,
-      ...updates,
-      region: nextRegion,
-      regions: nextRegions,
-      roles: deriveRolesFromProfiles(nextRoleProfiles),
-      priority: derivePriorityFromProfiles(
-        nextRoleProfiles,
-        updates.priority ?? existingProfile.priority,
-      ),
-      pendingRecords: updates.pendingRecords
-        ? [...updates.pendingRecords]
-        : existingProfile.pendingRecords,
-      approvalStatus:
-        updates.approvalStatus ??
-        (updates.registrationStatus
-          ? mapRegistrationStatusToApprovalStatus(updates.registrationStatus)
-          : existingProfile.approvalStatus),
-      registrationStatus: nextRegistrationStatus,
-      registrationLabel: getRegistrationLabel(nextRegistrationStatus),
-      profileApproved: nextProfileApproved,
-      profileApprovalLabel: getProfileApprovalLabel(nextProfileApproved),
-      bankName: updates.bankName ?? existingProfile.bankName ?? "",
-      driverLicenseManual:
-        updates.driverLicenseManual ?? existingProfile.driverLicenseManual ?? false,
-      driverLicenseAutomatic:
-        updates.driverLicenseAutomatic ?? existingProfile.driverLicenseAutomatic ?? false,
-      allergies: updates.allergies ?? existingProfile.allergies ?? "",
-      roleProfiles: nextRoleProfiles,
-      profileComments: deriveProfileCommentsFromProfiles(
-        nextRoleProfiles,
-        updates.profileComments ?? existingProfile.profileComments,
-      ),
-    });
-
-    await upsertDatabaseStaffProfile(updatedProfile);
-    return updatedProfile;
-  }
-
-  const profiles = await readStaffStore();
-  const profileIndex = profiles.findIndex((profile) => profile.id === personId);
-
-  if (profileIndex === -1) {
-    return null;
-  }
-
-  const existingProfile = profiles[profileIndex];
   const nextRegistrationStatus =
     updates.registrationStatus ?? existingProfile.registrationStatus;
   const nextProfileApproved =
@@ -735,7 +666,7 @@ export async function updateStoredStaffProfile(
     updates.profileComments ?? existingProfile.profileComments,
   );
 
-  const updatedProfile: StoredStaffProfile = {
+  return normalizeStoredStaffProfile({
     ...existingProfile,
     ...updates,
     region: nextRegion,
@@ -768,7 +699,35 @@ export async function updateStoredStaffProfile(
       nextRoleProfiles,
       updates.profileComments ?? existingProfile.profileComments,
     ),
-  };
+  });
+}
+
+export async function updateStoredStaffProfile(
+  personId: string,
+  updates: StaffProfileUpdate,
+) {
+  const databaseProfile = await getDatabaseStaffProfileById(personId);
+  const seedProfile = isDatabaseConfigured()
+    ? createSeedStaffProfiles().find((profile) => profile.id === personId) ?? null
+    : null;
+
+  const databaseBackedProfile = databaseProfile ?? seedProfile;
+
+  if (databaseBackedProfile) {
+    const updatedProfile = buildUpdatedStoredStaffProfile(databaseBackedProfile, updates);
+    await upsertDatabaseStaffProfile(updatedProfile);
+    return updatedProfile;
+  }
+
+  const profiles = await readStaffStore();
+  const profileIndex = profiles.findIndex((profile) => profile.id === personId);
+
+  if (profileIndex === -1) {
+    return null;
+  }
+
+  const existingProfile = profiles[profileIndex];
+  const updatedProfile = buildUpdatedStoredStaffProfile(existingProfile, updates);
 
   profiles[profileIndex] = normalizeStoredStaffProfile(updatedProfile);
   await writeStaffStore(profiles);

@@ -9,7 +9,10 @@ import {
 } from "react";
 
 import { resolveGigOverviewIndicator } from "@/data/scm-data";
-import { resolveGigRegisterSection } from "@/lib/gig-archive";
+import {
+  isGigArchivedForRegister,
+  resolveGigRegisterSection,
+} from "@/lib/gig-archive";
 import type { Gig, GigOverviewIndicator } from "@/types/scm";
 
 const shortMonthLabels: Record<string, string> = {
@@ -92,7 +95,7 @@ type EditableRegisterField =
   | "merchRepresentative"
   | "scmRepresentative"
   | "projectManager";
-type RegisterViewMode = "active" | "toBeClosed" | "archived";
+type RegisterViewMode = "active" | "toBeClosed" | "closed" | "archived";
 type RegisterCountryFilter = "all" | "Sweden" | "Norway" | "Denmark" | "Finland";
 type DateFilterMode = "all" | "range" | "month";
 type RegisterColumnFilterKey =
@@ -512,12 +515,17 @@ export function GigRegisterClient({
   const toBeClosedGigs = registerGigs.filter(
     (gig) => resolveGigRegisterSection(gig) === "toBeClosed",
   );
+  const closedGigs = registerGigs.filter(
+    (gig) => resolveGigRegisterSection(gig) === "closed",
+  );
   const archivedGigs = registerGigs.filter(
-    (gig) => resolveGigRegisterSection(gig) === "archived",
+    (gig) => isGigArchivedForRegister(gig),
   );
   const scopedGigs =
     viewMode === "archived"
       ? archivedGigs
+      : viewMode === "closed"
+        ? closedGigs
       : viewMode === "toBeClosed"
         ? toBeClosedGigs
         : activeGigs;
@@ -763,10 +771,17 @@ export function GigRegisterClient({
         </button>
         <button
           type="button"
+          className={`segment-chip segment-chip-soft ${viewMode === "closed" ? "active" : ""}`}
+          onClick={() => setViewMode("closed")}
+        >
+          Closed gigs
+        </button>
+        <button
+          type="button"
           className={`segment-chip segment-chip-soft ${viewMode === "archived" ? "active" : ""}`}
           onClick={() => setViewMode("archived")}
         >
-          Archived gigs
+          Archived
         </button>
       </div>
 

@@ -19,7 +19,7 @@ function pickQueryValue(value: string | string[] | undefined) {
 }
 
 function resolveInitialViewMode(value: string | undefined) {
-  if (value === "toBeClosed" || value === "archived") {
+  if (value === "toBeClosed" || value === "closed" || value === "archived") {
     return value;
   }
 

@@ -6,6 +6,7 @@ const globalForPostgres = globalThis as typeof globalThis & {
   __scmPostgresClient?: SqlClient;
   __scmPostgresSchemaPromise?: Promise<void>;
   __scmPostgresSchemaFailed?: boolean;
+  __scmPostgresUnavailable?: boolean;
 };
 
 const defaultProductionConnectTimeoutSeconds = 3;
@@ -47,8 +48,52 @@ function getConnectTimeoutSeconds() {
     : defaultNonProductionConnectTimeoutSeconds;
 }
 
+function getErrorCode(error: unknown) {
+  if (typeof error === "object" && error && "code" in error) {
+    return String(error.code).trim().toUpperCase();
+  }
+
+  return "";
+}
+
+function getErrorMessage(error: unknown) {
+  if (error instanceof Error) {
+    return error.message.trim().toLowerCase();
+  }
+
+  return String(error ?? "").trim().toLowerCase();
+}
+
+function shouldMarkPostgresUnavailable(error: unknown) {
+  const errorCode = getErrorCode(error);
+
+  if (
+    errorCode === "ECONNREFUSED" ||
+    errorCode === "ENOTFOUND" ||
+    errorCode === "ETIMEDOUT" ||
+    errorCode === "ETIMEOUT" ||
+    errorCode === "EHOSTUNREACH" ||
+    errorCode === "ECONNRESET"
+  ) {
+    return true;
+  }
+
+  const message = getErrorMessage(error);
+
+  return (
+    message.includes("connect_timeout") ||
+    message.includes("connection refused") ||
+    message.includes("connection terminated") ||
+    message.includes("timeout") ||
+    message.includes("timed out") ||
+    message.includes("could not connect") ||
+    message.includes("can't reach database") ||
+    message.includes("getaddrinfo")
+  );
+}
+
 async function markPostgresUnavailable() {
-  globalForPostgres.__scmPostgresSchemaFailed = true;
+  globalForPostgres.__scmPostgresUnavailable = true;
   globalForPostgres.__scmPostgresSchemaPromise = undefined;
 
   const client = globalForPostgres.__scmPostgresClient;
@@ -66,7 +111,7 @@ async function markPostgresUnavailable() {
 }
 
 export function getPostgresClient() {
-  if (!isDatabaseConfigured() || globalForPostgres.__scmPostgresSchemaFailed) {
+  if (!isDatabaseConfigured() || globalForPostgres.__scmPostgresUnavailable) {
     return null;
   }
 
@@ -305,9 +350,21 @@ export async function ensureProductionStorageSchema() {
     `)
       .then(() => undefined)
       .catch(async (error) => {
-        await markPostgresUnavailable();
+        if (shouldMarkPostgresUnavailable(error)) {
+          await markPostgresUnavailable();
+          console.error(
+            "Failed to connect to the SCM Postgres database. Falling back to bundled data where possible.",
+            error,
+          );
+          return;
+        }
+
+        // If schema bootstrap fails, keep the client available so existing
+        // tables can still serve live data instead of forcing bundled fallback.
+        globalForPostgres.__scmPostgresSchemaFailed = true;
+        globalForPostgres.__scmPostgresSchemaPromise = undefined;
         console.error(
-          "Failed to ensure the SCM Postgres schema. Falling back to existing tables and bundled data where possible.",
+          "Failed to ensure the SCM Postgres schema. Continuing with existing tables and falling back only where necessary.",
           error,
         );
       });

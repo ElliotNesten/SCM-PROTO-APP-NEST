@@ -432,11 +432,11 @@ function normalizeStoredGig(gig: Gig) {
 
 // Keep the latest successful gig snapshot in memory so transient DB fallbacks
 // do not bounce the UI back to stale bundled data between requests.
-function cloneGigSnapshot(gigs: Gig[]) {
+function cloneGigSnapshot(gigs: Gig[]): Gig[] {
   return sortGigs(gigs).map((gig) => normalizeStoredGig(gig).gig);
 }
 
-function getCachedGigSnapshot() {
+function getCachedGigSnapshot(): Gig[] | null {
   const snapshot = globalForGigStore.__scmGigSnapshot;
   return snapshot ? cloneGigSnapshot(snapshot) : null;
 }
@@ -446,8 +446,8 @@ function setCachedGigSnapshot(gigs: Gig[]) {
 }
 
 function upsertGigIntoCache(gig: Gig) {
-  const current = getCachedGigSnapshot() ?? [];
-  const next = current.filter((item) => item.id !== gig.id);
+  const current: Gig[] = getCachedGigSnapshot() ?? [];
+  const next: Gig[] = current.filter((item) => item.id !== gig.id);
   next.push(gig);
   setCachedGigSnapshot(next);
 }

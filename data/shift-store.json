@@ -13,6 +13,18 @@
     "assignments": []
   },
   {
+    "id": "shift-7",
+    "gigId": "gig-3",
+    "role": "Stand Leader",
+    "priorityLevel": 1,
+    "startTime": "14:00",
+    "endTime": "22:30",
+    "requiredStaff": 1,
+    "notes": "Oslo floor lead.",
+    "priorityTag": "High",
+    "assignments": []
+  },
+  {
     "id": "shift-4",
     "gigId": "gig-2",
     "role": "Stand Leader",
@@ -156,6 +168,28 @@
     ]
   },
   {
+    "id": "shift-1",
+    "gigId": "gig-1",
+    "role": "Stand Leader",
+    "priorityLevel": 1,
+    "startTime": "15:00",
+    "endTime": "23:30",
+    "requiredStaff": 2,
+    "notes": "Lead main floor stands.",
+    "skillRequirement": "Experienced arena lead",
+    "priorityTag": "High",
+    "assignments": [
+      {
+        "staffId": "staff-1",
+        "bookingStatus": "Confirmed"
+      },
+      {
+        "staffId": "staff-2",
+        "bookingStatus": "Pending"
+      }
+    ]
+  },
+  {
     "id": "shift-10",
     "gigId": "gig-4",
     "role": "Stand Leader",
@@ -202,6 +236,18 @@
     "notes": "Main sales team.",
     "skillRequirement": "POS knowledge",
     "priorityTag": "High",
+    "assignments": []
+  },
+  {
+    "id": "shift-8",
+    "gigId": "gig-3",
+    "role": "Seller",
+    "priorityLevel": 2,
+    "startTime": "15:00",
+    "endTime": "22:00",
+    "requiredStaff": 5,
+    "notes": "Front concourse sales.",
+    "priorityTag": "Medium",
     "assignments": []
   },
   {
@@ -267,6 +313,32 @@
     "priorityTag": "High",
     "assignments": [],
     "priorityLevel": 2
+  },
+  {
+    "id": "shift-2",
+    "gigId": "gig-1",
+    "role": "Seller",
+    "priorityLevel": 2,
+    "startTime": "16:00",
+    "endTime": "22:45",
+    "requiredStaff": 8,
+    "notes": "Main sales team.",
+    "skillRequirement": "POS knowledge",
+    "priorityTag": "High",
+    "assignments": [
+      {
+        "staffId": "staff-3",
+        "bookingStatus": "Confirmed"
+      },
+      {
+        "staffId": "staff-4",
+        "bookingStatus": "Confirmed"
+      },
+      {
+        "staffId": "staff-5",
+        "bookingStatus": "Waitlisted"
+      }
+    ]
   },
   {
     "id": "shift-5",
@@ -361,6 +433,35 @@
     "priorityTag": "Medium",
     "assignments": [],
     "priorityLevel": 3
+  },
+  {
+    "id": "shift-3",
+    "gigId": "gig-1",
+    "role": "Runner",
+    "priorityLevel": 3,
+    "startTime": "14:00",
+    "endTime": "23:30",
+    "requiredStaff": 3,
+    "notes": "Stock refills and support.",
+    "priorityTag": "Medium",
+    "assignments": [
+      {
+        "staffId": "staff-6",
+        "bookingStatus": "Confirmed"
+      }
+    ]
+  },
+  {
+    "id": "shift-9",
+    "gigId": "gig-3",
+    "role": "Runner",
+    "priorityLevel": 3,
+    "startTime": "14:30",
+    "endTime": "22:30",
+    "requiredStaff": 2,
+    "notes": "Warehouse and stand support.",
+    "priorityTag": "Medium",
+    "assignments": []
   },
   {
     "id": "gig-d924a610-runner-1",

@@ -117,6 +117,10 @@
   gap: 0.45rem;
 }
 
+.staff-app-device.scm-ops:has(.staff-app-scm-gigs-screen) .staff-app-scm-topbar-meta {
+  display: none;
+}
+
 .staff-app-scm-topbar-pill,
 .staff-app-scm-topbar-scope,
 .staff-app-scm-chip {
@@ -984,6 +988,43 @@
 .staff-app-scm-person-copy strong {
   color: #16213f;
   font-size: 1rem;
+}
+
+.staff-app-scm-person-badge-stack {
+  display: grid;
+  justify-items: end;
+  gap: 0.45rem;
+  flex: 0 0 auto;
+}
+
+.staff-app-scm-directory-filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin-bottom: 0.9rem;
+}
+
+.staff-app-scm-directory-filter {
+  min-height: 2.55rem;
+  padding: 0.6rem 0.95rem;
+  border: 1px solid rgba(205, 215, 242, 0.95);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.88);
+  color: #33446e;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.staff-app-scm-directory-filter.active {
+  background: linear-gradient(180deg, #5f6ea8 0%, #44558f 100%);
+  border-color: rgba(84, 101, 166, 0.92);
+  color: #fff;
+}
+
+.staff-app-scm-directory-note {
+  margin: 0 0 0.9rem;
+  color: #61728e;
+  line-height: 1.5;
 }
 
 .staff-app-scm-line-item {
@@ -3275,6 +3316,10 @@
   color: #fff0cf;
 }
 
+.staff-app-scm-live-pill-link {
+  text-decoration: none;
+}
+
 .staff-app-scm-live-pill.subtle {
   background: rgba(255, 255, 255, 0.08);
   color: rgba(236, 242, 250, 0.84);
@@ -3326,6 +3371,27 @@
   padding: 1rem;
 }
 
+.staff-app-scm-live-metric-link {
+  color: inherit;
+  text-decoration: none;
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease,
+    border-color 160ms ease;
+}
+
+.staff-app-scm-live-metric-link:hover,
+.staff-app-scm-live-metric-link:focus-visible {
+  transform: translateY(-1px);
+  border-color: rgba(183, 196, 232, 0.96);
+  box-shadow: 0 22px 42px rgba(34, 49, 87, 0.12);
+}
+
+.staff-app-scm-live-metric-link:focus-visible {
+  outline: 2px solid rgba(80, 104, 175, 0.34);
+  outline-offset: 3px;
+}
+
 .staff-app-scm-live-metric span {
   color: #657795;
   font-size: 0.78rem;
@@ -3359,6 +3425,73 @@
 .staff-app-scm-live-gig-list {
   display: grid;
   gap: 0.8rem;
+}
+
+.staff-app-scm-board-today-list {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.staff-app-scm-board-today-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.9rem;
+  padding: 0.9rem 1rem;
+  border-radius: 1.15rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.08);
+  color: inherit;
+  text-decoration: none;
+  transition:
+    transform 160ms ease,
+    background-color 160ms ease,
+    border-color 160ms ease;
+}
+
+.staff-app-scm-board-today-item:hover,
+.staff-app-scm-board-today-item:focus-visible {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.staff-app-scm-board-today-item:focus-visible {
+  outline: 2px solid rgba(255, 246, 220, 0.92);
+  outline-offset: 2px;
+}
+
+.staff-app-scm-board-today-copy {
+  display: grid;
+  gap: 0.18rem;
+}
+
+.staff-app-scm-board-today-copy strong {
+  color: #ffffff;
+}
+
+.staff-app-scm-board-today-copy p {
+  margin: 0;
+  color: rgba(236, 242, 250, 0.82);
+}
+
+.staff-app-scm-board-today-meta {
+  display: grid;
+  justify-items: end;
+  gap: 0.45rem;
+}
+
+.staff-app-scm-board-today-meta > span:first-child {
+  color: #fff6dc;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-align: right;
+}
+
+.staff-app-scm-board-empty {
+  margin: 0;
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: rgba(236, 242, 250, 0.84);
 }
 
 .staff-app-scm-live-shift-card,

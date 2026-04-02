@@ -198,7 +198,12 @@ export type StaffAppScmOperationsBoard = {
   primaryGigId: string | null;
   liveGigCount: number;
   todayGigCount: number;
+  weekGigCount: number;
   requiresAttentionCount: number;
+  toBeClosedCount: number;
+  todayGigCards: StaffAppScmGigCard[];
+  upcomingMonthGigCards: StaffAppScmGigCard[];
+  closeoutGigCards: StaffAppScmGigCard[];
   gigCards: StaffAppScmGigCard[];
 };
 
@@ -225,6 +230,59 @@ function parseTimeToMinutes(value: string) {
   const normalizedHours = Number.isFinite(hours) ? hours : 0;
   const normalizedMinutes = Number.isFinite(minutes) ? minutes : 0;
   return normalizedHours * 60 + normalizedMinutes;
+}
+
+function parseDateKeyToUtcDate(value: string) {
+  const [year, month, day] = value.split("-").map((part) => Number(part));
+
+  return new Date(Date.UTC(year || 0, (month || 1) - 1, day || 1));
+}
+
+function formatUtcDateAsDateKey(value: Date) {
+  return value.toISOString().slice(0, 10);
+}
+
+function addDaysToDateKey(value: string, days: number) {
+  const date = parseDateKeyToUtcDate(value);
+  date.setUTCDate(date.getUTCDate() + days);
+  return formatUtcDateAsDateKey(date);
+}
+
+function addMonthsToDateKey(value: string, months: number) {
+  const [year, month, day] = value.split("-").map((part) => Number(part));
+  const normalizedYear = year || 0;
+  const normalizedMonth = (month || 1) - 1;
+  const normalizedDay = day || 1;
+  const targetMonthDate = new Date(Date.UTC(normalizedYear, normalizedMonth + months, 1));
+  const lastDayOfTargetMonth = new Date(
+    Date.UTC(
+      targetMonthDate.getUTCFullYear(),
+      targetMonthDate.getUTCMonth() + 1,
+      0,
+    ),
+  ).getUTCDate();
+
+  targetMonthDate.setUTCDate(Math.min(normalizedDay, lastDayOfTargetMonth));
+
+  return formatUtcDateAsDateKey(targetMonthDate);
+}
+
+function getCurrentWeekRange(dateKey: string) {
+  const today = parseDateKeyToUtcDate(dateKey);
+  const dayOfWeek = today.getUTCDay();
+  const daysSinceMonday = (dayOfWeek + 6) % 7;
+  const start = addDaysToDateKey(dateKey, -daysSinceMonday);
+  const end = addDaysToDateKey(start, 6);
+
+  return { start, end };
+}
+
+function isDateWithinRange(date: string, start: string, end: string) {
+  return date >= start && date <= end;
+}
+
+function isGigAwaitingCloseout(card: StaffAppScmGigCard) {
+  return card.gigStatus === "Completed" || card.gigStatus === "Reported";
 }
 
 function formatMinutesAsTime(totalMinutes: number) {
@@ -687,6 +745,8 @@ function getTimelineLabel(gig: Gig, shifts: Shift[]) {
 export async function getStaffAppScmOperationsBoard(profile: StoredScmStaffProfile) {
   const scmData = await getStaffAppScmData(profile);
   const now = getStockholmNowSnapshot();
+  const weekRange = getCurrentWeekRange(now.dateKey);
+  const nextMonthBoundary = addMonthsToDateKey(now.dateKey, 1);
   const gigCards = await Promise.all(
     scmData.accessibleGigs.map((gig) => buildGigCard(gig, now)),
   );
@@ -704,14 +764,33 @@ export async function getStaffAppScmOperationsBoard(profile: StoredScmStaffProfi
 
     return left.startTime.localeCompare(right.startTime);
   });
+  const todayGigCards = sortedCards.filter(
+    (card) => card.date === now.dateKey && card.gigStatus !== "Closed",
+  );
+  const upcomingMonthGigCards = sortedCards.filter(
+    (card) =>
+      card.operationalStatus === "upcoming" &&
+      card.gigStatus !== "Closed" &&
+      isDateWithinRange(card.date, now.dateKey, nextMonthBoundary),
+  );
+  const closeoutGigCards = sortedCards.filter(isGigAwaitingCloseout);
 
   return {
     roleLabel: scmData.roleDefinition.label,
     scopeLabel: scmData.scopeLabel,
     primaryGigId: selectPrimaryGigId(sortedCards, now.dateKey),
     liveGigCount: sortedCards.filter((card) => card.operationalStatus === "live").length,
-    todayGigCount: sortedCards.filter((card) => card.date === now.dateKey).length,
+    todayGigCount: todayGigCards.length,
+    weekGigCount: sortedCards.filter(
+      (card) =>
+        card.gigStatus !== "Closed" &&
+        isDateWithinRange(card.date, weekRange.start, weekRange.end),
+    ).length,
     requiresAttentionCount: sortedCards.filter((card) => card.requiresAttention).length,
+    toBeClosedCount: closeoutGigCards.length,
+    todayGigCards,
+    upcomingMonthGigCards,
+    closeoutGigCards,
     gigCards: sortedCards,
   } satisfies StaffAppScmOperationsBoard;
 }

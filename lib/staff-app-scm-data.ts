@@ -87,6 +87,17 @@ function canAccessScmPeer(
   }
 }
 
+function canAccessScmDirectoryProfile(
+  profile: StoredScmStaffProfile,
+  candidateProfile: StoredScmStaffProfile,
+) {
+  if (candidateProfile.id === profile.id) {
+    return true;
+  }
+
+  return canAccessScmPeer(profile, candidateProfile);
+}
+
 export function formatStaffAppScmScopeLabel(profile: StoredScmStaffProfile) {
   if (profile.roleKey === "superAdmin") {
     return "Global access";
@@ -139,7 +150,10 @@ export async function getStaffAppScmData(profile: StoredScmStaffProfile) {
   const fieldStaffProfiles = allFieldStaff
     .filter((staffProfile) => canAccessPlatformFieldStaffProfile(profile, staffProfile))
     .sort((left, right) => left.displayName.localeCompare(right.displayName));
-  const scmPeers = allScmProfiles
+  const scmDirectoryProfiles = allScmProfiles
+    .filter((candidateProfile) => canAccessScmDirectoryProfile(profile, candidateProfile))
+    .sort((left, right) => left.displayName.localeCompare(right.displayName));
+  const scmPeers = scmDirectoryProfiles
     .filter((peerProfile) => canAccessScmPeer(profile, peerProfile))
     .sort((left, right) => left.displayName.localeCompare(right.displayName));
 
@@ -152,6 +166,7 @@ export async function getStaffAppScmData(profile: StoredScmStaffProfile) {
     closeoutGigs,
     staffingGapGigs,
     fieldStaffProfiles,
+    scmDirectoryProfiles,
     scmPeers,
     metrics: {
       accessibleGigCount: accessibleGigs.length,
@@ -160,6 +175,7 @@ export async function getStaffAppScmData(profile: StoredScmStaffProfile) {
       closeoutGigCount: closeoutGigs.length,
       staffingGapCount: staffingGapGigs.length,
       fieldStaffCount: fieldStaffProfiles.length,
+      scmDirectoryCount: scmDirectoryProfiles.length,
       scmPeerCount: scmPeers.length,
     },
   };

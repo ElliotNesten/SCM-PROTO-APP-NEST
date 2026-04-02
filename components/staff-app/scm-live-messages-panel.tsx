@@ -228,11 +228,7 @@ export function ScmLiveMessagesPanel({
       <section className="staff-app-scm-live-message-section" id="message-all">
         <div className="staff-app-scm-live-message-section-head">
           <div>
-            <p className="staff-app-kicker">Messages to all</p>
-            <h3>Everyone booked on this gig</h3>
-            <p className="staff-app-scm-live-message-section-copy">
-              New updates stay in the same shared staff thread if it already exists.
-            </p>
+            <h3>Message to all</h3>
           </div>
           <span className="staff-app-scm-status-pill">
             {allBookedRecipientIds.length} recipients
@@ -257,9 +253,6 @@ export function ScmLiveMessagesPanel({
               required
             />
           </label>
-          <p className="staff-app-inline-note">
-            This is a one-way update for all booked staff. They can read it, but not reply in this thread.
-          </p>
           <button
             type="submit"
             className="staff-app-button"
@@ -276,11 +269,7 @@ export function ScmLiveMessagesPanel({
       >
         <div className="staff-app-scm-live-message-section-head">
           <div>
-            <p className="staff-app-kicker">Stand leaders</p>
-            <h3>Lead-only conversation</h3>
-            <p className="staff-app-scm-live-message-section-copy">
-              Use this thread for operational updates that only stand leaders should receive.
-            </p>
+            <h3>Stand leaders</h3>
           </div>
           <span className="staff-app-scm-status-pill">
             {standLeaderRecipientIds.length} recipients
@@ -305,9 +294,6 @@ export function ScmLiveMessagesPanel({
               required
             />
           </label>
-          <p className="staff-app-inline-note">
-            Replies stay on in this chat, so stand leaders can answer back in the same thread.
-          </p>
           <button
             type="submit"
             className="staff-app-button"
@@ -321,11 +307,7 @@ export function ScmLiveMessagesPanel({
       <section className="staff-app-scm-live-message-section" id="message-new-chat">
         <div className="staff-app-scm-live-message-section-head">
           <div>
-            <p className="staff-app-kicker">New chat</p>
-            <h3>Create a direct or group conversation</h3>
-            <p className="staff-app-scm-live-message-section-copy">
-              Start a new thread for one person or create a reusable group chat for a selected set of people.
-            </p>
+            <h3>New chat</h3>
           </div>
         </div>
 
@@ -346,7 +328,6 @@ export function ScmLiveMessagesPanel({
               <div className="staff-app-scm-live-compose-card-head">
                 <div>
                   <strong>Direct chat</strong>
-                  <p>Message one person and keep the thread open for follow-up.</p>
                 </div>
               </div>
 
@@ -362,7 +343,7 @@ export function ScmLiveMessagesPanel({
               </label>
 
               <label className="staff-app-form-field">
-                <span>First message</span>
+                <span>Message</span>
                 <textarea
                   name="body"
                   placeholder="Hi, can you confirm your arrival time for the gig?"
@@ -386,7 +367,6 @@ export function ScmLiveMessagesPanel({
               <div className="staff-app-scm-live-compose-card-head">
                 <div>
                   <strong>Group chat</strong>
-                  <p>Name the group, choose the people, and open one reusable thread.</p>
                 </div>
               </div>
 
@@ -418,7 +398,7 @@ export function ScmLiveMessagesPanel({
               </div>
 
               <label className="staff-app-form-field">
-                <span>First message</span>
+                <span>Message</span>
                 <textarea
                   name="body"
                   placeholder="This chat is for the floor team. Use it for updates during the shift."

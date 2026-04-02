@@ -4,6 +4,14 @@ import { formatStaffAppDate } from "@/lib/staff-app-data";
 import { getStaffAppScmOperationsBoard } from "@/lib/staff-app-scm-ops";
 import { requireCurrentStaffAppScmProfile } from "@/lib/staff-app-session";
 
+type StaffAppScmGigsPageProps = {
+  searchParams?: Promise<{
+    view?: string;
+  }>;
+};
+
+type BoardListView = "queue" | "closeout";
+
 function getStatusToneClassName(
   operationalStatus: "live" | "upcoming" | "finished",
   requiresAttention: boolean,
@@ -23,65 +31,131 @@ function getStatusToneClassName(
   return "neutral";
 }
 
-export default async function StaffAppScmGigsPage() {
+function normalizeBoardListView(value: string | undefined): BoardListView {
+  return value === "closeout" ? "closeout" : "queue";
+}
+
+function ScmBoardMetricCard({
+  label,
+  value,
+  copy,
+  href,
+}: {
+  label: string;
+  value: number;
+  copy: string;
+  href?: string;
+}) {
+  const content = (
+    <>
+      <span>{label}</span>
+      <strong>{value}</strong>
+      <p>{copy}</p>
+    </>
+  );
+
+  if (href) {
+    return (
+      <Link href={href} className="staff-app-scm-live-metric staff-app-scm-live-metric-link">
+        {content}
+      </Link>
+    );
+  }
+
+  return <article className="staff-app-scm-live-metric">{content}</article>;
+}
+
+export default async function StaffAppScmGigsPage({
+  searchParams,
+}: StaffAppScmGigsPageProps) {
   const profile = await requireCurrentStaffAppScmProfile();
+  const resolvedSearchParams = (await searchParams) ?? {};
   const board = await getStaffAppScmOperationsBoard(profile);
+  const listView = normalizeBoardListView(resolvedSearchParams.view);
+  const listCards =
+    listView === "closeout" ? board.closeoutGigCards : board.upcomingMonthGigCards;
+  const listHeading = listView === "closeout" ? "To be closed" : "Gig queue";
+  const listKicker = listView === "closeout" ? "Awaiting closeout" : "Upcoming next 30 days";
+  const emptyStateCopy =
+    listView === "closeout"
+      ? "No gigs are currently waiting to be closed in this SCM scope."
+      : "No upcoming gigs are scheduled within the next month in this SCM scope.";
+  const metricLinkHref = "/staff-app/scm/gigs?view=closeout#gig-list";
 
   return (
-    <section className="staff-app-screen staff-app-scm-screen staff-app-scm-live-screen">
+    <section className="staff-app-screen staff-app-scm-screen staff-app-scm-live-screen staff-app-scm-gigs-screen">
       <div className="staff-app-card staff-app-scm-live-hero">
         <div className="staff-app-scm-live-hero-copy">
-          <p className="staff-app-kicker">Gig board</p>
-          <h1>Operations in your scope</h1>
-          <p>
-            Live gigs, today&apos;s load, and next actions are ordered here so Regional Managers
-            and Temporary Gig Managers can jump straight into the right event.
-          </p>
+          <h1>Todays GIG&apos;s</h1>
         </div>
 
-        <div className="staff-app-scm-live-pill-row">
-          <span className="staff-app-scm-live-pill">{board.roleLabel}</span>
-          <span className="staff-app-scm-live-pill subtle">{board.scopeLabel}</span>
-        </div>
+        <div className="staff-app-scm-board-today-list">
+          {board.todayGigCards.length === 0 ? (
+            <p className="staff-app-empty-state staff-app-scm-board-empty">
+              No gigs are scheduled for today in your SCM scope.
+            </p>
+          ) : (
+            board.todayGigCards.map((gig) => (
+              <Link
+                key={gig.id}
+                href={`/staff-app/scm/live/${gig.id}`}
+                className="staff-app-scm-board-today-item"
+              >
+                <div className="staff-app-scm-board-today-copy">
+                  <strong>{gig.artist}</strong>
+                  <p>
+                    {gig.arena}, {gig.city}
+                  </p>
+                </div>
 
-        {board.primaryGigId ? (
-          <Link href={`/staff-app/scm/live/${board.primaryGigId}`} className="staff-app-button">
-            Open primary live view
-          </Link>
-        ) : null}
+                <div className="staff-app-scm-board-today-meta">
+                  <span>
+                    {gig.startTime} - {gig.endTime}
+                  </span>
+                  <span
+                    className={`staff-app-scm-status-pill ${getStatusToneClassName(gig.operationalStatus, gig.requiresAttention)}`}
+                  >
+                    {gig.gigStatus}
+                  </span>
+                </div>
+              </Link>
+            ))
+          )}
+        </div>
       </div>
 
       <div className="staff-app-scm-live-metric-grid">
-        <article className="staff-app-scm-live-metric">
-          <span>Live now</span>
-          <strong>{board.liveGigCount}</strong>
-          <p>Gigs currently inside an active operational window.</p>
-        </article>
-        <article className="staff-app-scm-live-metric">
-          <span>Today</span>
-          <strong>{board.todayGigCount}</strong>
-          <p>Events dated for today in the logged-in SCM scope.</p>
-        </article>
-        <article className="staff-app-scm-live-metric">
-          <span>Need action</span>
-          <strong>{board.requiresAttentionCount}</strong>
-          <p>Gigs carrying late arrivals, gaps, or alerts that need follow-up.</p>
-        </article>
+        <ScmBoardMetricCard
+          label="This week"
+          value={board.weekGigCount}
+          copy="Gigs scheduled in the current week, with Sunday 23:59 as the cutoff."
+        />
+        <ScmBoardMetricCard
+          label="To be closed"
+          value={board.toBeClosedCount}
+          copy="Gigs that are completed or reported and still waiting to be closed."
+          href={metricLinkHref}
+        />
       </div>
 
-      <div className="staff-app-card">
+      <div className="staff-app-card" id="gig-list">
         <div className="staff-app-section-head compact">
           <div>
-            <p className="staff-app-kicker">Sorted for operations</p>
-            <h2>Gig queue</h2>
+            <p className="staff-app-kicker">{listKicker}</p>
+            <h2>{listHeading}</h2>
           </div>
+          {listView === "closeout" ? (
+            <Link href="/staff-app/scm/gigs#gig-list" className="staff-app-button secondary compact">
+              Show gig queue
+            </Link>
+          ) : null}
         </div>
 
         <div className="staff-app-scm-live-gig-list">
-          {board.gigCards.length === 0 ? (
-            <p className="staff-app-empty-state">No gigs are currently visible in this SCM role scope.</p>
+          {listCards.length === 0 ? (
+            <p className="staff-app-empty-state">{emptyStateCopy}</p>
           ) : (
-            board.gigCards.map((gig) => (
+            listCards.map((gig) => (
               <Link
                 key={gig.id}
                 href={`/staff-app/scm/live/${gig.id}`}
@@ -95,7 +169,7 @@ export default async function StaffAppScmGigsPage() {
                     </p>
                   </div>
                   <span className={`staff-app-scm-status-pill ${getStatusToneClassName(gig.operationalStatus, gig.requiresAttention)}`}>
-                    {gig.operationalStatusLabel}
+                    {listView === "closeout" ? gig.gigStatus : gig.operationalStatusLabel}
                   </span>
                 </div>
 

@@ -452,18 +452,46 @@ function upsertGigIntoCache(gig: Gig) {
   setCachedGigSnapshot(next);
 }
 
-function removeGigFromCache(gigId: string) {
-  const current = getCachedGigSnapshot();
-
-  if (!current) {
-    return;
-  }
-
-  setCachedGigSnapshot(current.filter((gig) => gig.id !== gigId));
-}
-
 function getCachedGigById(gigId: string) {
   return getCachedGigSnapshot()?.find((gig) => gig.id === gigId) ?? null;
+}
+
+async function buildGigSnapshotFromAvailableSources() {
+  const fallbackGigs = await getFallbackStoredGigs();
+
+  if (!isDatabaseConfigured()) {
+    return fallbackGigs;
+  }
+
+  await bootstrapDatabaseGigsFromFallback(fallbackGigs);
+
+  try {
+    const databaseGigs = await getDatabaseGigs();
+    return databaseGigs.length > 0
+      ? sortGigs(mergeUniqueGigs(databaseGigs, fallbackGigs))
+      : fallbackGigs;
+  } catch {
+    const cachedSnapshot = getCachedGigSnapshot() ?? [];
+    return sortGigs(mergeUniqueGigs(cachedSnapshot, fallbackGigs));
+  }
+}
+
+async function seedGigCacheSnapshot() {
+  const cachedSnapshot = getCachedGigSnapshot();
+
+  if (cachedSnapshot && cachedSnapshot.length > 0) {
+    return cachedSnapshot;
+  }
+
+  const seededSnapshot = await buildGigSnapshotFromAvailableSources();
+  setCachedGigSnapshot(seededSnapshot);
+  return seededSnapshot;
+}
+
+async function refreshGigCacheSnapshot() {
+  const refreshedSnapshot = await buildGigSnapshotFromAvailableSources();
+  setCachedGigSnapshot(refreshedSnapshot);
+  return refreshedSnapshot;
 }
 
 async function ensureGigStore() {
@@ -743,23 +771,8 @@ async function getMergedStoredGigs() {
     return fallbackGigs;
   }
 
-  await bootstrapDatabaseGigsFromFallback(fallbackGigs);
-
-  try {
-    const databaseGigs = await getDatabaseGigs();
-    const resolvedGigs = databaseGigs.length > 0 ? sortGigs(databaseGigs) : fallbackGigs;
-    setCachedGigSnapshot(resolvedGigs);
-    return resolvedGigs;
-  } catch {
-    const cachedSnapshot = getCachedGigSnapshot();
-
-    if (cachedSnapshot) {
-      return cachedSnapshot;
-    }
-
-    setCachedGigSnapshot(fallbackGigs);
-    return fallbackGigs;
-  }
+  const resolvedGigs = await refreshGigCacheSnapshot();
+  return resolvedGigs;
 }
 
 async function updateStoredGigRecord<T>(
@@ -782,8 +795,8 @@ async function updateStoredGigRecord<T>(
     }
 
     await upsertDatabaseGig(updated.gig);
-    upsertGigIntoCache(updated.gig);
     await syncGigToFallbackStore(updated.gig);
+    await refreshGigCacheSnapshot();
     return updated.result;
   }
 
@@ -842,8 +855,15 @@ export async function getStoredGigById(gigId: string) {
       const databaseGig = await getDatabaseGigById(gigId);
 
       if (databaseGig) {
-        upsertGigIntoCache(databaseGig);
-        return databaseGig;
+        const cachedSnapshot = getCachedGigSnapshot();
+
+        if (cachedSnapshot && cachedSnapshot.length > 0) {
+          upsertGigIntoCache(databaseGig);
+          return databaseGig;
+        }
+
+        const seededSnapshot = await seedGigCacheSnapshot();
+        return seededSnapshot.find((gig) => gig.id === gigId) ?? databaseGig;
       }
     } catch {
       const cachedGig = getCachedGigById(gigId);
@@ -856,7 +876,13 @@ export async function getStoredGigById(gigId: string) {
     const fallbackGig = fallbackGigs.find((gig) => gig.id === gigId) ?? null;
 
     if (fallbackGig) {
-      upsertGigIntoCache(fallbackGig);
+      const cachedSnapshot = getCachedGigSnapshot();
+
+      if (cachedSnapshot && cachedSnapshot.length > 0) {
+        upsertGigIntoCache(fallbackGig);
+      } else {
+        await seedGigCacheSnapshot();
+      }
     }
 
     return fallbackGig;
@@ -872,7 +898,13 @@ export async function getStoredGigById(gigId: string) {
     const fallbackGig = fallbackGigs.find((gig) => gig.id === gigId) ?? null;
 
     if (fallbackGig) {
-      upsertGigIntoCache(fallbackGig);
+      const cachedSnapshot = getCachedGigSnapshot();
+
+      if (cachedSnapshot && cachedSnapshot.length > 0) {
+        upsertGigIntoCache(fallbackGig);
+      } else {
+        await seedGigCacheSnapshot();
+      }
     }
 
     return fallbackGig;
@@ -1014,8 +1046,8 @@ export async function deleteStoredGig(gigId: string) {
     const deletedGig = await deleteDatabaseGig(gigId);
 
     if (deletedGig) {
-      removeGigFromCache(gigId);
       await removeGigFromFallbackStore(gigId);
+      await refreshGigCacheSnapshot();
     }
 
     return deletedGig;
@@ -1079,8 +1111,8 @@ export async function createStoredGig(input: NewGigInput) {
 
   if (sql) {
     await upsertDatabaseGig(createdGig);
-    upsertGigIntoCache(createdGig);
     await syncGigToFallbackStore(createdGig);
+    await refreshGigCacheSnapshot();
     return createdGig;
   }
 

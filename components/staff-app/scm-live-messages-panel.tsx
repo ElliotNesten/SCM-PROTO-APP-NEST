@@ -159,11 +159,15 @@ function ConversationSummary({
 export function ScmLiveMessagesPanel({
   gigId,
   livePath,
+  activeComposer,
+  isRosterOpen,
   roster,
   conversationThreads,
 }: {
   gigId: string;
   livePath: string;
+  activeComposer: "all" | "stand-leaders" | "new-chat" | null;
+  isRosterOpen: boolean;
   roster: StaffAppScmGigWorkspace["roster"];
   conversationThreads: StaffAppScmConversationThread[];
 }) {
@@ -192,6 +196,19 @@ export function ScmLiveMessagesPanel({
   const standLeadersThread =
     conversationThreads.find((thread) => thread.audience === "standLeaders") ??
     null;
+  const buildMessagePath = (chat: "all" | "stand-leaders" | "new-chat") => {
+    const params = new URLSearchParams();
+    params.set("chat", chat);
+
+    if (isRosterOpen) {
+      params.set("roster", "open");
+    }
+
+    return `${livePath}?${params.toString()}#messages`;
+  };
+  const allMessagesPath = buildMessagePath("all");
+  const standLeadersPath = buildMessagePath("stand-leaders");
+  const newChatPath = buildMessagePath("new-chat");
 
   return (
     <div className="staff-app-card staff-app-scm-live-messages-card" id="messages">
@@ -202,217 +219,218 @@ export function ScmLiveMessagesPanel({
         </div>
       </div>
 
-      <div className="staff-app-scm-live-message-block-head">
-        <div>
-          <p className="staff-app-kicker">Quick actions</p>
-          <h3>Start or continue the right chat</h3>
-          <p className="staff-app-scm-live-message-section-copy">
-            Use the fixed chats for the whole team or stand leaders, or create a
-            brand-new direct or group conversation.
-          </p>
-        </div>
-      </div>
-
       <div className="staff-app-scm-live-message-actions">
-        <a href="#message-all" className="staff-app-button secondary compact">
+        <Link
+          href={allMessagesPath}
+          className={`staff-app-button compact${activeComposer === "all" ? "" : " secondary"}`}
+        >
           Messages to all
-        </a>
-        <a href="#message-stand-leaders" className="staff-app-button secondary compact">
+        </Link>
+        <Link
+          href={standLeadersPath}
+          className={`staff-app-button compact${activeComposer === "stand-leaders" ? "" : " secondary"}`}
+        >
           Stand leaders
-        </a>
-        <a href="#message-new-chat" className="staff-app-button secondary compact">
+        </Link>
+        <Link
+          href={newChatPath}
+          className={`staff-app-button compact${activeComposer === "new-chat" ? "" : " secondary"}`}
+        >
           New chat
-        </a>
+        </Link>
       </div>
 
-      <section className="staff-app-scm-live-message-section" id="message-all">
-        <div className="staff-app-scm-live-message-section-head">
-          <div>
-            <h3>Message to all</h3>
+      {activeComposer === "all" ? (
+        <section className="staff-app-scm-live-message-section">
+          <div className="staff-app-scm-live-message-section-head">
+            <div>
+              <h3>Message to all</h3>
+            </div>
+            <span className="staff-app-scm-status-pill">
+              {allBookedRecipientIds.length} recipients
+            </span>
           </div>
-          <span className="staff-app-scm-status-pill">
-            {allBookedRecipientIds.length} recipients
-          </span>
-        </div>
 
-        <ConversationSummary
-          thread={allBookedThread}
-          livePath={livePath}
-          emptyCopy="No shared all-staff thread has been started yet. Your first message will open it."
-        />
+          <ConversationSummary
+            thread={allBookedThread}
+            livePath={livePath}
+            emptyCopy="No shared all-staff thread has been started yet. Your first message will open it."
+          />
 
-        <form action={sendScmGigMessageAction} className="staff-app-form-card staff-app-scm-live-message-form">
-          <input type="hidden" name="gigId" value={gigId} />
-          <input type="hidden" name="messageMode" value="allBooked" />
-          <input type="hidden" name="returnTo" value={livePath} />
-          <label className="staff-app-form-field">
-            <span>Message</span>
-            <textarea
-              name="body"
-              placeholder="Doors moved to 16:30. Please report to Gate B and check in with the stand lead."
-              required
-            />
-          </label>
-          <button
-            type="submit"
-            className="staff-app-button"
-            disabled={allBookedRecipientIds.length === 0}
-          >
-            Send to all booked staff
-          </button>
-        </form>
-      </section>
-
-      <section
-        className="staff-app-scm-live-message-section"
-        id="message-stand-leaders"
-      >
-        <div className="staff-app-scm-live-message-section-head">
-          <div>
-            <h3>Stand leaders</h3>
-          </div>
-          <span className="staff-app-scm-status-pill">
-            {standLeaderRecipientIds.length} recipients
-          </span>
-        </div>
-
-        <ConversationSummary
-          thread={standLeadersThread}
-          livePath={livePath}
-          emptyCopy="No stand leader thread has been started yet. Your first message will open it."
-        />
-
-        <form action={sendScmGigMessageAction} className="staff-app-form-card staff-app-scm-live-message-form">
-          <input type="hidden" name="gigId" value={gigId} />
-          <input type="hidden" name="messageMode" value="standLeaders" />
-          <input type="hidden" name="returnTo" value={livePath} />
-          <label className="staff-app-form-field">
-            <span>Message</span>
-            <textarea
-              name="body"
-              placeholder="Stand leaders: please collect your float bags and confirm that your team is in position."
-              required
-            />
-          </label>
-          <button
-            type="submit"
-            className="staff-app-button"
-            disabled={standLeaderRecipientIds.length === 0}
-          >
-            Send to stand leaders
-          </button>
-        </form>
-      </section>
-
-      <section className="staff-app-scm-live-message-section" id="message-new-chat">
-        <div className="staff-app-scm-live-message-section-head">
-          <div>
-            <h3>New chat</h3>
-          </div>
-        </div>
-
-        {recipientOptions.length === 0 ? (
-          <p className="staff-app-empty-state">
-            No people are linked to this gig yet, so new chats cannot be created.
-          </p>
-        ) : (
-          <div className="staff-app-scm-live-new-chat-grid">
-            <form
-              action={sendScmGigMessageAction}
-              className="staff-app-form-card staff-app-scm-live-compose-card"
+          <form action={sendScmGigMessageAction} className="staff-app-form-card staff-app-scm-live-message-form">
+            <input type="hidden" name="gigId" value={gigId} />
+            <input type="hidden" name="messageMode" value="allBooked" />
+            <input type="hidden" name="returnTo" value={allMessagesPath} />
+            <label className="staff-app-form-field">
+              <span>Message</span>
+              <textarea
+                name="body"
+                placeholder="Doors moved to 16:30. Please report to Gate B and check in with the stand lead."
+                required
+              />
+            </label>
+            <button
+              type="submit"
+              className="staff-app-button"
+              disabled={allBookedRecipientIds.length === 0}
             >
-              <input type="hidden" name="gigId" value={gigId} />
-              <input type="hidden" name="messageMode" value="direct" />
-              <input type="hidden" name="returnTo" value={livePath} />
+              Send to all booked staff
+            </button>
+          </form>
+        </section>
+      ) : null}
 
-              <div className="staff-app-scm-live-compose-card-head">
-                <div>
-                  <strong>Direct chat</strong>
+      {activeComposer === "stand-leaders" ? (
+        <section className="staff-app-scm-live-message-section">
+          <div className="staff-app-scm-live-message-section-head">
+            <div>
+              <h3>Stand leaders</h3>
+            </div>
+            <span className="staff-app-scm-status-pill">
+              {standLeaderRecipientIds.length} recipients
+            </span>
+          </div>
+
+          <ConversationSummary
+            thread={standLeadersThread}
+            livePath={livePath}
+            emptyCopy="No stand leader thread has been started yet. Your first message will open it."
+          />
+
+          <form action={sendScmGigMessageAction} className="staff-app-form-card staff-app-scm-live-message-form">
+            <input type="hidden" name="gigId" value={gigId} />
+            <input type="hidden" name="messageMode" value="standLeaders" />
+            <input type="hidden" name="returnTo" value={standLeadersPath} />
+            <label className="staff-app-form-field">
+              <span>Message</span>
+              <textarea
+                name="body"
+                placeholder="Stand leaders: please collect your float bags and confirm that your team is in position."
+                required
+              />
+            </label>
+            <button
+              type="submit"
+              className="staff-app-button"
+              disabled={standLeaderRecipientIds.length === 0}
+            >
+              Send to stand leaders
+            </button>
+          </form>
+        </section>
+      ) : null}
+
+      {activeComposer === "new-chat" ? (
+        <section className="staff-app-scm-live-message-section">
+          <div className="staff-app-scm-live-message-section-head">
+            <div>
+              <h3>New chat</h3>
+            </div>
+          </div>
+
+          {recipientOptions.length === 0 ? (
+            <p className="staff-app-empty-state">
+              No people are linked to this gig yet, so new chats cannot be created.
+            </p>
+          ) : (
+            <div className="staff-app-scm-live-new-chat-grid">
+              <form
+                action={sendScmGigMessageAction}
+                className="staff-app-form-card staff-app-scm-live-compose-card"
+              >
+                <input type="hidden" name="gigId" value={gigId} />
+                <input type="hidden" name="messageMode" value="direct" />
+                <input type="hidden" name="returnTo" value={newChatPath} />
+
+                <div className="staff-app-scm-live-compose-card-head">
+                  <div>
+                    <strong>Direct chat</strong>
+                  </div>
                 </div>
-              </div>
 
-              <label className="staff-app-form-field">
-                <span>Choose person</span>
-                <select name="recipientId" defaultValue={recipientOptions[0]?.id ?? ""} required>
+                <label className="staff-app-form-field">
+                  <span>Choose person</span>
+                  <select name="recipientId" defaultValue={recipientOptions[0]?.id ?? ""} required>
+                    {recipientOptions.map((recipient) => (
+                      <option key={recipient.id} value={recipient.id}>
+                        {recipient.name} - {recipient.roleSummary}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <label className="staff-app-form-field">
+                  <span>Message</span>
+                  <textarea
+                    name="body"
+                    placeholder="Hi, can you confirm your arrival time for the gig?"
+                    required
+                  />
+                </label>
+
+                <button type="submit" className="staff-app-button">
+                  Start direct chat
+                </button>
+              </form>
+
+              <form
+                action={sendScmGigMessageAction}
+                className="staff-app-form-card staff-app-scm-live-compose-card"
+              >
+                <input type="hidden" name="gigId" value={gigId} />
+                <input type="hidden" name="messageMode" value="group" />
+                <input type="hidden" name="returnTo" value={newChatPath} />
+
+                <div className="staff-app-scm-live-compose-card-head">
+                  <div>
+                    <strong>Group chat</strong>
+                  </div>
+                </div>
+
+                <label className="staff-app-form-field">
+                  <span>Group name</span>
+                  <input
+                    name="groupName"
+                    type="text"
+                    placeholder="Example: Floor sellers"
+                    required
+                  />
+                </label>
+
+                <div className="staff-app-scm-live-recipient-grid">
                   {recipientOptions.map((recipient) => (
-                    <option key={recipient.id} value={recipient.id}>
-                      {recipient.name} - {recipient.roleSummary}
-                    </option>
+                    <label
+                      key={recipient.id}
+                      className="staff-app-scm-live-recipient-option"
+                    >
+                      <input type="checkbox" name="memberIds" value={recipient.id} />
+                      <span className="staff-app-scm-live-recipient-option-copy">
+                        <strong>{recipient.name}</strong>
+                        <small>{recipient.roleSummary}</small>
+                        <small>{recipient.statusSummary}</small>
+                        <small>{recipient.contactSummary}</small>
+                      </span>
+                    </label>
                   ))}
-                </select>
-              </label>
-
-              <label className="staff-app-form-field">
-                <span>Message</span>
-                <textarea
-                  name="body"
-                  placeholder="Hi, can you confirm your arrival time for the gig?"
-                  required
-                />
-              </label>
-
-              <button type="submit" className="staff-app-button">
-                Start direct chat
-              </button>
-            </form>
-
-            <form
-              action={sendScmGigMessageAction}
-              className="staff-app-form-card staff-app-scm-live-compose-card"
-            >
-              <input type="hidden" name="gigId" value={gigId} />
-              <input type="hidden" name="messageMode" value="group" />
-              <input type="hidden" name="returnTo" value={livePath} />
-
-              <div className="staff-app-scm-live-compose-card-head">
-                <div>
-                  <strong>Group chat</strong>
                 </div>
-              </div>
 
-              <label className="staff-app-form-field">
-                <span>Group name</span>
-                <input
-                  name="groupName"
-                  type="text"
-                  placeholder="Example: Floor sellers"
-                  required
-                />
-              </label>
+                <label className="staff-app-form-field">
+                  <span>Message</span>
+                  <textarea
+                    name="body"
+                    placeholder="This chat is for the floor team. Use it for updates during the shift."
+                    required
+                  />
+                </label>
 
-              <div className="staff-app-scm-live-recipient-grid">
-                {recipientOptions.map((recipient) => (
-                  <label
-                    key={recipient.id}
-                    className="staff-app-scm-live-recipient-option"
-                  >
-                    <input type="checkbox" name="memberIds" value={recipient.id} />
-                    <span className="staff-app-scm-live-recipient-option-copy">
-                      <strong>{recipient.name}</strong>
-                      <small>{recipient.roleSummary}</small>
-                      <small>{recipient.statusSummary}</small>
-                      <small>{recipient.contactSummary}</small>
-                    </span>
-                  </label>
-                ))}
-              </div>
-
-              <label className="staff-app-form-field">
-                <span>Message</span>
-                <textarea
-                  name="body"
-                  placeholder="This chat is for the floor team. Use it for updates during the shift."
-                  required
-                />
-              </label>
-
-              <button type="submit" className="staff-app-button">
-                Create group chat
-              </button>
-            </form>
-          </div>
-        )}
-      </section>
+                <button type="submit" className="staff-app-button">
+                  Create group chat
+                </button>
+              </form>
+            </div>
+          )}
+        </section>
+      ) : null}
 
       <div className="staff-app-scm-live-message-list-head">
         <div>

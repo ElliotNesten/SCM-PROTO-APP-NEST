@@ -17,20 +17,24 @@ import {
 } from "@/lib/gig-archive";
 import type { Gig, GigOverviewIndicator } from "@/types/scm";
 
-const shortMonthLabels: Record<string, string> = {
-  "01": "jan",
-  "02": "feb",
-  "03": "mar",
-  "04": "apr",
-  "05": "maj",
-  "06": "jun",
-  "07": "jul",
-  "08": "aug",
-  "09": "sep",
-  "10": "okt",
-  "11": "nov",
-  "12": "dec",
-};
+const gigRegisterMonthOptions = [
+  { value: "01", label: "Jan", shortLabel: "jan" },
+  { value: "02", label: "Feb", shortLabel: "feb" },
+  { value: "03", label: "Mar", shortLabel: "mar" },
+  { value: "04", label: "Apr", shortLabel: "apr" },
+  { value: "05", label: "May", shortLabel: "may" },
+  { value: "06", label: "Jun", shortLabel: "jun" },
+  { value: "07", label: "Jul", shortLabel: "jul" },
+  { value: "08", label: "Aug", shortLabel: "aug" },
+  { value: "09", label: "Sep", shortLabel: "sep" },
+  { value: "10", label: "Oct", shortLabel: "oct" },
+  { value: "11", label: "Nov", shortLabel: "nov" },
+  { value: "12", label: "Dec", shortLabel: "dec" },
+] as const;
+
+function getGigRegisterMonthOption(value: string) {
+  return gigRegisterMonthOptions.find((option) => option.value === value);
+}
 
 function formatGigRegisterDate(date: string) {
   const [year, month, day] = date.split("-");
@@ -39,7 +43,7 @@ function formatGigRegisterDate(date: string) {
     return date;
   }
 
-  const monthLabel = shortMonthLabels[month];
+  const monthLabel = getGigRegisterMonthOption(month)?.shortLabel;
 
   if (!monthLabel) {
     return date;
@@ -252,21 +256,6 @@ function createInitialColumnFilters(
   };
 }
 
-const dateMonthOptions = [
-  { value: "01", label: "Jan" },
-  { value: "02", label: "Feb" },
-  { value: "03", label: "Mar" },
-  { value: "04", label: "Apr" },
-  { value: "05", label: "May" },
-  { value: "06", label: "Jun" },
-  { value: "07", label: "Jul" },
-  { value: "08", label: "Aug" },
-  { value: "09", label: "Sep" },
-  { value: "10", label: "Oct" },
-  { value: "11", label: "Nov" },
-  { value: "12", label: "Dec" },
-] as const;
-
 const progressOptions: Array<{
   value: GigOverviewIndicator;
   label: string;
@@ -338,7 +327,7 @@ function getDateFilterSummary(
   monthValue: string,
 ) {
   if (mode === "month" && monthValue) {
-    return dateMonthOptions.find((option) => option.value === monthValue)?.label ?? "Month";
+    return getGigRegisterMonthOption(monthValue)?.label ?? "Month";
   }
 
   if (mode === "range" && (startDate || endDate)) {
@@ -867,7 +856,7 @@ export function GigRegisterClient({
                       onChange={(event) => setDateMonth(event.currentTarget.value)}
                     >
                       <option value="">All months</option>
-                      {dateMonthOptions.map((month) => (
+                      {gigRegisterMonthOptions.map((month) => (
                         <option key={month.value} value={month.value}>
                           {month.label}
                         </option>

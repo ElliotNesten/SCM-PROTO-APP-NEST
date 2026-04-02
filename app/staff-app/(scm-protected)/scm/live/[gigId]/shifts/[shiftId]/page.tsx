@@ -6,10 +6,7 @@ import { formatStaffAppDate } from "@/lib/staff-app-data";
 import { getStaffAppScmShiftWorkspace } from "@/lib/staff-app-scm-ops";
 import { requireCurrentStaffAppScmProfile } from "@/lib/staff-app-session";
 
-import {
-  assignScmGigStaffAction,
-  updateScmGigRosterEntryAction,
-} from "../../../actions";
+import { assignScmGigStaffAction } from "../../../actions";
 
 type StaffAppScmShiftPageProps = {
   params: Promise<{
@@ -17,31 +14,6 @@ type StaffAppScmShiftPageProps = {
     shiftId: string;
   }>;
 };
-
-function formatDateTimeLocalValue(value: string | undefined) {
-  if (!value) {
-    return "";
-  }
-
-  const parsed = new Date(value);
-
-  if (Number.isNaN(parsed.getTime())) {
-    return "";
-  }
-
-  const parts = new Intl.DateTimeFormat("sv-SE", {
-    timeZone: "Europe/Stockholm",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  }).formatToParts(parsed);
-  const valueByType = new Map(parts.map((part) => [part.type, part.value]));
-
-  return `${valueByType.get("year")}-${valueByType.get("month")}-${valueByType.get("day")}T${valueByType.get("hour")}:${valueByType.get("minute")}`;
-}
 
 function getToneClassName(tone: "neutral" | "success" | "warn" | "danger") {
   if (tone === "success") {
@@ -123,14 +95,14 @@ export default async function StaffAppScmShiftPage({
           </div>
         </div>
 
-        <div className="staff-app-scm-live-roster">
+        <div className="staff-app-scm-live-roster staff-app-scm-live-roster-compact-grid">
           {workspace.roster.length === 0 ? (
             <p className="staff-app-empty-state">No staff are linked to this shift yet.</p>
           ) : (
             workspace.roster.map((entry) => (
-              <article key={entry.id} className="staff-app-scm-live-roster-card detail">
-                <div className="staff-app-scm-live-person-row">
-                  <div className="staff-app-scm-live-person-avatar">
+              <article key={entry.id} className="staff-app-scm-live-roster-card compact">
+                <div className="staff-app-scm-live-compact-person-head">
+                  <div className="staff-app-scm-live-person-avatar compact">
                     <ProfileImage
                       displayName={entry.staffName}
                       imageUrl={entry.staffProfileImageUrl}
@@ -141,133 +113,52 @@ export default async function StaffAppScmShiftPage({
                     />
                   </div>
 
-                  <div className="staff-app-scm-live-roster-copy">
-                    <div className="staff-app-scm-live-roster-head">
-                      <div>
-                        <span className="staff-app-scm-live-person-field-label">Name</span>
-                        <strong>{entry.staffName}</strong>
-                        <p>{entry.shiftRole}</p>
-                      </div>
-                      <span className={`staff-app-scm-status-pill ${getToneClassName(entry.tone)}`}>
-                        {entry.statusLabel}
-                      </span>
-                    </div>
-
-                    <div className="staff-app-scm-live-person-contact-list">
-                      <div className="staff-app-scm-live-person-contact-item">
-                        <span>Phone</span>
-                        {entry.staffPhone ? (
-                          <a
-                            href={`tel:${entry.staffPhone}`}
-                            className="staff-app-scm-live-person-link"
-                          >
-                            {entry.staffPhone}
-                          </a>
-                        ) : (
-                          <p>No phone number</p>
-                        )}
-                      </div>
-
-                      <div className="staff-app-scm-live-person-contact-item">
-                        <span>Booking</span>
-                        <strong>{entry.bookingStatus}</strong>
-                      </div>
-
-                      {entry.staffEmail ? (
-                        <div className="staff-app-scm-live-person-contact-item full">
-                          <span>Email</span>
-                          <a
-                            href={`mailto:${entry.staffEmail}`}
-                            className="staff-app-scm-live-person-link"
-                          >
-                            {entry.staffEmail}
-                          </a>
-                        </div>
-                      ) : null}
-                    </div>
-
-                    <form action={updateScmGigRosterEntryAction} className="staff-app-scm-time-form">
-                      <input type="hidden" name="gigId" value={gigId} />
-                      <input type="hidden" name="shiftId" value={shiftId} />
-                      <input type="hidden" name="staffId" value={entry.staffId} />
-                      <input type="hidden" name="intent" value="saveTimes" />
-                      <input type="hidden" name="returnTo" value={shiftPath} />
-
-                      <label className="staff-app-form-field">
-                        <span>Check-in</span>
-                        <input
-                          type="datetime-local"
-                          name="checkedIn"
-                          defaultValue={formatDateTimeLocalValue(entry.checkedIn)}
-                        />
-                      </label>
-
-                      <label className="staff-app-form-field">
-                        <span>Check-out</span>
-                        <input
-                          type="datetime-local"
-                          name="checkedOut"
-                          defaultValue={formatDateTimeLocalValue(entry.checkedOut)}
-                        />
-                      </label>
-
-                      <div className="staff-app-scm-inline-actions">
-                        <button type="submit" className="staff-app-button secondary compact">
-                          Save times
-                        </button>
-                      </div>
-                    </form>
-                  </div>
+                  <span className={`staff-app-scm-status-pill ${getToneClassName(entry.tone)}`}>
+                    {entry.statusLabel}
+                  </span>
                 </div>
 
-                <div className="staff-app-scm-live-roster-actions detail">
-                  {entry.bookingStatus === "Confirmed" && entry.status !== "checkedIn" && entry.status !== "checkedOut" ? (
-                    <form action={updateScmGigRosterEntryAction}>
-                      <input type="hidden" name="gigId" value={gigId} />
-                      <input type="hidden" name="shiftId" value={shiftId} />
-                      <input type="hidden" name="staffId" value={entry.staffId} />
-                      <input type="hidden" name="intent" value="checkInNow" />
-                      <input type="hidden" name="returnTo" value={shiftPath} />
-                      <button type="submit" className="staff-app-button secondary compact">
-                        Check in
-                      </button>
-                    </form>
-                  ) : null}
+                <div className="staff-app-scm-live-roster-copy compact">
+                  <div className="staff-app-scm-live-compact-person-copy">
+                    <strong>{entry.staffName}</strong>
+                    <p>{entry.shiftRole}</p>
+                  </div>
 
-                  {entry.bookingStatus === "Confirmed" && entry.status === "checkedIn" ? (
-                    <form action={updateScmGigRosterEntryAction}>
-                      <input type="hidden" name="gigId" value={gigId} />
-                      <input type="hidden" name="shiftId" value={shiftId} />
-                      <input type="hidden" name="staffId" value={entry.staffId} />
-                      <input type="hidden" name="intent" value="checkOutNow" />
-                      <input type="hidden" name="returnTo" value={shiftPath} />
-                      <button type="submit" className="staff-app-button secondary compact">
-                        Check out
-                      </button>
-                    </form>
-                  ) : null}
+                  <div className="staff-app-scm-live-compact-person-contact">
+                    {entry.staffPhone ? (
+                      <a
+                        href={`tel:${entry.staffPhone}`}
+                        className="staff-app-scm-live-person-link"
+                      >
+                        {entry.staffPhone}
+                      </a>
+                    ) : entry.staffEmail ? (
+                      <a
+                        href={`mailto:${entry.staffEmail}`}
+                        className="staff-app-scm-live-person-link"
+                      >
+                        {entry.staffEmail}
+                      </a>
+                    ) : (
+                      <p>No contact info</p>
+                    )}
 
-                  <form action={updateScmGigRosterEntryAction}>
-                    <input type="hidden" name="gigId" value={gigId} />
-                    <input type="hidden" name="shiftId" value={shiftId} />
-                    <input type="hidden" name="staffId" value={entry.staffId} />
-                    <input type="hidden" name="intent" value="clearTimes" />
-                    <input type="hidden" name="returnTo" value={shiftPath} />
-                    <button type="submit" className="staff-app-button secondary compact">
-                      Clear times
-                    </button>
-                  </form>
+                    {entry.staffPhone && entry.staffEmail ? (
+                      <a
+                        href={`mailto:${entry.staffEmail}`}
+                        className="staff-app-scm-live-person-link secondary"
+                      >
+                        {entry.staffEmail}
+                      </a>
+                    ) : null}
+                  </div>
 
-                  <form action={updateScmGigRosterEntryAction}>
-                    <input type="hidden" name="gigId" value={gigId} />
-                    <input type="hidden" name="shiftId" value={shiftId} />
-                    <input type="hidden" name="staffId" value={entry.staffId} />
-                    <input type="hidden" name="intent" value="removeAssignment" />
-                    <input type="hidden" name="returnTo" value={shiftPath} />
-                    <button type="submit" className="staff-app-button secondary compact">
-                      Remove
-                    </button>
-                  </form>
+                  <div className="staff-app-scm-live-inline-stats compact">
+                    <span>
+                      {entry.shiftStartTime} - {entry.shiftEndTime}
+                    </span>
+                    {entry.workedTimeLabel ? <span>{entry.workedTimeLabel}</span> : null}
+                  </div>
                 </div>
               </article>
             ))

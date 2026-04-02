@@ -3264,11 +3264,36 @@
   color: #ffffff;
 }
 
+.staff-app-scm-live-pass-copy {
+  display: grid;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+.staff-app-scm-live-pass-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.7rem;
+}
+
 .staff-app-scm-live-pass-item p {
   margin: 0.18rem 0 0;
 }
 
-.staff-app-scm-live-pass-item span {
+.staff-app-scm-live-pass-inline-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem 0.65rem;
+}
+
+.staff-app-scm-live-pass-inline-stats span {
+  font-size: 0.76rem;
+  font-weight: 700;
+  text-align: left;
+}
+
+.staff-app-scm-live-pass-meta span {
   flex: 0 0 auto;
   font-size: 0.82rem;
   font-weight: 700;
@@ -3427,6 +3452,11 @@
   gap: 0.8rem;
 }
 
+.staff-app-scm-live-roster-compact-grid {
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  align-items: stretch;
+}
+
 .staff-app-scm-board-today-list {
   display: grid;
   gap: 0.7rem;
@@ -3536,12 +3566,21 @@
 
 .staff-app-scm-live-roster-card {
   display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: flex-start;
   gap: 0.85rem;
   padding: 1rem;
 }
 
 .staff-app-scm-live-roster-card.detail {
   gap: 1rem;
+}
+
+.staff-app-scm-live-roster-card.compact {
+  grid-template-columns: 1fr;
+  align-content: flex-start;
+  gap: 0.65rem;
+  padding: 0.8rem;
 }
 
 .staff-app-scm-live-person-row {
@@ -3560,6 +3599,12 @@
   background:
     linear-gradient(145deg, rgba(206, 219, 255, 0.96), rgba(151, 176, 234, 0.92));
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.42);
+}
+
+.staff-app-scm-live-person-avatar.compact {
+  width: 2.8rem;
+  height: 2.8rem;
+  border-radius: 0.9rem;
 }
 
 .staff-app-scm-live-person-avatar-image {
@@ -3592,6 +3637,47 @@
 .staff-app-scm-live-roster-copy {
   display: grid;
   gap: 0.7rem;
+  min-width: 0;
+}
+
+.staff-app-scm-live-roster-copy.compact {
+  gap: 0.45rem;
+}
+
+.staff-app-scm-live-compact-person-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
+
+.staff-app-scm-live-compact-person-copy {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.staff-app-scm-live-compact-person-copy strong {
+  color: #16213f;
+  font-size: 0.98rem;
+  line-height: 1.15;
+}
+
+.staff-app-scm-live-compact-person-copy p {
+  font-size: 0.8rem;
+}
+
+.staff-app-scm-live-compact-person-contact {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.staff-app-scm-live-compact-person-contact .staff-app-scm-live-person-link {
+  font-size: 0.8rem;
+  line-height: 1.3;
+}
+
+.staff-app-scm-live-person-link.secondary {
+  color: #5c6f8e;
 }
 
 .staff-app-scm-live-person-contact-list {
@@ -3638,13 +3724,26 @@
 }
 
 .staff-app-scm-live-roster-actions {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  justify-items: flex-end;
+  align-content: flex-start;
   gap: 0.55rem;
+}
+
+.staff-app-scm-live-roster-actions form {
+  display: flex;
+  justify-content: flex-end;
 }
 
 .staff-app-scm-live-roster-actions.detail {
   align-items: flex-start;
+}
+
+.staff-app-scm-live-inline-stats.compact {
+  gap: 0.35rem;
+  color: #73829b;
+  font-size: 0.74rem;
+  font-weight: 700;
 }
 
 .staff-app-button.compact {
@@ -3887,10 +3986,26 @@
     grid-template-columns: 1fr;
   }
 
+  .staff-app-scm-live-roster-card {
+    grid-template-columns: 1fr;
+  }
+
+  .staff-app-scm-live-roster-actions {
+    justify-items: flex-start;
+  }
+
+  .staff-app-scm-live-roster-actions form {
+    justify-content: flex-start;
+  }
+
   .staff-app-scm-live-pass-item,
   .staff-app-scm-live-pass-summary-head {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .staff-app-scm-live-pass-head {
+    flex-direction: column;
   }
 
   .staff-app-scm-live-pass-meta {

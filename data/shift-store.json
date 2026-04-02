@@ -181,7 +181,12 @@
     "assignments": [
       {
         "staffId": "staff-1",
-        "bookingStatus": "Confirmed"
+        "bookingStatus": "Confirmed",
+        "hourlyRate": 130,
+        "hourlyRateCurrency": "SEK",
+        "hourlyRateCountry": "Sweden",
+        "hourlyRateSource": "standard",
+        "timeReportApproved": false
       },
       {
         "staffId": "staff-2",

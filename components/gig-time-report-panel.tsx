@@ -187,12 +187,14 @@ export function GigTimeReportPanel({
   timeReportFinalApprovedAt,
   shifts,
   staffProfiles,
+  apiBasePath,
 }: {
   gigId: string;
   gigDate: string;
   timeReportFinalApprovedAt?: string;
   shifts: Shift[];
   staffProfiles: TimeReportStaffProfile[];
+  apiBasePath?: string;
 }) {
   const router = useRouter();
   const [shiftItems, setShiftItems] = useState(shifts);
@@ -213,6 +215,7 @@ export function GigTimeReportPanel({
   const [isFinalizingTimeReport, setIsFinalizingTimeReport] = useState(false);
   const [showFinalizeConfirm, setShowFinalizeConfirm] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const resolvedApiBasePath = apiBasePath ?? `/api/gigs/${gigId}`;
 
   useEffect(() => {
     setShiftItems(shifts);
@@ -313,7 +316,7 @@ export function GigTimeReportPanel({
     setPendingFoodKey(pendingKey);
     setTimeReportError(null);
 
-    const response = await fetch(`/api/gigs/${gigId}/shifts/${shiftId}`, {
+    const response = await fetch(`${resolvedApiBasePath}/shifts/${shiftId}`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
@@ -357,7 +360,7 @@ export function GigTimeReportPanel({
     setPendingApprovalKey(pendingKey);
     setTimeReportError(null);
 
-    const response = await fetch(`/api/gigs/${gigId}/shifts/${shiftId}`, {
+    const response = await fetch(`${resolvedApiBasePath}/shifts/${shiftId}`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
@@ -400,7 +403,7 @@ export function GigTimeReportPanel({
     setPendingApprovalKey(pendingKey);
     setTimeReportError(null);
 
-    const response = await fetch(`/api/gigs/${gigId}/shifts/${shiftId}`, {
+    const response = await fetch(`${resolvedApiBasePath}/shifts/${shiftId}`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
@@ -469,7 +472,7 @@ export function GigTimeReportPanel({
     }
     setTimeReportError(null);
 
-    const response = await fetch(`/api/gigs/${gigId}/shifts/${shiftId}`, {
+    const response = await fetch(`${resolvedApiBasePath}/shifts/${shiftId}`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
@@ -520,7 +523,7 @@ export function GigTimeReportPanel({
     setTimeReportError(null);
     setTimeReportFeedback(null);
 
-    const response = await fetch(`/api/gigs/${gigId}/time-report`, {
+    const response = await fetch(`${resolvedApiBasePath}/time-report`, {
       method: "POST",
     });
 

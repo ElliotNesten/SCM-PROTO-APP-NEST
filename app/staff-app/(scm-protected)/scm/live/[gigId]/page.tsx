@@ -9,6 +9,7 @@ import {
 import {
   getStaffAppScmGigConversationThreads,
   getStaffAppScmGigWorkspace,
+  type StaffAppScmRosterEntry,
 } from "@/lib/staff-app-scm-ops";
 import { requireCurrentStaffAppScmProfile } from "@/lib/staff-app-session";
 import { ScmLiveMessagesPanel } from "@/components/staff-app/scm-live-messages-panel";
@@ -22,7 +23,13 @@ type StaffAppScmLiveGigPageProps = {
   params: Promise<{
     gigId: string;
   }>;
+  searchParams?: Promise<{
+    chat?: string | string[];
+    roster?: string | string[];
+  }>;
 };
+
+type StaffAppScmLiveComposer = "all" | "stand-leaders" | "new-chat";
 
 function getToneClassName(tone: "neutral" | "success" | "warn" | "danger") {
   if (tone === "success") {
@@ -88,15 +95,197 @@ function getShiftStaffingCopy(shift: {
   };
 }
 
+function pickQueryValue(value: string | string[] | undefined) {
+  return Array.isArray(value) ? value[0] : value;
+}
+
+function resolveActiveMessageComposer(
+  value: string | undefined,
+): StaffAppScmLiveComposer | null {
+  if (value === "all" || value === "stand-leaders" || value === "new-chat") {
+    return value;
+  }
+
+  return null;
+}
+
+function resolveRosterExpanded(value: string | undefined) {
+  return value === "open";
+}
+
+function getStockholmNowSnapshot() {
+  const parts = new Intl.DateTimeFormat("sv-SE", {
+    timeZone: "Europe/Stockholm",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).formatToParts(new Date());
+  const valueByType = new Map(parts.map((part) => [part.type, part.value]));
+
+  return {
+    dateKey: `${valueByType.get("year")}-${valueByType.get("month")}-${valueByType.get("day")}`,
+    timeKey: `${valueByType.get("hour")}:${valueByType.get("minute")}`,
+  };
+}
+
+function hasShiftStarted(
+  gigDate: string,
+  shiftStartTime: string,
+  now: ReturnType<typeof getStockholmNowSnapshot>,
+) {
+  return now.dateKey > gigDate || (now.dateKey === gigDate && now.timeKey >= shiftStartTime);
+}
+
+function getLiveRosterStatusMeta(
+  entry: StaffAppScmRosterEntry,
+  gigDate: string,
+  now: ReturnType<typeof getStockholmNowSnapshot>,
+) {
+  if (entry.bookingStatus === "Pending") {
+    return {
+      label: "Pending",
+      tone: "warn" as const,
+    };
+  }
+
+  if (entry.bookingStatus === "Waitlisted") {
+    return {
+      label: "Waitlist",
+      tone: "neutral" as const,
+    };
+  }
+
+  if (entry.checkedOut) {
+    return {
+      label: "Checked out",
+      tone: "neutral" as const,
+    };
+  }
+
+  if (entry.checkedIn) {
+    return {
+      label: "Checked in",
+      tone: "success" as const,
+    };
+  }
+
+  if (entry.bookingStatus === "Confirmed") {
+    if (hasShiftStarted(gigDate, entry.shiftStartTime, now)) {
+      return {
+        label: "Late checkin",
+        tone: "danger" as const,
+      };
+    }
+
+    return {
+      label: "Waiting for check in",
+      tone: "warn" as const,
+    };
+  }
+
+  return {
+    label: entry.statusLabel,
+    tone: entry.tone,
+  };
+}
+
+function buildLiveViewHref(
+  livePath: string,
+  options: {
+    activeComposer?: StaffAppScmLiveComposer | null;
+    rosterOpen?: boolean;
+    hash?: string;
+  },
+) {
+  const params = new URLSearchParams();
+
+  if (options.activeComposer) {
+    params.set("chat", options.activeComposer);
+  }
+
+  if (options.rosterOpen) {
+    params.set("roster", "open");
+  }
+
+  const query = params.toString();
+  const hash = options.hash ? `#${options.hash}` : "";
+
+  return `${livePath}${query ? `?${query}` : ""}${hash}`;
+}
+
+function formatMissingStaffRoleLabel(role: string, count: number) {
+  if (count === 1) {
+    return role;
+  }
+
+  const lowerRole = role.trim().toLowerCase();
+
+  if (lowerRole.endsWith("s")) {
+    return role;
+  }
+
+  if (lowerRole.endsWith("y")) {
+    return `${role.slice(0, -1)}ies`;
+  }
+
+  return `${role}s`;
+}
+
+function buildMissingStaffSummary(
+  shifts: Array<{
+    role: string;
+    gapCount: number;
+  }>,
+) {
+  const missingByRole = new Map<string, number>();
+  let totalMissingStaff = 0;
+
+  for (const shift of shifts) {
+    if (shift.gapCount <= 0) {
+      continue;
+    }
+
+    totalMissingStaff += shift.gapCount;
+    missingByRole.set(shift.role, (missingByRole.get(shift.role) ?? 0) + shift.gapCount);
+  }
+
+  const items = [...missingByRole.entries()]
+    .sort((left, right) => right[1] - left[1] || left[0].localeCompare(right[0]))
+    .map(([role, count]) => `${count} ${formatMissingStaffRoleLabel(role, count)}`);
+
+  return {
+    totalMissingStaff,
+    copy:
+      items.length > 0
+        ? items.join(" | ")
+        : "Fully staffed across all passes.",
+  };
+}
+
 function ScmLiveMetric({
   label,
   value,
   copy,
+  href,
 }: {
   label: string;
   value: string;
   copy: string;
+  href?: string;
 }) {
+  if (href) {
+    return (
+      <Link href={href} className="staff-app-scm-live-metric staff-app-scm-live-metric-link">
+        <span>{label}</span>
+        <strong>{value}</strong>
+        <p>{copy}</p>
+      </Link>
+    );
+  }
+
   return (
     <article className="staff-app-scm-live-metric">
       <span>{label}</span>
@@ -108,8 +297,10 @@ function ScmLiveMetric({
 
 export default async function StaffAppScmLiveGigPage({
   params,
+  searchParams,
 }: StaffAppScmLiveGigPageProps) {
   const { gigId } = await params;
+  const resolvedSearchParams = searchParams ? await searchParams : undefined;
   const profile = await requireCurrentStaffAppScmProfile();
   const [workspace, conversationThreads] = await Promise.all([
     getStaffAppScmGigWorkspace(profile, gigId),
@@ -121,9 +312,30 @@ export default async function StaffAppScmLiveGigPage({
   }
 
   const livePath = `/staff-app/scm/live/${gigId}`;
+  const stockholmNow = getStockholmNowSnapshot();
+  const activeMessageComposer = resolveActiveMessageComposer(
+    pickQueryValue(resolvedSearchParams?.chat),
+  );
+  const isRosterOpen = resolveRosterExpanded(pickQueryValue(resolvedSearchParams?.roster));
+  const rosterTogglePath = buildLiveViewHref(livePath, {
+    activeComposer: activeMessageComposer,
+    rosterOpen: !isRosterOpen,
+    hash: "roster",
+  });
+  const rosterReturnTo = buildLiveViewHref(livePath, {
+    activeComposer: activeMessageComposer,
+    rosterOpen: true,
+    hash: "roster",
+  });
   const quickShiftPath = workspace.quickActionTargetShiftId
     ? `${livePath}/shifts/${workspace.quickActionTargetShiftId}`
     : "/staff-app/scm/gigs";
+  const timeReportPath = `${livePath}/time-report`;
+  const missingStaffSummary = buildMissingStaffSummary(workspace.shifts);
+  const remainingTimeReportCount = Math.max(
+    workspace.summary.correctableTimeEntryCount - workspace.summary.approvedTimeReportCount,
+    0,
+  );
 
   return (
     <section className="staff-app-screen staff-app-scm-screen staff-app-scm-live-screen">
@@ -178,11 +390,32 @@ export default async function StaffAppScmLiveGigPage({
                   href={`${livePath}/shifts/${shift.id}`}
                   className="staff-app-scm-live-pass-item"
                 >
-                  <div>
-                    <strong>{shift.role}</strong>
-                    <p>
-                      {shift.startTime} - {shift.endTime}
-                    </p>
+                  <div className="staff-app-scm-live-pass-copy">
+                    <div className="staff-app-scm-live-pass-head">
+                      <div>
+                        <strong>{shift.role}</strong>
+                        <p>
+                          {shift.startTime} - {shift.endTime}
+                        </p>
+                      </div>
+                      <span className={`staff-app-scm-status-pill ${getToneClassName(
+                        shift.requiresAttention
+                          ? "danger"
+                          : shift.shiftStatus === "upcoming"
+                            ? "warn"
+                            : shift.shiftStatus === "finished"
+                              ? "neutral"
+                              : "success",
+                      )}`}>
+                        {shift.shiftStatusLabel}
+                      </span>
+                    </div>
+
+                    <div className="staff-app-scm-live-pass-inline-stats">
+                      <span>{shift.onSiteCount}/{shift.plannedCount} on site</span>
+                      <span>{shift.confirmedCount} confirmed</span>
+                      <span>{shift.gapCount} missing</span>
+                    </div>
                   </div>
 
                   <div className="staff-app-scm-live-pass-meta">
@@ -227,144 +460,116 @@ export default async function StaffAppScmLiveGigPage({
           copy="Passes that are currently staffed to planned level."
         />
         <ScmLiveMetric
-          label="Needs action"
-          value={`${workspace.summary.understaffedShiftCount + workspace.summary.lateCount}`}
-          copy="Open staffing gaps and late arrivals that still need follow-up."
+          label="Missing staff"
+          value={`${missingStaffSummary.totalMissingStaff}`}
+          copy={missingStaffSummary.copy}
         />
         <ScmLiveMetric
-          label="Time control"
-          value={`${workspace.summary.approvedTimeReportCount}`}
-          copy={`${workspace.summary.correctableTimeEntryCount} active or editable time entries remain open.`}
+          label="Time report"
+          value={`${remainingTimeReportCount}`}
+          copy={`${workspace.summary.approvedTimeReportCount}/${workspace.summary.correctableTimeEntryCount} booked entries approved.`}
+          href={timeReportPath}
         />
       </div>
 
-      <div className="staff-app-card">
-        <div className="staff-app-section-head compact">
-          <div>
-            <p className="staff-app-kicker">Shift status</p>
-            <h2>Today&apos;s passes</h2>
-          </div>
-          <Link href="/staff-app/scm/gigs" className="staff-app-inline-link">
-            All gigs
-          </Link>
-        </div>
-
-        <div className="staff-app-scm-live-shift-list">
-          {workspace.shifts.map((shift) => (
-            <Link
-              key={shift.id}
-              href={`${livePath}/shifts/${shift.id}`}
-              className={`staff-app-scm-live-shift-card${shift.requiresAttention ? " attention" : ""}`}
-            >
-              <div className="staff-app-scm-live-shift-head">
-                <div>
-                  <strong>{shift.role}</strong>
-                  <p>
-                    {shift.startTime} - {shift.endTime}
-                  </p>
-                </div>
-                <span className={`staff-app-scm-status-pill ${getToneClassName(
-                  shift.requiresAttention
-                    ? "danger"
-                    : shift.shiftStatus === "upcoming"
-                      ? "warn"
-                      : shift.shiftStatus === "finished"
-                        ? "neutral"
-                        : "success",
-                )}`}>
-                  {shift.shiftStatusLabel}
-                </span>
-              </div>
-
-              <div className="staff-app-scm-live-inline-stats">
-                <span>{shift.onSiteCount}/{shift.plannedCount} on site</span>
-                <span>{shift.confirmedCount} confirmed</span>
-                <span>{shift.gapCount} missing</span>
-              </div>
-
-              <p>{shift.summary}</p>
-            </Link>
-          ))}
-        </div>
-      </div>
-
-      <div className="staff-app-card">
+      <div className="staff-app-card" id="roster">
         <div className="staff-app-section-head compact">
           <div>
             <p className="staff-app-kicker">Live roster</p>
             <h2>People status</h2>
           </div>
+          <Link href={rosterTogglePath} className="staff-app-button secondary compact">
+            {isRosterOpen ? "Hide roster" : "Open roster"}
+          </Link>
         </div>
 
-        <div className="staff-app-scm-live-roster">
-          {workspace.roster.length === 0 ? (
-            <p className="staff-app-empty-state">No staffing records are linked to this gig yet.</p>
-          ) : (
-            workspace.roster.map((entry) => (
-              <article key={entry.id} className="staff-app-scm-live-roster-card">
-                <div className="staff-app-scm-live-roster-copy">
-                  <div className="staff-app-scm-live-roster-head">
-                    <div>
-                      <strong>{entry.staffName}</strong>
-                      <p>{entry.shiftRole}</p>
+        {isRosterOpen ? (
+          <div className="staff-app-scm-live-roster">
+            {workspace.roster.length === 0 ? (
+              <p className="staff-app-empty-state">No staffing records are linked to this gig yet.</p>
+            ) : (
+              workspace.roster.map((entry) => {
+                const rosterStatusMeta = getLiveRosterStatusMeta(
+                  entry,
+                  workspace.gig.date,
+                  stockholmNow,
+                );
+
+                return (
+                  <article key={entry.id} className="staff-app-scm-live-roster-card">
+                    <div className="staff-app-scm-live-roster-copy">
+                      <div className="staff-app-scm-live-roster-head">
+                        <div>
+                          <strong>{entry.staffName}</strong>
+                          <p>{entry.shiftRole}</p>
+                        </div>
+                        <span
+                          className={`staff-app-scm-status-pill ${getToneClassName(
+                            rosterStatusMeta.tone,
+                          )}`}
+                        >
+                          {rosterStatusMeta.label}
+                        </span>
+                      </div>
+
+                      <div className="staff-app-scm-live-inline-stats">
+                        <span>{entry.staffPhone || entry.staffEmail || "No contact info"}</span>
+                        <span>
+                          {entry.shiftStartTime} - {entry.shiftEndTime}
+                        </span>
+                        {entry.workedTimeLabel ? <span>{entry.workedTimeLabel}</span> : null}
+                      </div>
                     </div>
-                    <span className={`staff-app-scm-status-pill ${getToneClassName(entry.tone)}`}>
-                      {entry.statusLabel}
-                    </span>
-                  </div>
 
-                  <div className="staff-app-scm-live-inline-stats">
-                    <span>{entry.staffPhone || entry.staffEmail || "No contact info"}</span>
-                    <span>
-                      {entry.shiftStartTime} - {entry.shiftEndTime}
-                    </span>
-                    {entry.workedTimeLabel ? <span>{entry.workedTimeLabel}</span> : null}
-                  </div>
-                </div>
+                    <div className="staff-app-scm-live-roster-actions">
+                      {entry.bookingStatus === "Confirmed" &&
+                      entry.status !== "checkedIn" &&
+                      entry.status !== "checkedOut" ? (
+                        <form action={updateScmGigRosterEntryAction}>
+                          <input type="hidden" name="gigId" value={gigId} />
+                          <input type="hidden" name="shiftId" value={entry.shiftId} />
+                          <input type="hidden" name="staffId" value={entry.staffId} />
+                          <input type="hidden" name="intent" value="checkInNow" />
+                          <input type="hidden" name="returnTo" value={rosterReturnTo} />
+                          <button type="submit" className="staff-app-button secondary compact">
+                            Check in
+                          </button>
+                        </form>
+                      ) : null}
 
-                <div className="staff-app-scm-live-roster-actions">
-                  {entry.bookingStatus === "Confirmed" && entry.status !== "checkedIn" && entry.status !== "checkedOut" ? (
-                    <form action={updateScmGigRosterEntryAction}>
-                      <input type="hidden" name="gigId" value={gigId} />
-                      <input type="hidden" name="shiftId" value={entry.shiftId} />
-                      <input type="hidden" name="staffId" value={entry.staffId} />
-                      <input type="hidden" name="intent" value="checkInNow" />
-                      <input type="hidden" name="returnTo" value={livePath} />
-                      <button type="submit" className="staff-app-button secondary compact">
-                        Check in
-                      </button>
-                    </form>
-                  ) : null}
+                      {entry.bookingStatus === "Confirmed" && entry.status === "checkedIn" ? (
+                        <form action={updateScmGigRosterEntryAction}>
+                          <input type="hidden" name="gigId" value={gigId} />
+                          <input type="hidden" name="shiftId" value={entry.shiftId} />
+                          <input type="hidden" name="staffId" value={entry.staffId} />
+                          <input type="hidden" name="intent" value="checkOutNow" />
+                          <input type="hidden" name="returnTo" value={rosterReturnTo} />
+                          <button type="submit" className="staff-app-button secondary compact">
+                            Check out
+                          </button>
+                        </form>
+                      ) : null}
 
-                  {entry.bookingStatus === "Confirmed" && entry.status === "checkedIn" ? (
-                    <form action={updateScmGigRosterEntryAction}>
-                      <input type="hidden" name="gigId" value={gigId} />
-                      <input type="hidden" name="shiftId" value={entry.shiftId} />
-                      <input type="hidden" name="staffId" value={entry.staffId} />
-                      <input type="hidden" name="intent" value="checkOutNow" />
-                      <input type="hidden" name="returnTo" value={livePath} />
-                      <button type="submit" className="staff-app-button secondary compact">
-                        Check out
-                      </button>
-                    </form>
-                  ) : null}
-
-                  <Link
-                    href={`${livePath}/shifts/${entry.shiftId}`}
-                    className="staff-app-button secondary compact"
-                  >
-                    Adjust
-                  </Link>
-                </div>
-              </article>
-            ))
-          )}
-        </div>
+                      <Link
+                        href={`${livePath}/shifts/${entry.shiftId}`}
+                        className="staff-app-button secondary compact"
+                      >
+                        Adjust
+                      </Link>
+                    </div>
+                  </article>
+                );
+              })
+            )}
+          </div>
+        ) : null}
       </div>
 
       <ScmLiveMessagesPanel
         gigId={gigId}
         livePath={livePath}
+        activeComposer={activeMessageComposer}
+        isRosterOpen={isRosterOpen}
         roster={workspace.roster}
         conversationThreads={conversationThreads ?? []}
       />

@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import {
   decodeSignedSessionCookie,
   encodeSignedSessionCookie,
+  isSessionCookieConfigurationAvailable,
 } from "@/lib/session-cookie";
 import { getStoredScmStaffProfileById } from "@/lib/scm-staff-store";
 import { getStoredStaffProfileById } from "@/lib/staff-store";
@@ -75,6 +76,12 @@ function isStoredStaffAppSessionFresh(session: StoredStaffAppSession) {
 
 export async function createStaffAppSession(target: string | StaffAppSessionTarget) {
   const cookieStore = await cookies();
+
+  if (!isSessionCookieConfigurationAvailable()) {
+    cookieStore.delete(sessionCookieName);
+    return null;
+  }
+
   const sessionTarget: StaffAppSessionTarget =
     typeof target === "string"
       ? {
@@ -114,6 +121,11 @@ export async function getCurrentStaffAppSession() {
   const sessionToken = cookieStore.get(sessionCookieName)?.value;
 
   if (!sessionToken) {
+    return null;
+  }
+
+  if (!isSessionCookieConfigurationAvailable()) {
+    cookieStore.delete(sessionCookieName);
     return null;
   }
 

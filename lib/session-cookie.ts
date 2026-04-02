@@ -2,24 +2,56 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 
 const developmentFallbackSessionSecret = "scm-platform-prototype-dev-session-secret";
 
+function getConfiguredSessionSecret() {
+  return process.env.SCM_SESSION_SECRET?.trim() || process.env.AUTH_SECRET?.trim() || "";
+}
+
+export function isSessionCookieConfigurationMissingInProduction() {
+  return process.env.NODE_ENV === "production" && !getConfiguredSessionSecret();
+}
+
+export function isSessionCookieConfigurationAvailable() {
+  return Boolean(getConfiguredSessionSecret()) || process.env.NODE_ENV !== "production";
+}
+
+export function getSessionCookieConfigurationNotice() {
+  if (!isSessionCookieConfigurationMissingInProduction()) {
+    return "";
+  }
+
+  return "Authentication is temporarily unavailable due to an environment configuration issue. Contact an administrator and try again shortly.";
+}
+
+export class SessionCookieConfigurationError extends Error {
+  constructor() {
+    super("SCM_SESSION_SECRET or AUTH_SECRET must be set in production.");
+    this.name = "SessionCookieConfigurationError";
+  }
+}
+
 function getSessionSecret() {
-  const configuredSecret =
-    process.env.SCM_SESSION_SECRET?.trim() || process.env.AUTH_SECRET?.trim() || "";
+  const configuredSecret = getConfiguredSessionSecret();
 
   if (configuredSecret) {
     return configuredSecret;
   }
 
   if (process.env.NODE_ENV === "production") {
-    throw new Error("SCM_SESSION_SECRET or AUTH_SECRET must be set in production.");
+    return null;
   }
 
   return developmentFallbackSessionSecret;
 }
 
 export function encodeSignedSessionCookie(payload: object) {
+  const sessionSecret = getSessionSecret();
+
+  if (!sessionSecret) {
+    throw new SessionCookieConfigurationError();
+  }
+
   const body = Buffer.from(JSON.stringify(payload), "utf8").toString("base64url");
-  const signature = createHmac("sha256", getSessionSecret())
+  const signature = createHmac("sha256", sessionSecret)
     .update(body)
     .digest("base64url");
 
@@ -33,7 +65,13 @@ export function decodeSignedSessionCookie<T>(value: string): T | null {
     return null;
   }
 
-  const expectedSignature = createHmac("sha256", getSessionSecret())
+  const sessionSecret = getSessionSecret();
+
+  if (!sessionSecret) {
+    return null;
+  }
+
+  const expectedSignature = createHmac("sha256", sessionSecret)
     .update(body)
     .digest("base64url");
 

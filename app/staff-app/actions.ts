@@ -19,6 +19,7 @@ import {
   destroyCurrentStaffAppSession,
   getCurrentStaffAppAccount,
 } from "@/lib/staff-app-session";
+import { isSessionCookieConfigurationAvailable } from "@/lib/session-cookie";
 import { verifyPasswordHash } from "@/lib/password-utils";
 import { getStoredScmStaffProfileByEmail } from "@/lib/scm-staff-store";
 import {
@@ -46,6 +47,10 @@ function readCheckbox(formData: FormData, key: string) {
 export async function loginToStaffApp(formData: FormData) {
   const email = readString(formData, "email").toLowerCase();
   const password = readString(formData, "password");
+
+  if (!isSessionCookieConfigurationAvailable()) {
+    redirect(`/staff-app/login?error=config&email=${encodeURIComponent(email)}`);
+  }
 
   if (!email || !password) {
     redirect(`/staff-app/login?error=missing&email=${encodeURIComponent(email)}`);

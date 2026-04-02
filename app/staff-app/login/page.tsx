@@ -4,6 +4,7 @@ import { loginToStaffApp } from "@/app/staff-app/actions";
 import { LoginPasswordField } from "@/components/login-password-field";
 import { WorkAtScmModal } from "@/components/staff-app/work-at-scm-modal";
 import { getBrandSettings } from "@/lib/brand-store";
+import { getSessionCookieConfigurationNotice, isSessionCookieConfigurationMissingInProduction } from "@/lib/session-cookie";
 
 type StaffAppLoginPageProps = {
   searchParams?: Promise<{
@@ -18,6 +19,10 @@ function pickQueryValue(value: string | string[] | undefined) {
 }
 
 function getLoginErrorMessage(errorCode: string | undefined) {
+  if (errorCode === "config") {
+    return getSessionCookieConfigurationNotice();
+  }
+
   if (errorCode === "missing") {
     return "Enter both email and password to continue.";
   }
@@ -34,6 +39,7 @@ export default async function StaffAppLoginPage({
 }: StaffAppLoginPageProps) {
   const resolvedSearchParams = searchParams ? await searchParams : undefined;
   const brandSettings = await getBrandSettings();
+  const authConfigurationIssue = isSessionCookieConfigurationMissingInProduction();
   const savedEmail = pickQueryValue(resolvedSearchParams?.email) ?? "";
   const errorMessage = getLoginErrorMessage(
     pickQueryValue(resolvedSearchParams?.error),
@@ -89,6 +95,7 @@ export default async function StaffAppLoginPage({
                 defaultValue={savedEmail}
                 placeholder="name@scm.se"
                 autoComplete="email"
+                disabled={authConfigurationIssue}
                 required
               />
             </label>
@@ -99,6 +106,7 @@ export default async function StaffAppLoginPage({
               defaultValue=""
               placeholder="Enter password"
               autoComplete="current-password"
+              disabled={authConfigurationIssue}
               required
             />
 
@@ -106,8 +114,12 @@ export default async function StaffAppLoginPage({
             {activationMessage ? (
               <p className="staff-app-inline-alert success">{activationMessage}</p>
             ) : null}
-            <button type="submit" className="staff-app-button">
-              Log in to staff app
+            <button
+              type="submit"
+              className="staff-app-button"
+              disabled={authConfigurationIssue}
+            >
+              {authConfigurationIssue ? "Authentication unavailable" : "Log in to staff app"}
             </button>
 
           </form>

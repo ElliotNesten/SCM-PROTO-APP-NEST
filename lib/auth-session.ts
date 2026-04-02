@@ -8,6 +8,7 @@ import {
 import {
   decodeSignedSessionCookie,
   encodeSignedSessionCookie,
+  isSessionCookieConfigurationAvailable,
 } from "@/lib/session-cookie";
 import { getStoredScmStaffProfileById } from "@/lib/scm-staff-store";
 import { getStoredStaffProfileById } from "@/lib/staff-store";
@@ -94,6 +95,12 @@ async function resolvePlatformTemporaryGigManagerProfile(linkedStaffProfileId: s
 
 export async function createAuthSession(target: string | AuthSessionTarget) {
   const cookieStore = await cookies();
+
+  if (!isSessionCookieConfigurationAvailable()) {
+    cookieStore.delete(sessionCookieName);
+    return null;
+  }
+
   const sessionTarget: AuthSessionTarget =
     typeof target === "string"
       ? {
@@ -135,6 +142,11 @@ export async function getCurrentAuthSession() {
   const sessionToken = cookieStore.get(sessionCookieName)?.value;
 
   if (!sessionToken) {
+    return null;
+  }
+
+  if (!isSessionCookieConfigurationAvailable()) {
+    cookieStore.delete(sessionCookieName);
     return null;
   }
 

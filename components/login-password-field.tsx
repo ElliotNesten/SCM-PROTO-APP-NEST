@@ -9,6 +9,7 @@ type LoginPasswordFieldProps = {
   required?: boolean;
   defaultValue?: string;
   autoComplete?: string;
+  disabled?: boolean;
 };
 
 export function LoginPasswordField({
@@ -18,6 +19,7 @@ export function LoginPasswordField({
   required = false,
   defaultValue,
   autoComplete,
+  disabled = false,
 }: LoginPasswordFieldProps) {
   const [isVisible, setIsVisible] = useState(false);
 
@@ -40,12 +42,14 @@ export function LoginPasswordField({
           defaultValue={defaultValue}
           autoComplete={autoComplete}
           required={required}
+          disabled={disabled}
         />
         <button
           type="button"
           className="login-password-visibility-button"
           aria-label={isVisible ? "Hide password" : "Show password"}
           title="Hold to reveal password"
+          disabled={disabled}
           onPointerDown={(event) => {
             event.preventDefault();
             showPassword();

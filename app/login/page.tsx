@@ -6,6 +6,7 @@ import { loginWithScmStaff, logoutCurrentUser } from "@/app/auth-actions";
 import { LoginPasswordField } from "@/components/login-password-field";
 import { getBrandSettings } from "@/lib/brand-store";
 import { getCurrentAuthenticatedUserSummary } from "@/lib/auth-session";
+import { getSessionCookieConfigurationNotice, isSessionCookieConfigurationMissingInProduction } from "@/lib/session-cookie";
 
 type LoginPageProps = {
   searchParams?: Promise<{
@@ -20,6 +21,10 @@ function pickQueryValue(value: string | string[] | undefined) {
 }
 
 function getErrorMessage(errorCode: string | undefined) {
+  if (errorCode === "config") {
+    return getSessionCookieConfigurationNotice();
+  }
+
   if (errorCode === "missing") {
     return "Enter both email and password to sign in.";
   }
@@ -39,6 +44,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   const resolvedSearchParams = searchParams ? await searchParams : undefined;
   const currentUser = await getCurrentAuthenticatedUserSummary();
   const loginMode = pickQueryValue(resolvedSearchParams?.mode);
+  const authConfigurationIssue = isSessionCookieConfigurationMissingInProduction();
 
   if (currentUser && loginMode !== "switch") {
     redirect("/dashboard");
@@ -104,6 +110,12 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
                   <h2>Sign in</h2>
                 </div>
 
+                {authConfigurationIssue ? (
+                  <div className="note-block tone-warn">
+                    <p>{getSessionCookieConfigurationNotice()}</p>
+                  </div>
+                ) : null}
+
                 {loginMode === "switch" ? (
                   <input type="hidden" name="mode" value="switch" />
                 ) : null}
@@ -116,6 +128,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
                       type="email"
                       placeholder="edwin.jones@scm.se"
                       defaultValue={savedEmail}
+                      disabled={authConfigurationIssue}
                       required
                     />
                   </label>
@@ -123,6 +136,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
                     name="password"
                     label="Password"
                     placeholder="Enter your password"
+                    disabled={authConfigurationIssue}
                     required
                   />
                 </div>
@@ -136,8 +150,12 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
                   </span>
                 </div>
 
-                <button type="submit" className="button login-submit-button">
-                  Log in
+                <button
+                  type="submit"
+                  className="button login-submit-button"
+                  disabled={authConfigurationIssue}
+                >
+                  {authConfigurationIssue ? "Authentication unavailable" : "Log in"}
                 </button>
 
                 <div className="login-footnote">

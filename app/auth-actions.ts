@@ -15,6 +15,7 @@ import {
   getStoredScmStaffProfileByEmail,
   getStoredScmStaffProfileById,
 } from "@/lib/scm-staff-store";
+import { isSessionCookieConfigurationAvailable } from "@/lib/session-cookie";
 
 function readString(formData: FormData, key: string) {
   const value = formData.get(key);
@@ -22,7 +23,7 @@ function readString(formData: FormData, key: string) {
 }
 
 function buildLoginRedirectUrl(
-  error: "missing" | "invalid" | "expired",
+  error: "missing" | "invalid" | "expired" | "config",
   email: string,
   mode: string,
 ) {
@@ -43,6 +44,10 @@ export async function loginWithScmStaff(formData: FormData) {
   const password = readString(formData, "password");
   const mode = readString(formData, "mode");
   const normalizedPassword = password.trim();
+
+  if (!isSessionCookieConfigurationAvailable()) {
+    redirect(buildLoginRedirectUrl("config", email, mode));
+  }
 
   if (!email || !password) {
     redirect(buildLoginRedirectUrl("missing", email, mode));
@@ -89,6 +94,10 @@ export async function logoutCurrentUser() {
 
 export async function switchScmStaffSession(formData: FormData) {
   const profileId = readString(formData, "profileId");
+
+  if (!isSessionCookieConfigurationAvailable()) {
+    redirect("/login?error=config");
+  }
 
   if (!profileId) {
     redirect("/profile");

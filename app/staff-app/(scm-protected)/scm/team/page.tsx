@@ -181,12 +181,16 @@ export default async function StaffAppScmTeamPage({
   const permissionFilterOptions: Array<{
     value: StaffAppFieldStaffPermissionFilter;
     label: string;
-  }> = [{ value: "all", label: "All permissions" }].concat(
-    staffRoleKeys.map((roleKey) => ({
+  }> = [
+    { value: "all", label: "All permissions" },
+    ...staffRoleKeys.map((roleKey): {
+      value: StaffAppFieldStaffPermissionFilter;
+      label: string;
+    } => ({
       value: roleKey,
       label: roleKey,
     })),
-  );
+  ];
   const countryFilterOptions = ["all", ...countryOptions];
   const heroTitle = view === "scm-staff" ? "SCM staff in scope" : "Staff in scope";
   const heroCopy =

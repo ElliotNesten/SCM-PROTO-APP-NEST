@@ -340,10 +340,6 @@ export function GigTimeReportPanel({
     replaceShiftItem(payload.shift);
     clearFinalTimeReportApprovalState();
     setPendingFoodKey(null);
-
-    startTransition(() => {
-      router.refresh();
-    });
   }
 
   async function setTimeReportApproval(
@@ -387,10 +383,6 @@ export function GigTimeReportPanel({
     replaceShiftItem(payload.shift, true);
     clearFinalTimeReportApprovalState();
     setPendingApprovalKey(null);
-
-    startTransition(() => {
-      router.refresh();
-    });
   }
 
   async function setAllTimeReportsApproval(shiftId: string, nextApproved: boolean) {
@@ -429,10 +421,6 @@ export function GigTimeReportPanel({
     replaceShiftItem(payload.shift, true);
     clearFinalTimeReportApprovalState();
     setPendingApprovalKey(null);
-
-    startTransition(() => {
-      router.refresh();
-    });
   }
 
   async function saveManualTimes(
@@ -511,10 +499,6 @@ export function GigTimeReportPanel({
     setTimeDraft({
       checkedIn: "",
       checkedOut: "",
-    });
-
-    startTransition(() => {
-      router.refresh();
     });
   }
 

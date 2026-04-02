@@ -160,6 +160,16 @@ function formatTimelineDate(value: string) {
   }).format(parsed);
 }
 
+function shouldRefreshOverviewShell(gig: Gig, nextForm: OverviewFormState) {
+  return (
+    nextForm.artist !== gig.artist ||
+    nextForm.arena !== gig.arena ||
+    nextForm.city !== gig.city ||
+    nextForm.country !== gig.country ||
+    nextForm.date !== gig.date
+  );
+}
+
 export function GigOverviewEditor({
   gig,
   arenaCatalog,
@@ -286,7 +296,11 @@ export function GigOverviewEditor({
     }));
   }
 
-  async function saveOverview(nextForm = form, successMessage = "Gig details saved.") {
+  async function saveOverview(
+    nextForm = form,
+    successMessage = "Gig details saved.",
+    options?: { refresh?: boolean },
+  ) {
     if (!isScmRepresentativeSelectionValid) {
       setSaveMessage(
         "Choose an SCM representative from the profile list, or use Temporary Gig Manager.",
@@ -350,9 +364,11 @@ export function GigOverviewEditor({
     setSaveMessage(successMessage);
     setIsSaving(false);
 
-    startTransition(() => {
-      router.refresh();
-    });
+    if (options?.refresh ?? shouldRefreshOverviewShell(gig, nextForm)) {
+      startTransition(() => {
+        router.refresh();
+      });
+    }
 
     return true;
   }
@@ -440,12 +456,6 @@ export function GigOverviewEditor({
     }
     setUpdatingTemporaryGigManagerId(null);
 
-    if (options?.refresh !== false) {
-      startTransition(() => {
-        router.refresh();
-      });
-    }
-
     return true;
   }
 
@@ -468,6 +478,7 @@ export function GigOverviewEditor({
     const didSave = await saveOverview(
       nextForm,
       "SCM representative updated and gig info shared.",
+      { refresh: false },
     );
 
     setShareGigMessage(
@@ -505,10 +516,6 @@ export function GigOverviewEditor({
     setAssignedTemporaryGigManagers(payload?.temporaryGigManagers ?? []);
     setShareGigMessage("Temporary Gig Manager access removed.");
     setUpdatingTemporaryGigManagerId(null);
-
-    startTransition(() => {
-      router.refresh();
-    });
   }
 
   return (

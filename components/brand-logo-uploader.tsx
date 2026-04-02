@@ -1,8 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useRef, useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { useRef, useState } from "react";
 
 export function BrandLogoUploader({
   initialLogoUrl,
@@ -11,49 +10,47 @@ export function BrandLogoUploader({
   initialLogoUrl: string;
   canUpload?: boolean;
 }) {
-  const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [logoUrl, setLogoUrl] = useState(initialLogoUrl);
   const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
-  const [isPending, startTransition] = useTransition();
 
   async function uploadLogo(file: File) {
     setIsUploading(true);
     setFeedbackMessage(null);
 
-    const formData = new FormData();
-    formData.set("image", file);
+    try {
+      const formData = new FormData();
+      formData.set("image", file);
 
-    const response = await fetch("/api/brand/logo", {
-      method: "POST",
-      body: formData,
-    });
+      const response = await fetch("/api/brand/logo", {
+        method: "POST",
+        body: formData,
+      });
 
-    const payload = (await response.json().catch(() => null)) as
-      | { error?: string; logoUrl?: string }
-      | null;
+      const payload = (await response.json().catch(() => null)) as
+        | { error?: string; logoUrl?: string }
+        | null;
 
-    if (!response.ok) {
-      setFeedbackMessage(payload?.error ?? "Could not upload the logo image.");
+      if (!response.ok) {
+        setFeedbackMessage(payload?.error ?? "Could not upload the logo image.");
+        return;
+      }
+
+      if (payload?.logoUrl) {
+        setLogoUrl(payload.logoUrl);
+      }
+
+      setFeedbackMessage(null);
+
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    } catch {
+      setFeedbackMessage("Could not upload the logo image.");
+    } finally {
       setIsUploading(false);
-      return;
     }
-
-    if (payload?.logoUrl) {
-      setLogoUrl(payload.logoUrl);
-    }
-
-    setIsUploading(false);
-    setFeedbackMessage(null);
-
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
-
-    startTransition(() => {
-      router.refresh();
-    });
   }
 
   return (
@@ -114,7 +111,7 @@ export function BrandLogoUploader({
       {canUpload && feedbackMessage ? (
         <p className="brand-logo-feedback">{feedbackMessage}</p>
       ) : null}
-      {canUpload && (isUploading || isPending) ? (
+      {canUpload && isUploading ? (
         <p className="brand-logo-feedback">Uploading...</p>
       ) : null}
     </div>

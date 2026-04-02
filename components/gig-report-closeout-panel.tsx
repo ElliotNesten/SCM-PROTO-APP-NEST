@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 import type { GigCloseoutChecklist } from "@/lib/gig-closeout";
 import type { GigStatus } from "@/types/scm";
@@ -41,7 +40,6 @@ export function GigReportCloseoutPanel({
   initialClosedByName?: string;
   canReopen?: boolean;
 }) {
-  const router = useRouter();
   const [checklist, setChecklist] = useState(initialChecklist);
   const [isClosed, setIsClosed] = useState(gigStatus === "Closed");
   const [invoicesPaidAt, setInvoicesPaidAt] = useState<string | null>(
@@ -57,7 +55,6 @@ export function GigReportCloseoutPanel({
   const [pendingAction, setPendingAction] = useState<
     "economy" | "close" | "override" | "reopen" | null
   >(null);
-  const [isPending, startTransition] = useTransition();
 
   useEffect(() => {
     setChecklist(initialChecklist);
@@ -127,10 +124,6 @@ export function GigReportCloseoutPanel({
           : "Invoices marked as unpaid.",
     );
     setPendingAction(null);
-
-    startTransition(() => {
-      router.refresh();
-    });
   }
 
   async function overrideCloseGig() {
@@ -170,10 +163,6 @@ export function GigReportCloseoutPanel({
     setOverrideAcknowledged(false);
     setCloseoutFeedback("Gig closed with override.");
     setPendingAction(null);
-
-    startTransition(() => {
-      router.refresh();
-    });
   }
 
   async function closeGig() {
@@ -209,10 +198,6 @@ export function GigReportCloseoutPanel({
     setClosedByName(payload.gig.closedByName ?? "");
     setCloseoutFeedback("Gig closed.");
     setPendingAction(null);
-
-    startTransition(() => {
-      router.refresh();
-    });
   }
 
   async function reopenGig() {
@@ -253,10 +238,6 @@ export function GigReportCloseoutPanel({
     setClosedByName(payload.gig.closedByName ?? "");
     setCloseoutFeedback("Gig reopened.");
     setPendingAction(null);
-
-    startTransition(() => {
-      router.refresh();
-    });
   }
 
   return (
@@ -278,7 +259,7 @@ export function GigReportCloseoutPanel({
               <button
                 type="button"
                 className="button ghost"
-                disabled={pendingAction !== null || isPending}
+                disabled={pendingAction !== null}
                 onClick={() => {
                   void reopenGig();
                 }}
@@ -318,7 +299,7 @@ export function GigReportCloseoutPanel({
               value={economyComment}
               rows={4}
               placeholder="Add an economy comment"
-              disabled={isClosed || pendingAction !== null || isPending}
+              disabled={isClosed || pendingAction !== null}
               onChange={(event) => {
                 setEconomyComment(event.currentTarget.value);
               }}
@@ -329,7 +310,7 @@ export function GigReportCloseoutPanel({
             <button
               type="button"
               className={invoicesPaidAt ? "button" : "button ghost"}
-              disabled={isClosed || pendingAction !== null || isPending}
+              disabled={isClosed || pendingAction !== null}
               onClick={() => {
                 void updateEconomy(!invoicesPaidAt);
               }}
@@ -343,7 +324,6 @@ export function GigReportCloseoutPanel({
               disabled={
                 isClosed ||
                 pendingAction !== null ||
-                isPending ||
                 economyComment.trim() === savedEconomyComment.trim()
               }
               onClick={() => {
@@ -371,7 +351,7 @@ export function GigReportCloseoutPanel({
         <input
           type="checkbox"
           checked={overrideAcknowledged}
-          disabled={isClosed || checklist.allRequiredComplete || pendingAction !== null || isPending}
+          disabled={isClosed || checklist.allRequiredComplete || pendingAction !== null}
           onChange={(event) => {
             setOverrideAcknowledged(event.currentTarget.checked);
             setCloseoutError(null);
@@ -394,8 +374,7 @@ export function GigReportCloseoutPanel({
             disabled={
               isClosed ||
               !checklist.allRequiredComplete ||
-              pendingAction !== null ||
-              isPending
+              pendingAction !== null
             }
             onClick={() => {
               void closeGig();
@@ -411,8 +390,7 @@ export function GigReportCloseoutPanel({
               isClosed ||
               checklist.allRequiredComplete ||
               !overrideAcknowledged ||
-              pendingAction !== null ||
-              isPending
+              pendingAction !== null
             }
             onClick={() => {
               void overrideCloseGig();

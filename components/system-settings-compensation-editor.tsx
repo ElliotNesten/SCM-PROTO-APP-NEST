@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 import { formatHourlyRateLabel, normalizeHourlyRate } from "@/lib/compensation";
 import {
@@ -17,10 +16,9 @@ export function SystemSettingsCompensationEditor({
 }: {
   initialSettings: SystemCompensationSettings;
 }) {
-  const router = useRouter();
   const [settings, setSettings] = useState(initialSettings);
   const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
-  const [isPending, startTransition] = useTransition();
+  const [isPending, setIsPending] = useState(false);
 
   function updateRate(
     country: CompensationCountry,
@@ -41,32 +39,35 @@ export function SystemSettingsCompensationEditor({
 
   async function saveSettings() {
     setFeedbackMessage(null);
+    setIsPending(true);
 
-    const response = await fetch("/api/system-settings/compensation", {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        defaultHourlyRates: settings.defaultHourlyRates,
-      }),
-    });
+    try {
+      const response = await fetch("/api/system-settings/compensation", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          defaultHourlyRates: settings.defaultHourlyRates,
+        }),
+      });
 
-    const payload = (await response.json().catch(() => null)) as
-      | { error?: string; settings?: SystemCompensationSettings }
-      | null;
+      const payload = (await response.json().catch(() => null)) as
+        | { error?: string; settings?: SystemCompensationSettings }
+        | null;
 
-    if (!response.ok || !payload?.settings) {
-      setFeedbackMessage(payload?.error ?? "Could not save compensation settings.");
-      return;
+      if (!response.ok || !payload?.settings) {
+        setFeedbackMessage(payload?.error ?? "Could not save compensation settings.");
+        return;
+      }
+
+      setSettings(payload.settings);
+      setFeedbackMessage("Compensation settings saved.");
+    } catch {
+      setFeedbackMessage("Could not save compensation settings.");
+    } finally {
+      setIsPending(false);
     }
-
-    setSettings(payload.settings);
-    setFeedbackMessage("Compensation settings saved.");
-
-    startTransition(() => {
-      router.refresh();
-    });
   }
 
   return (

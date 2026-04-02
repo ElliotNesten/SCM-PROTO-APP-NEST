@@ -1,7 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { useMemo, useState } from "react";
 
 import {
   buildShiftPdfTemplateLines,
@@ -21,12 +20,11 @@ export function SystemSettingsTemplateEditor({
 }: {
   initialTemplates: TemplateCollection;
 }) {
-  const router = useRouter();
   const [templates, setTemplates] = useState(initialTemplates);
   const [activeTemplateId, setActiveTemplateId] =
     useState<ShiftPdfTemplateId>("employmentContract");
   const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
-  const [isPending, startTransition] = useTransition();
+  const [isPending, setIsPending] = useState(false);
 
   const activeTemplate = templates[activeTemplateId];
   const previewLines = useMemo(() => {
@@ -59,36 +57,39 @@ export function SystemSettingsTemplateEditor({
 
   async function saveTemplate() {
     setFeedbackMessage(null);
+    setIsPending(true);
 
-    const response = await fetch("/api/system-settings/templates", {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        templateId: activeTemplateId,
-        template: activeTemplate,
-      }),
-    });
+    try {
+      const response = await fetch("/api/system-settings/templates", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          templateId: activeTemplateId,
+          template: activeTemplate,
+        }),
+      });
 
-    const payload = (await response.json().catch(() => null)) as
-      | { error?: string; template?: ShiftPdfTemplate }
-      | null;
+      const payload = (await response.json().catch(() => null)) as
+        | { error?: string; template?: ShiftPdfTemplate }
+        | null;
 
-    if (!response.ok || !payload?.template) {
-      setFeedbackMessage(payload?.error ?? "Could not save template changes.");
-      return;
+      if (!response.ok || !payload?.template) {
+        setFeedbackMessage(payload?.error ?? "Could not save template changes.");
+        return;
+      }
+
+      setTemplates((currentTemplates) => ({
+        ...currentTemplates,
+        [activeTemplateId]: payload.template!,
+      }));
+      setFeedbackMessage("Template saved.");
+    } catch {
+      setFeedbackMessage("Could not save template changes.");
+    } finally {
+      setIsPending(false);
     }
-
-    setTemplates((currentTemplates) => ({
-      ...currentTemplates,
-      [activeTemplateId]: payload.template!,
-    }));
-    setFeedbackMessage("Template saved.");
-
-    startTransition(() => {
-      router.refresh();
-    });
   }
 
   return (

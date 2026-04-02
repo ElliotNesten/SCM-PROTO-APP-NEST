@@ -1,7 +1,6 @@
 "use client";
 
-import { useRef, useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { useRef, useState } from "react";
 
 import type { PublicUploadStorageStatus } from "@/lib/public-file-storage";
 
@@ -40,12 +39,10 @@ export function SystemSettingsPolicyUploader({
   initialPolicy: SystemPolicySettingsSummary;
   uploadStatus: PublicUploadStorageStatus;
 }) {
-  const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [policy, setPolicy] = useState(initialPolicy);
   const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
-  const [isPending, startTransition] = useTransition();
   const uploadDisabled = !uploadStatus.available;
 
   async function uploadPolicy(file: File) {
@@ -57,38 +54,38 @@ export function SystemSettingsPolicyUploader({
     setIsUploading(true);
     setFeedbackMessage(null);
 
-    const formData = new FormData();
-    formData.set("file", file);
+    try {
+      const formData = new FormData();
+      formData.set("file", file);
 
-    const response = await fetch("/api/system-settings/policy", {
-      method: "POST",
-      body: formData,
-    });
+      const response = await fetch("/api/system-settings/policy", {
+        method: "POST",
+        body: formData,
+      });
 
-    const payload = (await response.json().catch(() => null)) as
-      | {
-          error?: string;
-          policy?: SystemPolicySettingsSummary;
-        }
-      | null;
+      const payload = (await response.json().catch(() => null)) as
+        | {
+            error?: string;
+            policy?: SystemPolicySettingsSummary;
+          }
+        | null;
 
-    if (!response.ok || !payload?.policy) {
-      setFeedbackMessage(payload?.error ?? "Could not upload the SCM policy PDF.");
+      if (!response.ok || !payload?.policy) {
+        setFeedbackMessage(payload?.error ?? "Could not upload the SCM policy PDF.");
+        return;
+      }
+
+      setPolicy(payload.policy);
+      setFeedbackMessage("SCM policy PDF updated.");
+
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    } catch {
+      setFeedbackMessage("Could not upload the SCM policy PDF.");
+    } finally {
       setIsUploading(false);
-      return;
     }
-
-    setPolicy(payload.policy);
-    setFeedbackMessage("SCM policy PDF updated.");
-    setIsUploading(false);
-
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
-
-    startTransition(() => {
-      router.refresh();
-    });
   }
 
   return (
@@ -153,11 +150,11 @@ export function SystemSettingsPolicyUploader({
 
               fileInputRef.current?.click();
             }}
-            disabled={uploadDisabled || isUploading || isPending}
+            disabled={uploadDisabled || isUploading}
           >
             {uploadDisabled
               ? "Uploads unavailable"
-              : isUploading || isPending
+              : isUploading
                 ? "Uploading..."
                 : "Upload PDF"}
           </button>

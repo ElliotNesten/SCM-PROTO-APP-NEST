@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 import { equipmentOptions } from "@/data/equipment-options";
 import type { GigEquipmentItem } from "@/types/scm";
@@ -24,14 +23,12 @@ export function GigEquipmentEditor({
   gigId: string;
   initialEquipment: GigEquipmentItem[];
 }) {
-  const router = useRouter();
   const [counts, setCounts] = useState<EquipmentCounts>(
     buildEquipmentCounts(initialEquipment),
   );
   const [isOpen, setIsOpen] = useState(false);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
-  const [isPending, startTransition] = useTransition();
   const registeredCount = equipmentOptions.filter((item) => counts[item.key] > 0).length;
 
   function updateCount(key: keyof EquipmentCounts, value: number) {
@@ -45,34 +42,34 @@ export function GigEquipmentEditor({
     setSaveMessage(null);
     setIsSaving(true);
 
-    const payload = {
-      equipment: equipmentOptions.map((item) => ({
-        key: item.key,
-        label: item.label,
-        quantity: counts[item.key],
-      })),
-    };
+    try {
+      const payload = {
+        equipment: equipmentOptions.map((item) => ({
+          key: item.key,
+          label: item.label,
+          quantity: counts[item.key],
+        })),
+      };
 
-    const response = await fetch(`/api/gigs/${gigId}/equipment`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload),
-    });
+      const response = await fetch(`/api/gigs/${gigId}/equipment`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
 
-    if (!response.ok) {
+      if (!response.ok) {
+        setSaveMessage("Could not save equipment.");
+        return;
+      }
+
+      setSaveMessage("Equipment saved.");
+    } catch {
       setSaveMessage("Could not save equipment.");
+    } finally {
       setIsSaving(false);
-      return;
     }
-
-    setSaveMessage("Equipment saved.");
-    setIsSaving(false);
-
-    startTransition(() => {
-      router.refresh();
-    });
   }
 
   return (
@@ -154,12 +151,12 @@ export function GigEquipmentEditor({
             <button
               type="button"
               className="button"
-              disabled={isSaving || isPending}
+              disabled={isSaving}
               onClick={() => {
                 void saveEquipment();
               }}
             >
-              {isSaving || isPending ? "Saving..." : "Save equipment"}
+              {isSaving ? "Saving..." : "Save equipment"}
             </button>
           </div>
         </>

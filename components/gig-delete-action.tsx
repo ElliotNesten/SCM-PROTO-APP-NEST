@@ -34,7 +34,6 @@ export function GigDeleteAction({
     }
 
     router.push("/gigs");
-    router.refresh();
   }
 
   return (

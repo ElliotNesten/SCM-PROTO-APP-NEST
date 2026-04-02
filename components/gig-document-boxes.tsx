@@ -3,10 +3,9 @@
 import {
   type DragEvent,
   type FormEvent,
+  useEffect,
   useState,
-  useTransition,
 } from "react";
-import { useRouter } from "next/navigation";
 
 import {
   GigTimeReportPanel,
@@ -287,7 +286,6 @@ export function GigDocumentBoxes({
   timeReportShifts,
   timeReportStaffProfiles,
 }: GigDocumentBoxesProps) {
-  const router = useRouter();
   const [files, setFiles] = useState<GigFileItem[]>(initialFiles);
   const [folders, setFolders] = useState<GigFileFolder[]>(initialFolders);
   const [customTitle, setCustomTitle] = useState("");
@@ -298,7 +296,6 @@ export function GigDocumentBoxes({
   const [, setDragDepthByBoxId] = useState<Record<string, number>>({});
   const [isCreatingBox, setIsCreatingBox] = useState(false);
   const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
-  const [isPending, startTransition] = useTransition();
 
   const sectionFiles = files.filter((file) => file.section === section);
   const sectionFolders = folders.filter((folder) => folder.section === section);
@@ -308,6 +305,19 @@ export function GigDocumentBoxes({
     section === "reports" &&
     Array.isArray(timeReportShifts) &&
     Array.isArray(timeReportStaffProfiles);
+  const isMutating =
+    isCreatingBox ||
+    uploadingBoxId !== null ||
+    deletingBoxId !== null ||
+    deletingFileId !== null;
+
+  useEffect(() => {
+    setFiles(initialFiles);
+  }, [initialFiles]);
+
+  useEffect(() => {
+    setFolders(initialFolders);
+  }, [initialFolders]);
 
   async function createCustomBox(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -356,10 +366,6 @@ export function GigDocumentBoxes({
       payload?.alreadyExists ? `${canonicalTitle} already exists.` : `${canonicalTitle} created.`,
     );
     setIsCreatingBox(false);
-
-    startTransition(() => {
-      router.refresh();
-    });
   }
 
   async function uploadBoxFiles(box: DocumentBoxViewModel, selectedFiles: File[]) {
@@ -400,10 +406,6 @@ export function GigDocumentBoxes({
         : `${uploadedCount} files uploaded to ${box.title}.`,
     );
     setUploadingBoxId(null);
-
-    startTransition(() => {
-      router.refresh();
-    });
   }
 
   async function deleteCustomBox(box: DocumentBoxViewModel) {
@@ -436,10 +438,6 @@ export function GigDocumentBoxes({
     setFolders(payload?.folders ?? []);
     setFeedbackMessage(`${box.title} deleted.`);
     setDeletingBoxId(null);
-
-    startTransition(() => {
-      router.refresh();
-    });
   }
 
   async function deleteBoxFile(file: GigFileItem) {
@@ -467,14 +465,10 @@ export function GigDocumentBoxes({
     setFiles(payload?.files ?? []);
     setFeedbackMessage(`${file.fileName} deleted.`);
     setDeletingFileId(null);
-
-    startTransition(() => {
-      router.refresh();
-    });
   }
 
   function handleBoxDragEnter(boxId: string, event: DragEvent<HTMLElement>) {
-    if (isPending || !hasDraggedFiles(event.dataTransfer)) {
+    if (isMutating || !hasDraggedFiles(event.dataTransfer)) {
       return;
     }
 
@@ -487,7 +481,7 @@ export function GigDocumentBoxes({
   }
 
   function handleBoxDragOver(boxId: string, event: DragEvent<HTMLElement>) {
-    if (isPending || !hasDraggedFiles(event.dataTransfer)) {
+    if (isMutating || !hasDraggedFiles(event.dataTransfer)) {
       return;
     }
 
@@ -532,7 +526,7 @@ export function GigDocumentBoxes({
   }
 
   function handleBoxDrop(box: DocumentBoxViewModel, event: DragEvent<HTMLElement>) {
-    if (isPending || !hasDraggedFiles(event.dataTransfer)) {
+    if (isMutating || !hasDraggedFiles(event.dataTransfer)) {
       return;
     }
 
@@ -596,8 +590,8 @@ export function GigDocumentBoxes({
             />
           </label>
 
-          <button type="submit" className="button" disabled={isCreatingBox || isPending}>
-            {isCreatingBox || isPending ? "Creating..." : addButtonLabel}
+          <button type="submit" className="button" disabled={isMutating}>
+            {isCreatingBox ? "Creating..." : addButtonLabel}
           </button>
         </form>
       </div>
@@ -670,7 +664,7 @@ export function GigDocumentBoxes({
                           <button
                             type="button"
                             className="button ghost danger-outline report-document-file-delete"
-                            disabled={isDeletingThisFile || isPending}
+                            disabled={isDeletingThisFile || isMutating}
                             onClick={() => {
                               void deleteBoxFile(file);
                             }}
@@ -713,7 +707,7 @@ export function GigDocumentBoxes({
                   <button
                     type="button"
                     className="button ghost danger-outline report-document-delete"
-                    disabled={deletingBoxId === box.id || isPending}
+                    disabled={deletingBoxId === box.id || isMutating}
                     onClick={() => {
                       void deleteCustomBox(box);
                     }}

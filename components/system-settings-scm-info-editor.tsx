@@ -1,7 +1,6 @@
 "use client";
 
-import { useRef, useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { useRef, useState } from "react";
 
 import {
   arenaCatalogDocumentKeys,
@@ -371,7 +370,6 @@ export function SystemSettingsScmInfoEditor({
   initialPdfs: SystemScmInfoPdfSettings;
   uploadStatus: PublicUploadStorageStatus;
 }) {
-  const router = useRouter();
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
   const [settings, setSettings] = useState(initialSettings);
   const [pdfSettings, setPdfSettings] = useState(initialPdfs);
@@ -382,7 +380,7 @@ export function SystemSettingsScmInfoEditor({
   const [deletingKey, setDeletingKey] = useState<string | null>(null);
   const [openPanel, setOpenPanel] = useState<OpenPanelKey>("summary");
   const [editingField, setEditingField] = useState<string | null>(null);
-  const [isPending, startTransition] = useTransition();
+  const [isPending, setIsPending] = useState(false);
   const uploadDisabled = !uploadStatus.available;
 
   const activeSectionMeta = editorSections.find((section) => section.id === activeSection)!;
@@ -664,10 +662,6 @@ export function SystemSettingsScmInfoEditor({
     if (input) {
       input.value = "";
     }
-
-    startTransition(() => {
-      router.refresh();
-    });
   }
 
   async function deletePdf(
@@ -713,10 +707,6 @@ export function SystemSettingsScmInfoEditor({
     setPdfSettings(payload.pdfs);
     setFeedbackMessage("Guide PDF removed.");
     setDeletingKey(null);
-
-    startTransition(() => {
-      router.refresh();
-    });
   }
 
   async function uploadArenaDocument(
@@ -776,10 +766,6 @@ export function SystemSettingsScmInfoEditor({
     if (input) {
       input.value = "";
     }
-
-    startTransition(() => {
-      router.refresh();
-    });
   }
 
   async function deleteArenaDocument(
@@ -821,58 +807,57 @@ export function SystemSettingsScmInfoEditor({
     setSettings(payload.settings);
     setFeedbackMessage(`${getArenaCatalogDocumentLabel(documentKey)} removed.`);
     setDeletingKey(null);
-
-    startTransition(() => {
-      router.refresh();
-    });
   }
 
   async function saveSettings() {
     setFeedbackMessage(null);
+    setIsPending(true);
 
-    const [settingsResponse, pdfResponse] = await Promise.all([
-      fetch("/api/system-settings/scm-info", {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          settings,
+    try {
+      const [settingsResponse, pdfResponse] = await Promise.all([
+        fetch("/api/system-settings/scm-info", {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            settings,
+          }),
         }),
-      }),
-      fetch("/api/system-settings/scm-info-pdfs", {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          pdfs: pdfSettings,
+        fetch("/api/system-settings/scm-info-pdfs", {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            pdfs: pdfSettings,
+          }),
         }),
-      }),
-    ]);
+      ]);
 
-    const [settingsPayload, pdfPayload] = await Promise.all([
-      settingsResponse.json().catch(() => null),
-      pdfResponse.json().catch(() => null),
-    ]);
+      const [settingsPayload, pdfPayload] = await Promise.all([
+        settingsResponse.json().catch(() => null),
+        pdfResponse.json().catch(() => null),
+      ]);
 
-    if (!settingsResponse.ok || !settingsPayload?.settings) {
-      setFeedbackMessage(settingsPayload?.error ?? "Could not save SCM info settings.");
-      return;
+      if (!settingsResponse.ok || !settingsPayload?.settings) {
+        setFeedbackMessage(settingsPayload?.error ?? "Could not save SCM info settings.");
+        return;
+      }
+
+      if (!pdfResponse.ok || !pdfPayload?.pdfs) {
+        setFeedbackMessage(pdfPayload?.error ?? "Could not save SCM guide PDFs.");
+        return;
+      }
+
+      setSettings(settingsPayload.settings);
+      setPdfSettings(pdfPayload.pdfs);
+      setFeedbackMessage("SCM info settings saved.");
+    } catch {
+      setFeedbackMessage("Could not save SCM info settings.");
+    } finally {
+      setIsPending(false);
     }
-
-    if (!pdfResponse.ok || !pdfPayload?.pdfs) {
-      setFeedbackMessage(pdfPayload?.error ?? "Could not save SCM guide PDFs.");
-      return;
-    }
-
-    setSettings(settingsPayload.settings);
-    setPdfSettings(pdfPayload.pdfs);
-    setFeedbackMessage("SCM info settings saved.");
-
-    startTransition(() => {
-      router.refresh();
-    });
   }
 
   function renderPdfContent() {

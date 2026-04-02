@@ -54,13 +54,11 @@ export default async function ScmStaffProfilePage({
   const canManageAdministrativeFields = canAccessScmStaffAdministration(
     currentScmStaffProfile.roleKey,
   );
-  const canRevealStoredPassword = isSuperAdminRole(currentScmStaffProfile.roleKey);
   const isOwnProfile = currentScmStaffProfile.id === profile.id;
   const canEditBasicFields = canManageAdministrativeFields || isOwnProfile;
-  const canViewStoredPassword = canRevealStoredPassword || isOwnProfile;
-  const editableProfile = canViewStoredPassword
-    ? profile
-    : redactScmStaffPasswordPlaintext(profile);
+  const canChangePassword =
+    currentScmStaffProfile.roleKey === "superAdmin" || isOwnProfile;
+  const editableProfile = redactScmStaffPasswordPlaintext(profile);
 
   return (
     <ScmStaffProfileEditor
@@ -73,10 +71,10 @@ export default async function ScmStaffProfilePage({
         isOwnProfile
       }
       canEditRole={isSuperAdminRole(currentScmStaffProfile.roleKey)}
-      canChangePassword={canRevealStoredPassword || isOwnProfile}
-      canViewStoredPassword={canViewStoredPassword}
-      canRevealStoredPassword={canRevealStoredPassword}
-      requiresCurrentPassword={isOwnProfile && !canRevealStoredPassword}
+      canChangePassword={canChangePassword}
+      canViewStoredPassword={false}
+      canRevealStoredPassword={false}
+      requiresCurrentPassword={isOwnProfile && currentScmStaffProfile.roleKey !== "superAdmin"}
       initialStatusMessage={getInviteStatusMessage(
         pickQueryValue(resolvedSearchParams?.invite),
       )}

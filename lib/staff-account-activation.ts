@@ -56,9 +56,18 @@ export async function activateStaffAccountWithPassword(input: {
       };
     }
 
+    const consumedTokenRecord = await consumePasswordSetupToken(input.token);
+
+    if (!consumedTokenRecord) {
+      return {
+        ok: false as const,
+        error: "This password link has already been used.",
+        status: 400,
+      };
+    }
+
     const updatedProfile = await updateStoredScmStaffProfile(profile.id, {
       passwordHash: createPasswordHash(normalizedPassword),
-      passwordPlaintext: normalizedPassword,
     });
 
     if (!updatedProfile) {
@@ -69,13 +78,11 @@ export async function activateStaffAccountWithPassword(input: {
       };
     }
 
-    await consumePasswordSetupToken(input.token);
-
     return {
       ok: true as const,
       subjectType: "scmStaff" as const,
       profile: updatedProfile,
-      tokenRecord: verification.record,
+      tokenRecord: consumedTokenRecord,
     };
   }
 
@@ -86,6 +93,16 @@ export async function activateStaffAccountWithPassword(input: {
       ok: false as const,
       error: "The staff account connected to this token could not be found.",
       status: 404,
+    };
+  }
+
+  const consumedTokenRecord = await consumePasswordSetupToken(input.token);
+
+  if (!consumedTokenRecord) {
+    return {
+      ok: false as const,
+      error: "This password link has already been used.",
+      status: 400,
     };
   }
 
@@ -105,12 +122,10 @@ export async function activateStaffAccountWithPassword(input: {
     profileApproved: true,
   });
 
-  await consumePasswordSetupToken(input.token);
-
   return {
     ok: true as const,
     subjectType: "staffApp" as const,
     account: activatedAccount,
-    tokenRecord: verification.record,
+    tokenRecord: consumedTokenRecord,
   };
 }

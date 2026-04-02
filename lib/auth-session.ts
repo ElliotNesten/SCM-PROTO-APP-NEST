@@ -14,6 +14,8 @@ import { getStoredStaffProfileById } from "@/lib/staff-store";
 import { getScmRoleDefinition, type ScmStaffRoleKey, type StoredScmStaffProfile } from "@/types/scm-rbac";
 
 const sessionCookieName = "scm_auth_session";
+const sessionMaxAgeSeconds = 60 * 60 * 24 * 14;
+const sessionMaxAgeMs = sessionMaxAgeSeconds * 1000;
 
 type StoredAuthSession = {
   subjectType?: "scmStaff" | "temporaryGigManager";
@@ -41,6 +43,16 @@ function normalizeStoredAuthSession(session: StoredAuthSession): StoredAuthSessi
     ...session,
     subjectType: "scmStaff",
   };
+}
+
+function isStoredAuthSessionFresh(session: StoredAuthSession) {
+  const createdAt = new Date(session.createdAt).getTime();
+
+  if (!Number.isFinite(createdAt)) {
+    return false;
+  }
+
+  return Date.now() - createdAt <= sessionMaxAgeMs;
 }
 
 function getDisplayInitials(displayName: string) {
@@ -107,7 +119,7 @@ export async function createAuthSession(target: string | AuthSessionTarget) {
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
     path: "/",
-    maxAge: 60 * 60 * 24 * 14,
+    maxAge: sessionMaxAgeSeconds,
   });
 
   return session;
@@ -127,7 +139,19 @@ export async function getCurrentAuthSession() {
   }
 
   const session = decodeSignedSessionCookie<StoredAuthSession>(sessionToken);
-  return session ? normalizeStoredAuthSession(session) : null;
+
+  if (!session) {
+    return null;
+  }
+
+  const normalizedSession = normalizeStoredAuthSession(session);
+
+  if (!isStoredAuthSessionFresh(normalizedSession)) {
+    cookieStore.delete(sessionCookieName);
+    return null;
+  }
+
+  return normalizedSession;
 }
 
 export async function getCurrentAuthenticatedScmStaffProfile() {

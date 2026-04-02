@@ -26,7 +26,6 @@ import {
   upsertStaffOnboardingRecord,
 } from "@/lib/staff-onboarding-store";
 import {
-  ensureStaffAppAccountForLinkedStaffProfile,
   getStaffAppAccountByEmail,
   markStaffAppAccountOnboardingCompleted,
   touchStaffAppAccountLastLogin,
@@ -34,7 +33,6 @@ import {
   verifyStaffAppAccountPassword,
 } from "@/lib/staff-app-store";
 import { updateStoredStaffProfile } from "@/lib/staff-store";
-import { getStoredStaffProfileByEmail } from "@/lib/staff-store";
 
 function readString(formData: FormData, key: string) {
   const value = formData.get(key);
@@ -67,21 +65,7 @@ export async function loginToStaffApp(formData: FormData) {
     redirect("/staff-app/scm");
   }
 
-  const linkedProfile = await getStoredStaffProfileByEmail(email);
-  const account = linkedProfile
-    ? await ensureStaffAppAccountForLinkedStaffProfile({
-        id: linkedProfile.id,
-        displayName: linkedProfile.displayName,
-        email: linkedProfile.email,
-        phone: linkedProfile.phone,
-        country: linkedProfile.country,
-        region: linkedProfile.region,
-        roleProfiles: linkedProfile.roleProfiles,
-        roles: linkedProfile.roles,
-        priority: linkedProfile.priority,
-        profileImageUrl: linkedProfile.profileImageUrl,
-      })
-    : await getStaffAppAccountByEmail(email);
+  const account = await getStaffAppAccountByEmail(email);
 
   if (!account || !verifyStaffAppAccountPassword(account, password)) {
     redirect(`/staff-app/login?error=invalid&email=${encodeURIComponent(email)}`);
@@ -118,7 +102,7 @@ export async function changeStaffAppPassword(formData: FormData) {
     redirect("/staff-app/profile?password=invalid");
   }
 
-  if (nextPassword.length < 6) {
+  if (nextPassword.length < 8) {
     redirect("/staff-app/profile?password=length");
   }
 

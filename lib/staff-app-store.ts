@@ -3,7 +3,6 @@ import path from "node:path";
 import { ensureJsonFile, readJsonFile, writeJsonFile } from "@/lib/json-file-store";
 import {
   createPasswordHash,
-  getSeedScmStaffPassword,
   verifyPasswordHash,
 } from "@/lib/password-utils";
 import {
@@ -142,10 +141,9 @@ function createStaffAppAccountFromLinkedStaffProfile(
       profile.priority,
     ),
     profileImageUrl: profile.profileImageUrl,
-    passwordHash:
-      options?.passwordHash ?? createPasswordHash(getSeedScmStaffPassword(profile.email)),
-    isActive: options?.isActive ?? true,
-    mustCompleteOnboarding: options?.mustCompleteOnboarding ?? false,
+    passwordHash: options?.passwordHash ?? "",
+    isActive: options?.isActive ?? false,
+    mustCompleteOnboarding: options?.mustCompleteOnboarding ?? true,
     passwordSetAt: options?.passwordSetAt ?? null,
     activatedAt: options?.activatedAt ?? null,
     lastLoginAt: null,
@@ -464,6 +462,7 @@ export async function updateStaffAppAccountPasswordByLinkedStaffProfileId(
   password: string,
 ) {
   const sql = getPostgresClient();
+  const now = new Date().toISOString();
 
   if (sql) {
     const currentAccount = await getStaffAppAccountByLinkedStaffProfileId(staffProfileId);
@@ -475,7 +474,10 @@ export async function updateStaffAppAccountPasswordByLinkedStaffProfileId(
     const updatedAccount = {
       ...currentAccount,
       passwordHash: createPasswordHash(password),
-      passwordSetAt: new Date().toISOString(),
+      isActive: true,
+      mustCompleteOnboarding: currentAccount.mustCompleteOnboarding ?? true,
+      passwordSetAt: now,
+      activatedAt: currentAccount.activatedAt ?? now,
     };
 
     await upsertDatabaseStaffAppAccount(updatedAccount);
@@ -494,7 +496,10 @@ export async function updateStaffAppAccountPasswordByLinkedStaffProfileId(
   accounts[accountIndex] = {
     ...accounts[accountIndex],
     passwordHash: createPasswordHash(password),
-    passwordSetAt: new Date().toISOString(),
+    isActive: true,
+    mustCompleteOnboarding: accounts[accountIndex].mustCompleteOnboarding ?? true,
+    passwordSetAt: now,
+    activatedAt: accounts[accountIndex].activatedAt ?? now,
   };
 
   await writeStaffAppAccountStore(accounts);
@@ -589,8 +594,8 @@ export async function ensureStaffAppAccountForLinkedStaffProfile(profile: {
       const currentAccount = linkedAccount ?? emailMatchedAccount;
       const createdAccount = createStaffAppAccountFromLinkedStaffProfile(profile, {
         passwordHash: currentAccount?.passwordHash,
-        isActive: currentAccount?.isActive ?? true,
-        mustCompleteOnboarding: currentAccount?.mustCompleteOnboarding ?? false,
+        isActive: currentAccount?.isActive,
+        mustCompleteOnboarding: currentAccount?.mustCompleteOnboarding,
         passwordSetAt: currentAccount?.passwordSetAt ?? null,
         activatedAt: currentAccount?.activatedAt ?? null,
         createdFromApplicationId: currentAccount?.createdFromApplicationId ?? null,

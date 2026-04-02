@@ -1,9 +1,20 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 
-const fallbackSessionSecret = "scm-platform-prototype-session-secret";
+const developmentFallbackSessionSecret = "scm-platform-prototype-dev-session-secret";
 
 function getSessionSecret() {
-  return process.env.SCM_SESSION_SECRET || process.env.AUTH_SECRET || fallbackSessionSecret;
+  const configuredSecret =
+    process.env.SCM_SESSION_SECRET?.trim() || process.env.AUTH_SECRET?.trim() || "";
+
+  if (configuredSecret) {
+    return configuredSecret;
+  }
+
+  if (process.env.NODE_ENV === "production") {
+    throw new Error("SCM_SESSION_SECRET or AUTH_SECRET must be set in production.");
+  }
+
+  return developmentFallbackSessionSecret;
 }
 
 export function encodeSignedSessionCookie(payload: object) {

@@ -92,11 +92,18 @@ export function canAccessPlatformFieldStaffProfile(
   profile: PlatformFieldStaffScopeProfile,
   staffProfile: PlatformFieldStaffScopeTarget,
 ) {
-  if (!profile || !staffProfile) {
+  if (!canManagePlatformFieldStaffProfile(profile, staffProfile)) {
     return false;
   }
 
-  if (staffProfile.approvalStatus !== "Approved") {
+  return staffProfile?.approvalStatus === "Approved";
+}
+
+export function canManagePlatformFieldStaffProfile(
+  profile: PlatformFieldStaffScopeProfile,
+  staffProfile: PlatformFieldStaffScopeTarget,
+) {
+  if (!profile || !staffProfile) {
     return false;
   }
 

@@ -15,6 +15,8 @@ import type { StaffAppAccount } from "@/types/staff-app";
 import type { StoredScmStaffProfile } from "@/types/scm-rbac";
 
 const sessionCookieName = "scm_staff_mobile_session";
+const sessionMaxAgeSeconds = 60 * 60 * 24 * 14;
+const sessionMaxAgeMs = sessionMaxAgeSeconds * 1000;
 
 type StaffAppSessionSubjectType = "staff" | "scmStaff";
 
@@ -61,6 +63,16 @@ function normalizeStoredStaffAppSession(
   };
 }
 
+function isStoredStaffAppSessionFresh(session: StoredStaffAppSession) {
+  const createdAt = new Date(session.createdAt).getTime();
+
+  if (!Number.isFinite(createdAt)) {
+    return false;
+  }
+
+  return Date.now() - createdAt <= sessionMaxAgeMs;
+}
+
 export async function createStaffAppSession(target: string | StaffAppSessionTarget) {
   const cookieStore = await cookies();
   const sessionTarget: StaffAppSessionTarget =
@@ -88,7 +100,7 @@ export async function createStaffAppSession(target: string | StaffAppSessionTarg
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
     path: "/",
-    maxAge: 60 * 60 * 24 * 14,
+    maxAge: sessionMaxAgeSeconds,
   });
 }
 
@@ -106,7 +118,19 @@ export async function getCurrentStaffAppSession() {
   }
 
   const session = decodeSignedSessionCookie<StoredStaffAppSession>(sessionToken);
-  return session ? normalizeStoredStaffAppSession(session) : null;
+
+  if (!session) {
+    return null;
+  }
+
+  const normalizedSession = normalizeStoredStaffAppSession(session);
+
+  if (!isStoredStaffAppSessionFresh(normalizedSession)) {
+    cookieStore.delete(sessionCookieName);
+    return null;
+  }
+
+  return normalizedSession;
 }
 
 export async function getCurrentStaffAppAccount() {

@@ -78,8 +78,7 @@ export async function PATCH(request: Request, context: RouteContext) {
   const isOwnProfile = currentProfile.id === existingProfile.id;
   const canManageAdministrativeFields = canAccessScmStaffAdministration(currentProfile.roleKey);
   const canEditBasicFields = canManageAdministrativeFields || isOwnProfile;
-  const canRevealStoredPassword = isSuperAdminRole(currentProfile.roleKey);
-  const canViewStoredPassword = canRevealStoredPassword || isOwnProfile;
+  const canResetPassword = isSuperAdminRole(currentProfile.roleKey);
   const requestedPassword = payload.password?.trim() ?? "";
   const requestedCurrentPassword = payload.currentPassword?.trim() ?? "";
   const nextCountry = payload.country?.trim() ?? existingProfile.country;
@@ -126,7 +125,7 @@ export async function PATCH(request: Request, context: RouteContext) {
   }
 
   if (requestedPassword) {
-    if (!canRevealStoredPassword && !isOwnProfile) {
+    if (!canResetPassword && !isOwnProfile) {
       return NextResponse.json(
         { error: "You can only change your own SCM Staff password." },
         { status: 403 },
@@ -140,7 +139,7 @@ export async function PATCH(request: Request, context: RouteContext) {
       );
     }
 
-    if (!canRevealStoredPassword) {
+    if (!canResetPassword) {
       if (!requestedCurrentPassword) {
         return NextResponse.json(
           { error: "Enter your current password to change it." },
@@ -170,10 +169,6 @@ export async function PATCH(request: Request, context: RouteContext) {
       requestedPassword
         ? createPasswordHash(requestedPassword)
         : existingProfile.passwordHash,
-    passwordPlaintext:
-      requestedPassword
-        ? requestedPassword
-        : existingProfile.passwordPlaintext,
     phone:
       canEditBasicFields
         ? (payload.phone ?? existingProfile.phone)
@@ -200,9 +195,7 @@ export async function PATCH(request: Request, context: RouteContext) {
 
   return NextResponse.json({
     ok: true,
-    profile: canViewStoredPassword
-      ? updatedProfile
-      : redactScmStaffPasswordPlaintext(updatedProfile),
+    profile: redactScmStaffPasswordPlaintext(updatedProfile),
     isOwnProfile,
   });
 }

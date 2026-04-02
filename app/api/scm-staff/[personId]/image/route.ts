@@ -23,6 +23,7 @@ type RouteContext = {
 const publicRootDirectory = path.join(process.cwd(), "public");
 const imageRootDirectory = path.join(publicRootDirectory, "scm-staff-images");
 const allowedExtensions = new Set(["png", "jpg", "jpeg", "webp"]);
+const maxImageUploadBytes = 5 * 1024 * 1024;
 
 function sanitizeFileBaseName(fileName: string) {
   return fileName
@@ -66,6 +67,13 @@ export async function POST(request: Request, context: RouteContext) {
 
   if (!(uploadedEntry instanceof File)) {
     return NextResponse.json({ error: "Choose an image to upload." }, { status: 400 });
+  }
+
+  if (uploadedEntry.size > maxImageUploadBytes) {
+    return NextResponse.json(
+      { error: "Image uploads must be 5 MB or smaller." },
+      { status: 400 },
+    );
   }
 
   const fileExtension = path.extname(uploadedEntry.name).toLowerCase().replace(".", "");

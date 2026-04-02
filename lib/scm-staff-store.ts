@@ -11,7 +11,6 @@ import {
 import {
   getSeedScmStaffPassword,
   createPasswordHash,
-  verifyPasswordHash,
 } from "@/lib/password-utils";
 import {
   getRegionalManagerRegionSummary,
@@ -99,14 +98,24 @@ function getDisplayInitials(displayName: string) {
     .toUpperCase();
 }
 
+function isDemoScmStaffSeedingEnabled() {
+  return (
+    process.env.SCM_ENABLE_DEMO_ACCOUNTS === "true" &&
+    process.env.NODE_ENV !== "production"
+  );
+}
+
 function createSeedScmStaffProfiles(): StoredScmStaffProfile[] {
+  if (!isDemoScmStaffSeedingEnabled()) {
+    return [];
+  }
+
   return [
     {
       id: "office-1",
       displayName: "Edwin Jones",
       email: "edwin.jones@scm.se",
       passwordHash: createPasswordHash(getSeedScmStaffPassword("edwin.jones@scm.se")),
-      passwordPlaintext: getSeedScmStaffPassword("edwin.jones@scm.se"),
       phone: "+46 70 123 45 67",
       roleKey: "superAdmin",
       country: "Global",
@@ -122,7 +131,6 @@ function createSeedScmStaffProfiles(): StoredScmStaffProfile[] {
       displayName: "Mia Lund",
       email: "mia.lund@scm.se",
       passwordHash: createPasswordHash(getSeedScmStaffPassword("mia.lund@scm.se")),
-      passwordPlaintext: getSeedScmStaffPassword("mia.lund@scm.se"),
       phone: "+46 70 333 10 20",
       roleKey: "officeStaff",
       country: "Global",
@@ -138,7 +146,6 @@ function createSeedScmStaffProfiles(): StoredScmStaffProfile[] {
       displayName: "Henrik Borg",
       email: "henrik.borg@scm.se",
       passwordHash: createPasswordHash(getSeedScmStaffPassword("henrik.borg@scm.se")),
-      passwordPlaintext: getSeedScmStaffPassword("henrik.borg@scm.se"),
       phone: "+46 70 555 11 12",
       roleKey: "regionalManager",
       country: "Sweden",
@@ -154,7 +161,6 @@ function createSeedScmStaffProfiles(): StoredScmStaffProfile[] {
       displayName: "Ingrid Olsen",
       email: "ingrid.olsen@scm.no",
       passwordHash: createPasswordHash(getSeedScmStaffPassword("ingrid.olsen@scm.no")),
-      passwordPlaintext: getSeedScmStaffPassword("ingrid.olsen@scm.no"),
       phone: "+47 91 200 300",
       roleKey: "regionalManager",
       country: "Norway",
@@ -170,7 +176,6 @@ function createSeedScmStaffProfiles(): StoredScmStaffProfile[] {
       displayName: "Nora Beck",
       email: "nora.beck@scm.dk",
       passwordHash: createPasswordHash(getSeedScmStaffPassword("nora.beck@scm.dk")),
-      passwordPlaintext: getSeedScmStaffPassword("nora.beck@scm.dk"),
       phone: "+45 21 30 40 50",
       roleKey: "regionalManager",
       country: "Denmark",
@@ -197,19 +202,12 @@ function normalizeStoredScmStaffProfile(
     roleKey === "regionalManager" ? profile.country || "Sweden" : "Global";
   const normalizedRegions = normalizeRegions(profile.regions ?? []);
   const swedenOnlyRegions = normalizedCountry === "Sweden" ? normalizedRegions : [];
-  const fallbackSeedPassword = getSeedScmStaffPassword(profile.email);
-  const normalizedPasswordHash =
-    profile.passwordHash?.trim() || createPasswordHash(fallbackSeedPassword);
-  const normalizedPasswordPlaintext =
-    profile.passwordPlaintext?.trim() ||
-    (verifyPasswordHash(fallbackSeedPassword, normalizedPasswordHash)
-      ? fallbackSeedPassword
-      : "");
+  const normalizedPasswordHash = profile.passwordHash?.trim() ?? "";
 
   return {
     ...profile,
     passwordHash: normalizedPasswordHash,
-    passwordPlaintext: normalizedPasswordPlaintext,
+    passwordPlaintext: undefined,
     country: normalizedCountry,
     regions: roleKey === "regionalManager" ? swedenOnlyRegions : [],
     assignedGigIds: Array.from(new Set(profile.assignedGigIds ?? [])),
@@ -229,7 +227,7 @@ function mapScmStaffProfileRow(
     displayName: row.display_name,
     email: row.email,
     passwordHash: row.password_hash,
-    passwordPlaintext: row.password_plaintext ?? undefined,
+    passwordPlaintext: undefined,
     phone: row.phone,
     roleKey: row.role_key,
     country: row.country,
@@ -356,7 +354,7 @@ async function upsertDatabaseScmStaffProfile(
       ${profile.email},
       ${profile.email.toLowerCase()},
       ${profile.passwordHash},
-      ${profile.passwordPlaintext ?? null},
+      ${null},
       ${profile.phone},
       ${profile.roleKey},
       ${profile.country},
@@ -376,7 +374,7 @@ async function upsertDatabaseScmStaffProfile(
       email = excluded.email,
       email_lower = excluded.email_lower,
       password_hash = excluded.password_hash,
-      password_plaintext = excluded.password_plaintext,
+      password_plaintext = null,
       phone = excluded.phone,
       role_key = excluded.role_key,
       country = excluded.country,

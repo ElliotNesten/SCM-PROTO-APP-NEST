@@ -1,15 +1,19 @@
 import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 
+import { getCurrentAuthenticatedScmStaffProfile } from "@/lib/auth-session";
+import {
+  canAccessPlatformStaffDirectory,
+  canManagePlatformFieldStaffProfile,
+} from "@/lib/platform-access";
 import {
   deleteStoredStaffProfile,
   getStoredStaffProfileById,
   updateStoredStaffProfile,
 } from "@/lib/staff-store";
 import {
-  ensureStaffAppAccountForLinkedStaffProfile,
-  syncStaffAppAccountFromLinkedStaffProfile,
   updateStaffAppAccountPasswordByLinkedStaffProfileId,
+  syncStaffAppAccountFromLinkedStaffProfile,
 } from "@/lib/staff-app-store";
 import type { RegistrationStatus } from "@/types/backend";
 import type { StaffApprovalStatus } from "@/types/scm";
@@ -54,9 +58,18 @@ type StaffProfilePayload = {
 export async function PATCH(request: Request, context: RouteContext) {
   const { personId } = await context.params;
   const payload = (await request.json().catch(() => null)) as StaffProfilePayload | null;
+  const currentProfile = await getCurrentAuthenticatedScmStaffProfile();
 
   if (!payload) {
     return NextResponse.json({ error: "Missing staff profile payload." }, { status: 400 });
+  }
+
+  if (!currentProfile) {
+    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+  }
+
+  if (!canAccessPlatformStaffDirectory(currentProfile.roleKey)) {
+    return NextResponse.json({ error: "Forbidden." }, { status: 403 });
   }
 
   const requestedStaffAppPassword =
@@ -65,10 +78,20 @@ export async function PATCH(request: Request, context: RouteContext) {
       : undefined;
 
   if (payload.staffAppPassword !== undefined && requestedStaffAppPassword) {
-    if (requestedStaffAppPassword.length < 6) {
+    if (requestedStaffAppPassword.length < 8) {
       return NextResponse.json(
-        { error: "Staff App password must be at least 6 characters long." },
+        { error: "Staff App password must be at least 8 characters long." },
         { status: 400 },
+      );
+    }
+
+    if (
+      currentProfile.roleKey !== "superAdmin" &&
+      currentProfile.roleKey !== "officeStaff"
+    ) {
+      return NextResponse.json(
+        { error: "Only platform administrators can reset Staff App passwords." },
+        { status: 403 },
       );
     }
   }
@@ -77,6 +100,21 @@ export async function PATCH(request: Request, context: RouteContext) {
 
   if (!existingProfile) {
     return NextResponse.json({ error: "Staff profile not found." }, { status: 404 });
+  }
+
+  if (!canManagePlatformFieldStaffProfile(currentProfile, existingProfile)) {
+    return NextResponse.json({ error: "Forbidden." }, { status: 403 });
+  }
+
+  const requestedScopeProfile = {
+    ...existingProfile,
+    country: payload.country ?? existingProfile.country,
+    region: payload.region ?? existingProfile.region,
+    regions: Array.isArray(payload.regions) ? payload.regions : existingProfile.regions,
+  };
+
+  if (!canManagePlatformFieldStaffProfile(currentProfile, requestedScopeProfile)) {
+    return NextResponse.json({ error: "Forbidden." }, { status: 403 });
   }
 
   const updatedProfile = await updateStoredStaffProfile(personId, {
@@ -125,19 +163,6 @@ export async function PATCH(request: Request, context: RouteContext) {
     return NextResponse.json({ error: "Staff profile not found." }, { status: 404 });
   }
 
-  await ensureStaffAppAccountForLinkedStaffProfile({
-    id: updatedProfile.id,
-    displayName: updatedProfile.displayName,
-    email: updatedProfile.email,
-    phone: updatedProfile.phone,
-    country: updatedProfile.country,
-    region: updatedProfile.region,
-    roleProfiles: updatedProfile.roleProfiles,
-    roles: updatedProfile.roles,
-    priority: updatedProfile.priority,
-    profileImageUrl: updatedProfile.profileImageUrl,
-  });
-
   await syncStaffAppAccountFromLinkedStaffProfile({
     id: updatedProfile.id,
     displayName: updatedProfile.displayName,
@@ -158,15 +183,33 @@ export async function PATCH(request: Request, context: RouteContext) {
     );
   }
 
+  revalidatePath("/people");
+  revalidatePath(`/people/${personId}`);
+  revalidatePath("/dashboard");
+
   return NextResponse.json({ ok: true, profile: updatedProfile });
 }
 
 export async function DELETE(_request: Request, context: RouteContext) {
   const { personId } = await context.params;
+  const currentProfile = await getCurrentAuthenticatedScmStaffProfile();
+
+  if (!currentProfile) {
+    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+  }
+
+  if (!canAccessPlatformStaffDirectory(currentProfile.roleKey)) {
+    return NextResponse.json({ error: "Forbidden." }, { status: 403 });
+  }
+
   const existingProfile = await getStoredStaffProfileById(personId);
 
   if (!existingProfile) {
     return NextResponse.json({ error: "Staff profile not found." }, { status: 404 });
+  }
+
+  if (!canManagePlatformFieldStaffProfile(currentProfile, existingProfile)) {
+    return NextResponse.json({ error: "Forbidden." }, { status: 403 });
   }
 
   if (existingProfile.approvalStatus !== "Archived") {

@@ -4,6 +4,11 @@ import path from "path";
 import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 
+import { getCurrentAuthenticatedScmStaffProfile } from "@/lib/auth-session";
+import {
+  canAccessPlatformStaffDirectory,
+  canManagePlatformFieldStaffProfile,
+} from "@/lib/platform-access";
 import { deleteStoredPublicUpload, storePublicUpload } from "@/lib/public-file-storage";
 import { syncStaffAppAccountFromLinkedStaffProfile } from "@/lib/staff-app-store";
 import {
@@ -20,6 +25,7 @@ type RouteContext = {
 const publicRootDirectory = path.join(process.cwd(), "public");
 const imageRootDirectory = path.join(publicRootDirectory, "staff-images");
 const allowedExtensions = new Set(["png", "jpg", "jpeg", "webp"]);
+const maxImageUploadBytes = 5 * 1024 * 1024;
 
 function sanitizeFileBaseName(fileName: string) {
   return fileName
@@ -39,10 +45,24 @@ async function deletePreviousImage(currentImageUrl: string | undefined) {
 
 export async function POST(request: Request, context: RouteContext) {
   const { personId } = await context.params;
+  const currentProfile = await getCurrentAuthenticatedScmStaffProfile();
+
+  if (!currentProfile) {
+    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+  }
+
+  if (!canAccessPlatformStaffDirectory(currentProfile.roleKey)) {
+    return NextResponse.json({ error: "Forbidden." }, { status: 403 });
+  }
+
   const profile = await getStoredStaffProfileById(personId);
 
   if (!profile) {
     return NextResponse.json({ error: "Staff profile not found." }, { status: 404 });
+  }
+
+  if (!canManagePlatformFieldStaffProfile(currentProfile, profile)) {
+    return NextResponse.json({ error: "Forbidden." }, { status: 403 });
   }
 
   const formData = await request.formData();
@@ -50,6 +70,13 @@ export async function POST(request: Request, context: RouteContext) {
 
   if (!(uploadedEntry instanceof File)) {
     return NextResponse.json({ error: "Choose an image to upload." }, { status: 400 });
+  }
+
+  if (uploadedEntry.size > maxImageUploadBytes) {
+    return NextResponse.json(
+      { error: "Image uploads must be 5 MB or smaller." },
+      { status: 400 },
+    );
   }
 
   const fileExtension = path.extname(uploadedEntry.name).toLowerCase().replace(".", "");

@@ -14,15 +14,26 @@ import type {
 const storeDirectory = path.join(process.cwd(), "data");
 const storePath = path.join(storeDirectory, "password-setup-token-store.json");
 const tokenLifetimeMs = 24 * 60 * 60 * 1000;
-const fallbackTokenSecret = "scm-platform-prototype-password-setup-secret";
+const developmentFallbackTokenSecret = "scm-platform-prototype-dev-password-setup-secret";
 
 function getPasswordSetupTokenSecret() {
-  return (
-    process.env.SCM_PASSWORD_SETUP_TOKEN_SECRET ||
-    process.env.SCM_SESSION_SECRET ||
-    process.env.AUTH_SECRET ||
-    fallbackTokenSecret
-  );
+  const configuredSecret =
+    process.env.SCM_PASSWORD_SETUP_TOKEN_SECRET?.trim() ||
+    process.env.SCM_SESSION_SECRET?.trim() ||
+    process.env.AUTH_SECRET?.trim() ||
+    "";
+
+  if (configuredSecret) {
+    return configuredSecret;
+  }
+
+  if (process.env.NODE_ENV === "production") {
+    throw new Error(
+      "SCM_PASSWORD_SETUP_TOKEN_SECRET, SCM_SESSION_SECRET, or AUTH_SECRET must be set in production.",
+    );
+  }
+
+  return developmentFallbackTokenSecret;
 }
 
 function hashPasswordSetupToken(token: string) {
@@ -311,44 +322,43 @@ export async function consumePasswordSetupToken(rawToken: string) {
   const sql = getPostgresClient();
 
   if (sql) {
-    const verification = await verifyPasswordSetupToken(normalizedToken);
-
-    if (verification.state !== "valid" || !verification.record) {
-      return null;
-    }
-
     const consumedAt = new Date().toISOString();
     await ensureProductionStorageSchema();
-    await sql`
+    const rows = await sql<PasswordSetupTokenRow[]>`
       update password_setup_tokens
       set consumed_at = ${consumedAt}
-      where id = ${verification.record.id}
+      where token_hash = ${hashPasswordSetupToken(normalizedToken)}
+        and consumed_at is null
+        and invalidated_at is null
+        and expires_at > ${consumedAt}
+      returning *
     `;
 
-    return {
-      ...verification.record,
-      consumedAt,
-    };
-  }
-
-  const verification = await verifyPasswordSetupToken(normalizedToken);
-
-  if (verification.state !== "valid" || !verification.record) {
-    return null;
+    return rows[0] ? mapPasswordSetupTokenRow(rows[0]) : null;
   }
 
   const tokens = await readPasswordSetupTokenStore();
-  const tokenIndex = tokens.findIndex(
-    (token) => token.id === verification.record?.id,
-  );
+  const tokenHash = hashPasswordSetupToken(normalizedToken);
+  const tokenIndex = tokens.findIndex((token) => {
+    if (token.tokenHash !== tokenHash) {
+      return false;
+    }
+
+    if (token.invalidatedAt || token.consumedAt) {
+      return false;
+    }
+
+    return new Date(token.expiresAt).getTime() > Date.now();
+  });
 
   if (tokenIndex === -1) {
     return null;
   }
 
+  const consumedAt = new Date().toISOString();
   tokens[tokenIndex] = {
     ...tokens[tokenIndex],
-    consumedAt: new Date().toISOString(),
+    consumedAt,
   };
 
   await writePasswordSetupTokenStore(tokens);

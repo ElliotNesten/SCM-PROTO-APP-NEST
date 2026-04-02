@@ -8,17 +8,12 @@ import {
 } from "@/lib/gig-store";
 import { verifyPasswordHash } from "@/lib/password-utils";
 import {
-  ensureStaffAppAccountForLinkedStaffProfile,
   getStaffAppAccountByEmail,
   verifyStaffAppAccountPassword,
 } from "@/lib/staff-app-store";
 import {
-  getStoredStaffProfileByEmail,
-} from "@/lib/staff-store";
-import {
   getStoredScmStaffProfileByEmail,
   getStoredScmStaffProfileById,
-  updateStoredScmStaffProfile,
 } from "@/lib/scm-staff-store";
 
 function readString(formData: FormData, key: string) {
@@ -61,39 +56,11 @@ export async function loginWithScmStaff(formData: FormData) {
     profile.roleKey !== "temporaryGigManager" &&
     verifyPasswordHash(normalizedPassword, profile.passwordHash)
   ) {
-    if (profile.passwordPlaintext?.trim() !== normalizedPassword) {
-      await updateStoredScmStaffProfile(profile.id, {
-        passwordPlaintext: normalizedPassword,
-      });
-    }
-
     await createAuthSession(profile.id);
     redirect("/dashboard");
   }
 
-  const existingStaffAppAccount = await getStaffAppAccountByEmail(email);
-  const staffAppAccount =
-    existingStaffAppAccount ??
-    (await (async () => {
-      const linkedStaffProfile = await getStoredStaffProfileByEmail(email);
-
-      if (!linkedStaffProfile) {
-        return null;
-      }
-
-      return ensureStaffAppAccountForLinkedStaffProfile({
-        id: linkedStaffProfile.id,
-        displayName: linkedStaffProfile.displayName,
-        email: linkedStaffProfile.email,
-        phone: linkedStaffProfile.phone,
-        country: linkedStaffProfile.country,
-        region: linkedStaffProfile.region,
-        roleProfiles: linkedStaffProfile.roleProfiles,
-        roles: linkedStaffProfile.roles,
-        priority: linkedStaffProfile.priority,
-        profileImageUrl: linkedStaffProfile.profileImageUrl,
-      });
-    })());
+  const staffAppAccount = await getStaffAppAccountByEmail(email);
 
   if (staffAppAccount && verifyStaffAppAccountPassword(staffAppAccount, password)) {
     const linkedStaffProfileId = staffAppAccount.linkedStaffProfileId?.trim() ?? "";

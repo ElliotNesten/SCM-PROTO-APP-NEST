@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { unstable_noStore as noStore } from "next/cache";
 
 import { PageHeader } from "@/components/page-header";
 import { ShiftOverviewEditor } from "@/components/shift-overview-editor";
@@ -27,7 +26,6 @@ type ShiftDetailPageProps = {
 export default async function ShiftDetailPage({
   params,
 }: ShiftDetailPageProps) {
-  noStore();
   const { gigId, shiftId } = await params;
   const currentProfile = await requireCurrentAuthenticatedScmStaffProfile();
 

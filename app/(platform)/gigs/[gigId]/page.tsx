@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { unstable_noStore as noStore } from "next/cache";
 import { notFound } from "next/navigation";
 
 import { DetailTabs } from "@/components/detail-tabs";
@@ -119,7 +118,6 @@ export default async function GigDetailPage({
   params,
   searchParams,
 }: GigDetailPageProps) {
-  noStore();
   const { gigId } = await params;
   const { tab, shiftTab } = await searchParams;
   const requestedTab = pickTab(tab, shiftTab);

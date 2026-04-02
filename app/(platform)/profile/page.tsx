@@ -1,4 +1,3 @@
-import { unstable_noStore as noStore } from "next/cache";
 import Link from "next/link";
 
 import { PageHeader } from "@/components/page-header";
@@ -12,7 +11,6 @@ import { getAllStoredGigs } from "@/lib/gig-store";
 import { filterPlatformGigsForProfile, isTemporaryGigManagerProfile } from "@/lib/platform-access";
 
 export default async function ProfilePage() {
-  noStore();
   const currentScmStaffProfile = await requireCurrentAuthenticatedScmStaffProfile();
 
   if (isTemporaryGigManagerProfile(currentScmStaffProfile)) {

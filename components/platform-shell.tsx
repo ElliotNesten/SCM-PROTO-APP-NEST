@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { unstable_noStore as noStore } from "next/cache";
 
 import { logoutCurrentUser } from "@/app/auth-actions";
 import { BrandLogoUploader } from "@/components/brand-logo-uploader";
@@ -19,7 +18,6 @@ import {
 import { SidebarNav } from "@/components/sidebar-nav";
 
 export async function PlatformShell({ children }: { children: ReactNode }) {
-  noStore();
   const currentUser = await getCurrentAuthenticatedUserSummary();
   const brandSettings = await getBrandSettings();
 

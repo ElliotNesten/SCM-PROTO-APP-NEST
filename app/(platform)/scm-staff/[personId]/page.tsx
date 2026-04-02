@@ -1,5 +1,4 @@
 import { notFound } from "next/navigation";
-import { unstable_noStore as noStore } from "next/cache";
 
 import { ScmStaffProfileEditor } from "@/components/scm-staff-profile-editor";
 import {
@@ -39,7 +38,6 @@ export default async function ScmStaffProfilePage({
   params,
   searchParams,
 }: ScmStaffProfilePageProps) {
-  noStore();
   const { personId } = await params;
   const resolvedSearchParams = searchParams ? await searchParams : undefined;
   const [currentScmStaffProfile, profile] = await Promise.all([

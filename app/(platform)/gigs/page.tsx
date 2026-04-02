@@ -1,5 +1,3 @@
-import { unstable_noStore as noStore } from "next/cache";
-
 import { GigRegisterClient } from "@/components/gig-register-client";
 import { requireCurrentAuthenticatedScmStaffProfile } from "@/lib/auth-session";
 import { getAllStoredGigs } from "@/lib/gig-store";
@@ -33,7 +31,6 @@ function resolveInitialCountryFilter(value: string | undefined) {
 }
 
 export default async function GigsPage({ searchParams }: GigsPageProps) {
-  noStore();
   const resolvedSearchParams = searchParams ? await searchParams : undefined;
   const [profile, gigs] = await Promise.all([
     requireCurrentAuthenticatedScmStaffProfile(),

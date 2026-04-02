@@ -27,6 +27,8 @@ import { staffRoleKeys, type StaffRoleKey } from "@/types/staff-role";
 const countryOptions = compensationCountries;
 
 const swedenRegionOptions = ["Stockholm", "Gothenburg", "Malmo"] as const;
+const autoSaveDelayMs = 300;
+const archivedPeopleHref = "/people?status=Archived&archiveView=Old%20staff%20documents";
 
 type RoleHourlyRateChange = {
   roleKey: StaffRoleKey;
@@ -101,6 +103,11 @@ export function StaffProfileEditor({
   const [pendingHourlyRateEditorRole, setPendingHourlyRateEditorRole] =
     useState<StaffRoleKey | null>(null);
   const isSwedenProfile = profile.country === "Sweden";
+
+  useEffect(() => {
+    router.prefetch("/people");
+    router.prefetch(archivedPeopleHref);
+  }, [router]);
 
   const regionOptions = useMemo(
     () =>
@@ -493,8 +500,7 @@ export function StaffProfileEditor({
       }
 
       setShowDeleteConfirm(false);
-      router.push("/people?status=Archived&archiveView=Old%20staff%20documents");
-      router.refresh();
+      router.push(archivedPeopleHref);
     } catch {
       setSaveMessage("Could not delete employee profile.");
       setActionLoading(false);
@@ -583,8 +589,8 @@ export function StaffProfileEditor({
       return;
     }
 
-    if (passwordDraft.trim().length < 6) {
-      setPasswordMessage("Staff App password must be at least 6 characters long.");
+    if (passwordDraft.trim().length < 8) {
+      setPasswordMessage("Staff App password must be at least 8 characters long.");
       return;
     }
 
@@ -645,7 +651,7 @@ export function StaffProfileEditor({
 
     const timeoutId = window.setTimeout(() => {
       void saveProfile(false, "auto");
-    }, 900);
+    }, autoSaveDelayMs);
 
     return () => {
       window.clearTimeout(timeoutId);

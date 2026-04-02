@@ -1,4 +1,3 @@
-import { unstable_noStore as noStore } from "next/cache";
 import Link from "next/link";
 
 import { PageHeader } from "@/components/page-header";
@@ -215,7 +214,6 @@ function getRolePermissionChecklist(roleKey: ScmStaffRoleKey): ScmPermissionChec
 }
 
 export default async function ScmStaffPage() {
-  noStore();
   const currentProfile = await requireScmStaffDirectoryProfile();
   const canManageScmStaffProfiles = canAccessScmStaffAdministration(currentProfile.roleKey);
   const [profiles, storedGigs, staffProfiles] = await Promise.all([

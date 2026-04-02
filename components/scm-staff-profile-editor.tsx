@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { PageHeader } from "@/components/page-header";
 import { ProfileImage } from "@/components/profile-image";
@@ -129,6 +129,11 @@ export function ScmStaffProfileEditor({
   const [showPasswordDraft, setShowPasswordDraft] = useState(false);
   const [regionDraft, setRegionDraft] = useState("");
   const imageInputRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    router.prefetch(backHref);
+    router.prefetch("/scm-staff");
+  }, [backHref, router]);
 
   const roleDefinition = getScmRoleDefinition(profile.roleKey);
   const isRegionalManager = profile.roleKey === "regionalManager";
@@ -318,7 +323,6 @@ export function ScmStaffProfileEditor({
       setConfirmPasswordDraft("");
       setShowPasswordDraft(false);
       setSaveMessage("SCM staff profile saved.");
-      router.refresh();
     } else {
       setSaveMessage(payload?.error ?? "Could not save SCM staff profile.");
     }
@@ -364,7 +368,6 @@ export function ScmStaffProfileEditor({
         imageInputRef.current.value = "";
       }
       setSaveMessage("SCM staff profile image updated.");
-      router.refresh();
     } else {
       setSaveMessage(payload?.error ?? "Could not upload SCM staff profile image.");
     }
@@ -393,7 +396,6 @@ export function ScmStaffProfileEditor({
 
       setShowDeleteConfirm(false);
       router.push("/scm-staff");
-      router.refresh();
     } catch {
       setSaveMessage("Could not delete SCM staff profile.");
       setDeleting(false);

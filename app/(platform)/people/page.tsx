@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { unstable_noStore as noStore } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { PageHeader } from "@/components/page-header";
@@ -135,7 +134,6 @@ function buildPeopleHref(
 }
 
 export default async function PeoplePage({ searchParams }: PeoplePageProps) {
-  noStore();
   const currentProfile = await requireCurrentAuthenticatedScmStaffProfile();
 
   if (!canAccessPlatformStaffDirectory(currentProfile.roleKey)) {

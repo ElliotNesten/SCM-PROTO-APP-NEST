@@ -1,5 +1,4 @@
 import { notFound } from "next/navigation";
-import { unstable_noStore as noStore } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { StaffProfileEditor } from "@/components/staff-profile-editor";
@@ -19,7 +18,6 @@ type PersonProfilePageProps = {
 };
 
 export default async function PersonProfilePage({ params }: PersonProfilePageProps) {
-  noStore();
   const currentProfile = await requireCurrentAuthenticatedScmStaffProfile();
 
   if (!canAccessPlatformStaffDirectory(currentProfile.roleKey)) {

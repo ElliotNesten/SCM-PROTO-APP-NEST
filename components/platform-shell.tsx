@@ -51,6 +51,8 @@ export async function PlatformShell({ children }: { children: ReactNode }) {
 
       <BottomNav
         canAccessScmStaff={canAccessScmStaffDirectory(currentUser.roleKey)}
+        profileImageUrl={currentUser.profileImageUrl ?? ""}
+        displayName={currentUser.displayName}
       />
     </div>
   );

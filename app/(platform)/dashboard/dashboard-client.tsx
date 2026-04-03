@@ -687,31 +687,45 @@ export function DashboardClient({
         </div>
       ) : null}
 
-      <div className="overview-gigs-panel compact">
-        {upcomingGigs.length > 0 && (
-          <div className="upcoming-gigs-block">
-            <p className="upcoming-gigs-label">Upcoming gigs</p>
-            <div className="upcoming-gigs-list">
-              {upcomingGigs.map((gig) => (
-                <Link key={gig.id} href={`/gigs/${gig.id}`} className="upcoming-gig-row">
-                  <span className="upcoming-gig-name">{gig.artist}</span>
-                  <span className="upcoming-gig-date">{gig.date}</span>
-                  <span className="upcoming-gig-venue">{gig.arena}, {gig.city}</span>
-                </Link>
-              ))}
-            </div>
+      {upcomingGigs.length > 0 && (
+        <div className="upcoming-gigs-block">
+          <p className="upcoming-gigs-label">Upcoming gigs</p>
+          <div className="upcoming-gigs-list">
+            {upcomingGigs.map((gig) => (
+              <Link key={gig.id} href={`/gigs/${gig.id}`} className="upcoming-gig-row">
+                <span className="upcoming-gig-name">{gig.artist}</span>
+                <span className="upcoming-gig-date">{gig.date}</span>
+                <span className="upcoming-gig-venue">{gig.arena}, {gig.city}</span>
+              </Link>
+            ))}
           </div>
-        )}
+        </div>
+      )}
 
-        <div className="overview-country-card-grid compact">
+      <div className="all-gigs-section">
+        <div className="all-gigs-section-head">
+          <span className="all-gigs-title">All Gigs</span>
+          <span className="all-gigs-count">{filteredGigs.length} gigs</span>
+        </div>
+
+        <div className="quick-filter-row">
+          <button
+            type="button"
+            className={`qf-chip ${activeGigView === "all" && activeCountry === "all" ? "active" : ""}`}
+            onClick={() => pushFilterRoute({ ...currentFilters, view: "all", country: "all" })}
+          >
+            All
+          </button>
           {toBeClosedCountryCards.map((entry) => (
-            <ToBeClosedCountryCard
+            <button
+              type="button"
               key={entry.country}
-              country={entry.country}
-              count={entry.count}
-              active={activeGigView === "toBeClosed" && activeCountry === entry.country}
+              className={`qf-chip ${activeGigView === "toBeClosed" && activeCountry === entry.country ? "active" : ""}`}
               onClick={() => toggleToBeClosedCountry(entry.country)}
-            />
+            >
+              {entry.country}
+              {entry.count > 0 ? <span className="qf-chip-count"> · {entry.count}</span> : null}
+            </button>
           ))}
         </div>
 

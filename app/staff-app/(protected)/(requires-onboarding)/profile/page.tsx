@@ -81,7 +81,7 @@ export default async function StaffAppProfilePage({
     <section className="staff-app-screen">
       <div className="staff-app-card emphasis">
         <p className="staff-app-kicker">Profile</p>
-        <h1>{account.displayName}</h1>
+        <h1>{account.firstName} {account.lastName}</h1>
         <p className="staff-app-muted">
           {account.country} · {account.region}
         </p>
@@ -91,7 +91,7 @@ export default async function StaffAppProfilePage({
         <div className="staff-app-detail-grid">
           <div className="staff-app-detail-cell">
             <span>Name</span>
-            <strong>{account.displayName}</strong>
+            <strong>{account.firstName} {account.lastName}</strong>
           </div>
           <div className="staff-app-detail-cell">
             <span>Phone</span>

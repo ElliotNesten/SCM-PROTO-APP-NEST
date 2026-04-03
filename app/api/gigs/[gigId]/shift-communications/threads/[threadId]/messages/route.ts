@@ -97,18 +97,18 @@ export async function POST(request: Request, context: RouteContext) {
   const author =
     platformProfile && canAccessPlatformGig(platformProfile, gig)
       ? {
-          authorName: platformProfile.displayName,
+          authorName: `${platformProfile.firstName} ${platformProfile.lastName}`,
           authorProfileId: platformProfile.id,
           authorType: "scm" as const,
         }
       : staffAppScmProfile && canAccessPlatformGig(staffAppScmProfile, gig)
         ? {
-            authorName: staffAppScmProfile.displayName,
+            authorName: `${staffAppScmProfile.firstName} ${staffAppScmProfile.lastName}`,
             authorProfileId: staffAppScmProfile.id,
             authorType: "scm" as const,
           }
         : {
-            authorName: staffAppAccount?.displayName ?? "Staff member",
+            authorName: staffAppAccount ? `${staffAppAccount.firstName} ${staffAppAccount.lastName}` : "Staff member",
             authorProfileId: linkedStaffId,
             authorType: "staff" as const,
           };

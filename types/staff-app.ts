@@ -11,7 +11,8 @@ export interface StaffAppAccount {
   id: string;
   linkedStaffProfileId?: string;
   createdFromApplicationId?: string | null;
-  displayName: string;
+  firstName: string;
+  lastName: string;
   email: string;
   phone: string;
   country: string;

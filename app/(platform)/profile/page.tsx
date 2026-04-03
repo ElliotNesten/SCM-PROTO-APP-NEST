@@ -23,7 +23,7 @@ export default async function ProfilePage() {
     return (
       <>
         <PageHeader
-          title={currentScmStaffProfile.displayName}
+          title={`${currentScmStaffProfile.firstName} ${currentScmStaffProfile.lastName}`}
           subtitle="Temporary Gig Manager access"
           actions={
             <Link href="/dashboard" className="button ghost">
@@ -45,7 +45,7 @@ export default async function ProfilePage() {
               <div className="list-stack">
                 <div className="key-value-card">
                   <small>Name</small>
-                  <strong>{currentScmStaffProfile.displayName}</strong>
+                  <strong>{currentScmStaffProfile.firstName} {currentScmStaffProfile.lastName}</strong>
                 </div>
                 <div className="key-value-card">
                   <small>Email</small>

@@ -392,7 +392,7 @@ export default async function PeoplePage({ searchParams }: PeoplePageProps) {
                   >
                     <div className="staff-list-avatar" aria-hidden="true">
                       <ProfileImage
-                        displayName={person.displayName}
+                        fullName={`${person.firstName} ${person.lastName}`}
                         imageUrl={person.profileImageUrl}
                         alt=""
                         className="staff-list-avatar-img"
@@ -400,7 +400,7 @@ export default async function PeoplePage({ searchParams }: PeoplePageProps) {
                     </div>
                     <div className="staff-grid-card-body">
                       <div className="staff-list-name-row">
-                        <strong>{person.displayName}</strong>
+                        <strong>{person.firstName} {person.lastName}</strong>
                         {activeCountry === "All" && getCountryFlag(person.country) ? (
                           <span className="staff-list-flag" aria-label={person.country}>
                             {getCountryFlag(person.country)}

@@ -1,7 +1,7 @@
 [
   {
     "id": "office-1",
-    "displayName": "Anton Schöldberg",
+    "firstName": "Anton", "lastName": "Schöldberg",
     "email": "Anton@scm.se",
     "passwordHash": "scrypt:06ca4e9d-526d-4503-a9f2-7b953b645622:6b55ef7ea6da3fb24e82840e1d4de4a9d5e09dd536cfcd4ffe32c71fabd0526684275a34733d0a987d69eba774c66c54cafe9700451418efc1cc9143d6268b0c",
     "phone": "+46 738 16 17 17",
@@ -18,7 +18,7 @@
   },
   {
     "id": "scm-office-2",
-    "displayName": "Elliot Nestenborg",
+    "firstName": "Elliot", "lastName": "Nestenborg",
     "email": "Elliot@scm.se",
     "phone": "+46 70 333 10 20",
     "roleKey": "regionalManager",
@@ -33,7 +33,7 @@
   },
   {
     "id": "scm-region-1",
-    "displayName": "Henrik Borg",
+    "firstName": "Henrik", "lastName": "Borg",
     "email": "henrik.borg@scm.se",
     "phone": "+46 70 555 11 12",
     "roleKey": "officeStaff",
@@ -50,7 +50,7 @@
   },
   {
     "id": "scm-region-2",
-    "displayName": "Ingrid Olsen",
+    "firstName": "Ingrid", "lastName": "Olsen",
     "email": "ingrid.olsen@scm.no",
     "phone": "+47 91 200 300",
     "roleKey": "regionalManager",
@@ -67,7 +67,7 @@
   },
   {
     "id": "scm-gig-1",
-    "displayName": "Sandra Munoz",
+    "firstName": "Sandra", "lastName": "Munoz",
     "email": "sandra@scm.se",
     "phone": "+46 70 111 1111",
     "roleKey": "officeStaff",
@@ -84,7 +84,7 @@
   },
   {
     "id": "scm-gig-2",
-    "displayName": "Emil Ribba",
+    "firstName": "Emil", "lastName": "Ribba",
     "email": "Emil@scm.se",
     "phone": "",
     "roleKey": "officeStaff",

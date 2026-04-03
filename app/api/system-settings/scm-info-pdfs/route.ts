@@ -144,7 +144,7 @@ export async function POST(request: Request) {
         pdfUrl,
         fileName: uploadedEntry.name,
         uploadedAt: new Date().toISOString(),
-        uploadedBy: currentProfile.displayName,
+        uploadedBy: `${currentProfile.firstName} ${currentProfile.lastName}`,
         buttonLabel:
           buttonLabel || currentAsset?.buttonLabel || path.parse(uploadedEntry.name).name,
       });
@@ -183,7 +183,7 @@ export async function POST(request: Request) {
         pdfUrl,
         fileName: uploadedEntry.name,
         uploadedAt: new Date().toISOString(),
-        uploadedBy: currentProfile.displayName,
+        uploadedBy: `${currentProfile.firstName} ${currentProfile.lastName}`,
         buttonLabel:
           buttonLabel || currentAsset?.buttonLabel || path.parse(uploadedEntry.name).name,
       });

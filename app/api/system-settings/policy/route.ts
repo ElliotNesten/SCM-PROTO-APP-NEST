@@ -99,7 +99,7 @@ export async function POST(request: Request) {
       policyUrl,
       fileName: uploadedEntry.name,
       uploadedAt: new Date().toISOString(),
-      uploadedBy: currentProfile.displayName,
+      uploadedBy: `${currentProfile.firstName} ${currentProfile.lastName}`,
     });
     await deleteStoredPublicUpload({
       fileUrl: existingPolicy.policyUrl,

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 
 import { resolveGigOverviewIndicator } from "@/data/scm-data";
 import {
@@ -330,11 +330,48 @@ function DashboardGigRow({ gig }: { gig: Gig }) {
   );
 }
 
+const greetingWords = ["Hey", "Welcome", "Hello", "Wassup", "Hola", "Howdy", "Yo", "Hi there"];
+
+function useTypewriterGreeting() {
+  const [wordIndex, setWordIndex] = useState(0);
+  const [charIndex, setCharIndex] = useState(0);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const currentWord = greetingWords[wordIndex];
+
+  useEffect(() => {
+    const timeout = setTimeout(
+      () => {
+        if (!isDeleting) {
+          if (charIndex < currentWord.length) {
+            setCharIndex((c) => c + 1);
+          } else {
+            setTimeout(() => setIsDeleting(true), 2000);
+          }
+        } else {
+          if (charIndex > 0) {
+            setCharIndex((c) => c - 1);
+          } else {
+            setIsDeleting(false);
+            setWordIndex((i) => (i + 1) % greetingWords.length);
+          }
+        }
+      },
+      isDeleting ? 60 : 120,
+    );
+    return () => clearTimeout(timeout);
+  }, [charIndex, isDeleting, currentWord]);
+
+  return currentWord.slice(0, charIndex);
+}
+
 export function DashboardClient({
   gigs,
+  firstName,
 }: {
   gigs: Gig[];
+  firstName: string;
 }) {
+  const greetingWord = useTypewriterGreeting();
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -448,8 +485,47 @@ export function DashboardClient({
       !isGigArchivedOnlyForRegister(gig),
   ).length;
 
+  const [statsRange, setStatsRange] = useState<"week" | "month" | "year" | "all">("month");
+
   const today = new Date();
   today.setHours(0, 0, 0, 0);
+
+  function getDateBoundary(direction: "future" | "past") {
+    if (statsRange === "all") return null;
+    const d = new Date(today);
+    const sign = direction === "future" ? 1 : -1;
+    if (statsRange === "week") d.setDate(d.getDate() + sign * 7);
+    else if (statsRange === "month") d.setDate(d.getDate() + sign * 30);
+    else if (statsRange === "year") d.setFullYear(d.getFullYear() + sign * 1);
+    return d;
+  }
+
+  const futureBound = getDateBoundary("future");
+  const pastBound = getDateBoundary("past");
+
+  const statsUpcoming = gigs.filter((gig) => {
+    const [y, m, d] = gig.date.split("-").map(Number);
+    const gigDate = new Date(y, m - 1, d);
+    if (gigDate < today || resolveGigRegisterSection(gig) === "closed") return false;
+    return futureBound ? gigDate <= futureBound : true;
+  });
+
+  const statsPast = gigs.filter((gig) => {
+    const [y, m, d] = gig.date.split("-").map(Number);
+    const gigDate = new Date(y, m - 1, d);
+    if (gigDate >= today) return false;
+    return pastBound ? gigDate >= pastBound : true;
+  });
+
+  const statsSalesEstimate = statsUpcoming.reduce(
+    (sum, gig) => sum + (gig.salesEstimateOverride ?? gig.ticketsSold * gig.estimatedSpendPerVisitor),
+    0,
+  );
+  const statsTickets = statsUpcoming.reduce((sum, gig) => sum + gig.ticketsSold, 0);
+
+  const statsRangeLabel = statsRange === "week" ? "7d" : statsRange === "month" ? "30d" : statsRange === "year" ? "1y" : "all";
+  const statsPastLabel = statsRange === "week" ? "Past Week" : statsRange === "month" ? "Past Month" : statsRange === "year" ? "Past Year" : "All Time";
+
   const upcomingGigs = [...gigs]
     .filter((gig) => {
       const [y, m, d] = gig.date.split("-").map(Number);
@@ -687,16 +763,59 @@ export function DashboardClient({
         </div>
       ) : null}
 
+      <h2 className="dashboard-greeting">
+        <span className="greeting-word">{greetingWord}</span>
+        <span className="greeting-cursor">|</span>
+        {firstName ? `, ${firstName}` : ""}
+      </h2>
+
+      <div className="greeting-stats-section">
+        <div className="greeting-stats-range-row">
+          {(["week", "month", "year", "all"] as const).map((range) => (
+            <button
+              key={range}
+              type="button"
+              className={`greeting-range-chip ${statsRange === range ? "active" : ""}`}
+              onClick={() => setStatsRange(range)}
+            >
+              {range === "week" ? "1 Week" : range === "month" ? "1 Month" : range === "year" ? "1 Year" : "All time"}
+            </button>
+          ))}
+        </div>
+        <div className="greeting-stats">
+          <div className="greeting-stat-card">
+            <span className="greeting-stat-label">Upcoming gigs ({statsRangeLabel})</span>
+            <div className="greeting-stat-value-row">
+              <strong className="greeting-stat-value">{statsUpcoming.length}</strong>
+              <Link href="/gigs" className="greeting-stat-link">View gigs</Link>
+            </div>
+          </div>
+          <div className="greeting-stat-card">
+            <span className="greeting-stat-label">Est. sales ({statsRangeLabel})</span>
+            <strong className="greeting-stat-value">{statsSalesEstimate.toLocaleString("en-SE")} kr</strong>
+          </div>
+          <div className="greeting-stat-card">
+            <span className="greeting-stat-label">Tickets sold ({statsRangeLabel})</span>
+            <strong className="greeting-stat-value">{statsTickets.toLocaleString()}</strong>
+          </div>
+          <div className="greeting-stat-card">
+            <span className="greeting-stat-label">Gigs {statsPastLabel}</span>
+            <strong className="greeting-stat-value">{statsPast.length}</strong>
+          </div>
+        </div>
+      </div>
+
       {upcomingGigs.length > 0 && (
         <div className="upcoming-gigs-block">
           <p className="upcoming-gigs-label">Upcoming gigs</p>
           <div className="upcoming-gigs-list">
             {upcomingGigs.map((gig) => (
-              <Link key={gig.id} href={`/gigs/${gig.id}`} className="upcoming-gig-row">
+              <div key={gig.id} className="upcoming-gig-row">
                 <span className="upcoming-gig-name">{gig.artist}</span>
                 <span className="upcoming-gig-date">{gig.date}</span>
                 <span className="upcoming-gig-venue">{gig.arena}, {gig.city}</span>
-              </Link>
+                <Link href={`/gigs/${gig.id}`} className="upcoming-gig-info-btn">Gig Info</Link>
+              </div>
             ))}
           </div>
         </div>

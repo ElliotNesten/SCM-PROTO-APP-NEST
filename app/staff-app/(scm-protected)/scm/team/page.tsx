@@ -285,7 +285,7 @@ export default async function StaffAppScmTeamPage({
               visibleFieldStaff.map((candidate) => (
                 <article key={candidate.id} className="staff-app-scm-person-card">
                   <div className="staff-app-scm-person-copy">
-                    <strong>{candidate.displayName}</strong>
+                    <strong>{candidate.firstName} {candidate.lastName}</strong>
                     <p>{formatFieldStaffPermissions(candidate.roles)}</p>
                     <span>{candidate.email}</span>
                     <span>
@@ -351,7 +351,7 @@ export default async function StaffAppScmTeamPage({
                 return (
                   <article key={candidate.id} className="staff-app-scm-person-card">
                     <div className="staff-app-scm-person-copy">
-                      <strong>{candidate.displayName}</strong>
+                      <strong>{candidate.firstName} {candidate.lastName}</strong>
                       <p>{scopeSummary || roleDefinition.scopeLabel}</p>
                       <span>{candidate.email}</span>
                     </div>

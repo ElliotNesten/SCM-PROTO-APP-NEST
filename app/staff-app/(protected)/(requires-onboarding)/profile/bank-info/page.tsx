@@ -78,7 +78,7 @@ export default async function StaffAppBankInfoPage({
         <div className="staff-app-detail-grid">
           <div className="staff-app-detail-cell">
             <span>Account holder</span>
-            <strong>{account.displayName}</strong>
+            <strong>{account.firstName} {account.lastName}</strong>
           </div>
           <div className="staff-app-detail-cell">
             <span>Bank name</span>

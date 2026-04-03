@@ -186,7 +186,8 @@ export type StaffAppScmShiftWorkspace = {
   roster: StaffAppScmRosterEntry[];
   availableStaff: Array<{
     id: string;
-    displayName: string;
+    firstName: string;
+    lastName: string;
     roleLabel: string;
     regionLabel: string;
   }>;
@@ -587,7 +588,7 @@ function buildRosterEntries(
           shiftId: shift.id,
           shiftRole: shift.role,
           staffId: assignment.staffId,
-          staffName: staffProfile?.displayName ?? "Unknown staff member",
+          staffName: staffProfile ? `${staffProfile.firstName} ${staffProfile.lastName}` : "Unknown staff member",
           staffEmail: staffProfile?.email ?? "",
           staffPhone: staffProfile?.phone ?? "",
           staffProfileImageUrl: staffProfile?.profileImageUrl ?? "",
@@ -649,7 +650,7 @@ function buildScmConversationTitle(
 
   if (thread.audience === "individualPeople" && thread.recipientIds.length === 1) {
     return (
-      staffProfileById.get(thread.recipientIds[0] ?? "")?.displayName ??
+      (() => { const p = staffProfileById.get(thread.recipientIds[0] ?? ""); return p ? `${p.firstName} ${p.lastName}` : null; })() ??
       thread.audienceLabel
     );
   }
@@ -985,7 +986,8 @@ export async function getStaffAppScmShiftWorkspace(
     )
     .map((staffProfile) => ({
       id: staffProfile.id,
-      displayName: staffProfile.displayName,
+      firstName: staffProfile.firstName,
+      lastName: staffProfile.lastName,
       roleLabel: staffProfile.roles.join(" / ") || "No role set",
       regionLabel: [staffProfile.region, staffProfile.country].filter(Boolean).join(", "),
     }));

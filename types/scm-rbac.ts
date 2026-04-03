@@ -17,7 +17,8 @@ export interface ScmRoleDefinition {
 
 export interface StoredScmStaffProfile {
   id: string;
-  displayName: string;
+  firstName: string;
+  lastName: string;
   email: string;
   passwordHash: string;
   passwordPlaintext?: string;

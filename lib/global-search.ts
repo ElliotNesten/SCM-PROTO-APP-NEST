@@ -262,7 +262,7 @@ function buildGigItems(gigs: Gig[]) {
 function buildShiftItems(gigs: Gig[], staffProfiles: StoredStaffProfile[]) {
   const gigById = new Map(gigs.map((gig) => [gig.id, gig]));
   const staffNameById = new Map(
-    staffProfiles.map((profile) => [profile.id, profile.displayName]),
+    staffProfiles.map((profile) => [profile.id, `${profile.firstName} ${profile.lastName}`]),
   );
 
   return shifts
@@ -353,7 +353,7 @@ function buildStaffItems(staffProfiles: StoredStaffProfile[]) {
       {
         id: `staff-${profile.id}`,
         kind: "Staff",
-        title: profile.displayName,
+        title: `${profile.firstName} ${profile.lastName}`,
         subtitle: `${profile.region}, ${profile.country}`,
         detail: compactList([
           profile.email,
@@ -366,7 +366,7 @@ function buildStaffItems(staffProfiles: StoredStaffProfile[]) {
         scoreBase: 470,
       },
       [
-        profile.displayName,
+        `${profile.firstName} ${profile.lastName}`,
         profile.email,
         profile.phone,
         profile.country,
@@ -397,7 +397,7 @@ function buildStaffDocumentItems(staffProfiles: StoredStaffProfile[]) {
           id: `staff-document-${profile.id}-${document.id}`,
           kind: "Staff document",
           title: document.fileName,
-          subtitle: `${profile.displayName} · ${profile.country}`,
+          subtitle: `${profile.firstName} ${profile.lastName} · ${profile.country}`,
           detail: compactList([document.fileType, formatBytes(document.fileSize)]),
           href: `/people/${profile.id}`,
           badge: "Document",
@@ -407,7 +407,7 @@ function buildStaffDocumentItems(staffProfiles: StoredStaffProfile[]) {
           document.fileName,
           document.fileType,
           document.storageKey,
-          profile.displayName,
+          `${profile.firstName} ${profile.lastName}`,
           profile.country,
           profile.region,
           profile.email,

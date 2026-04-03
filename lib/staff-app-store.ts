@@ -24,7 +24,8 @@ type StaffAppAccountRow = {
   id: string;
   linked_staff_profile_id: string | null;
   created_from_application_id: string | null;
-  display_name: string;
+  first_name: string;
+  last_name: string;
   email: string;
   phone: string;
   country: string;
@@ -107,7 +108,8 @@ function normalizeRoleScopes(
 function createStaffAppAccountFromLinkedStaffProfile(
   profile: {
   id: string;
-  displayName: string;
+  firstName: string;
+  lastName: string;
   email: string;
   phone: string;
   country: string;
@@ -130,7 +132,8 @@ function createStaffAppAccountFromLinkedStaffProfile(
     id: `staff-app-${profile.id}`,
     linkedStaffProfileId: profile.id,
     createdFromApplicationId: options?.createdFromApplicationId ?? null,
-    displayName: profile.displayName,
+    firstName: profile.firstName,
+    lastName: profile.lastName,
     email: profile.email,
     phone: profile.phone,
     country: profile.country,
@@ -155,7 +158,8 @@ function normalizeStaffAppAccount(account: LegacyStaffAppAccount): StaffAppAccou
     id: account.id,
     linkedStaffProfileId: account.linkedStaffProfileId,
     createdFromApplicationId: account.createdFromApplicationId ?? null,
-    displayName: account.displayName,
+    firstName: account.firstName,
+    lastName: account.lastName,
     email: account.email,
     phone: account.phone,
     country: account.country,
@@ -176,7 +180,8 @@ function mapStaffAppAccountRow(row: StaffAppAccountRow): StaffAppAccount {
     id: row.id,
     linkedStaffProfileId: row.linked_staff_profile_id ?? undefined,
     createdFromApplicationId: row.created_from_application_id ?? null,
-    displayName: row.display_name,
+    firstName: row.first_name,
+    lastName: row.last_name,
     email: row.email,
     phone: row.phone,
     country: row.country,
@@ -281,7 +286,7 @@ async function upsertDatabaseStaffAppAccount(account: StaffAppAccount) {
       ${account.id},
       ${account.linkedStaffProfileId ?? null},
       ${account.createdFromApplicationId ?? null},
-      ${account.displayName},
+      ${`${account.firstName} ${account.lastName}`},
       ${account.email},
       ${account.email.toLowerCase()},
       ${account.phone},
@@ -508,7 +513,8 @@ export async function updateStaffAppAccountPasswordByLinkedStaffProfileId(
 
 export async function syncStaffAppAccountFromLinkedStaffProfile(profile: {
   id: string;
-  displayName: string;
+  firstName: string;
+  lastName: string;
   email: string;
   phone: string;
   country: string;
@@ -525,7 +531,8 @@ export async function syncStaffAppAccountFromLinkedStaffProfile(profile: {
       const ensuredAccount = await ensureStaffAppAccountForLinkedStaffProfile(profile);
       const syncedAccount: StaffAppAccount = {
         ...ensuredAccount,
-        displayName: profile.displayName,
+        firstName: profile.firstName,
+        lastName: profile.lastName,
         email: profile.email,
         phone: profile.phone,
         country: profile.country,
@@ -556,7 +563,8 @@ export async function syncStaffAppAccountFromLinkedStaffProfile(profile: {
 
   accounts[accountIndex] = {
     ...accounts[accountIndex],
-    displayName: profile.displayName,
+    firstName: profile.firstName,
+    lastName: profile.lastName,
     email: profile.email,
     phone: profile.phone,
     country: profile.country,
@@ -575,7 +583,8 @@ export async function syncStaffAppAccountFromLinkedStaffProfile(profile: {
 
 export async function ensureStaffAppAccountForLinkedStaffProfile(profile: {
   id: string;
-  displayName: string;
+  firstName: string;
+  lastName: string;
   email: string;
   phone: string;
   country: string;
@@ -632,7 +641,8 @@ export async function ensureStaffAppAccountForLinkedStaffProfile(profile: {
     const nextAccount: StaffAppAccount = {
       ...linkedAccount,
       linkedStaffProfileId: profile.id,
-      displayName: profile.displayName,
+      firstName: profile.firstName,
+      lastName: profile.lastName,
       email: profile.email,
       phone: profile.phone,
       country: profile.country,
@@ -655,7 +665,8 @@ export async function ensureStaffAppAccountForLinkedStaffProfile(profile: {
     const nextAccount: StaffAppAccount = {
       ...emailMatchedAccount,
       linkedStaffProfileId: profile.id,
-      displayName: profile.displayName,
+      firstName: profile.firstName,
+      lastName: profile.lastName,
       email: profile.email,
       phone: profile.phone,
       country: profile.country,
@@ -681,7 +692,8 @@ export async function ensureStaffAppAccountForLinkedStaffProfile(profile: {
 
 export async function createPendingStaffAppAccountForLinkedStaffProfile(profile: {
   id: string;
-  displayName: string;
+  firstName: string;
+  lastName: string;
   email: string;
   phone: string;
   country: string;

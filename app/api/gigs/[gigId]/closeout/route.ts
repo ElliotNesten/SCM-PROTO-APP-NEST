@@ -163,7 +163,7 @@ export async function POST(request: Request, context: RouteContext) {
   const updatedGig = await closeStoredGig(gigId, {
     overrideUsed: override,
     closedByProfileId: authorization.currentProfile.id,
-    closedByName: authorization.currentProfile.displayName,
+    closedByName: `${authorization.currentProfile.firstName} ${authorization.currentProfile.lastName}`,
   });
 
   if (!updatedGig) {

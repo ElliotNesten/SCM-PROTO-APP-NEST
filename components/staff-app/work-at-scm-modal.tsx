@@ -25,7 +25,8 @@ function getDisplayInitials(name: string) {
 function createInitialFormState() {
   return {
     profileImage: null as File | null,
-    displayName: "",
+    firstName: "",
+    lastName: "",
     email: "",
     phone: "",
     country: "Sweden",
@@ -46,8 +47,8 @@ export function WorkAtScmModal() {
   );
   const requiresSwedenDropdown = formState.country === "Sweden";
   const displayInitials = useMemo(
-    () => getDisplayInitials(formState.displayName) || "SC",
-    [formState.displayName],
+    () => getDisplayInitials(`${formState.firstName} ${formState.lastName}`) || "SC",
+    [formState.firstName, formState.lastName],
   );
 
   useEffect(() => {
@@ -81,7 +82,8 @@ export function WorkAtScmModal() {
 
     const payload = new FormData();
     payload.set("profileImage", formState.profileImage);
-    payload.set("displayName", formState.displayName);
+    payload.set("firstName", formState.firstName);
+    payload.set("lastName", formState.lastName);
     payload.set("email", formState.email);
     payload.set("phone", formState.phone);
     payload.set("country", formState.country);
@@ -187,15 +189,29 @@ export function WorkAtScmModal() {
                     </label>
 
                     <label className="staff-app-form-field">
-                      <span>Full name</span>
+                      <span>First name</span>
                       <input
                         type="text"
-                        value={formState.displayName}
+                        value={formState.firstName}
                         onChange={(event) => {
-                          const nextDisplayName = event.currentTarget.value;
                           setFormState((current) => ({
                             ...current,
-                            displayName: nextDisplayName,
+                            firstName: event.currentTarget.value,
+                          }));
+                        }}
+                        required
+                      />
+                    </label>
+
+                    <label className="staff-app-form-field">
+                      <span>Last name</span>
+                      <input
+                        type="text"
+                        value={formState.lastName}
+                        onChange={(event) => {
+                          setFormState((current) => ({
+                            ...current,
+                            lastName: event.currentTarget.value,
                           }));
                         }}
                         required

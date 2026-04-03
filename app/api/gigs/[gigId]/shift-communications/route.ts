@@ -210,7 +210,7 @@ export async function POST(request: Request, context: RouteContext) {
             ? payload.allowReplies
             : payload.audience !== "bookedOnShift",
         attachments,
-        authorName: currentProfile.displayName,
+        authorName: `${currentProfile.firstName} ${currentProfile.lastName}`,
         authorProfileId: currentProfile.id,
       });
 
@@ -286,7 +286,7 @@ export async function POST(request: Request, context: RouteContext) {
       typeof payload.allowReplies === "boolean"
         ? payload.allowReplies
         : payload.audience !== "bookedOnShift",
-    authorName: currentProfile.displayName,
+    authorName: `${currentProfile.firstName} ${currentProfile.lastName}`,
     authorProfileId: currentProfile.id,
   });
 

@@ -24,7 +24,8 @@ import {
 
 export interface StoredStaffProfile {
   id: string;
-  displayName: string;
+  firstName: string;
+  lastName: string;
   email: string;
   phone: string;
   country: string;
@@ -77,7 +78,8 @@ const archivedDocumentsStorePath = path.join(
 
 type StaffProfileRow = {
   id: string;
-  display_name: string;
+  first_name: string;
+  last_name: string;
   email: string;
   phone: string;
   country: string;
@@ -310,7 +312,8 @@ function normalizeStoredStaffProfile(profile: StoredStaffProfile): StoredStaffPr
 function mapStaffProfileRow(row: StaffProfileRow): StoredStaffProfile {
   return normalizeStoredStaffProfile({
     id: row.id,
-    displayName: row.display_name,
+    firstName: row.first_name,
+    lastName: row.last_name,
     email: row.email,
     phone: row.phone,
     country: row.country,
@@ -368,7 +371,7 @@ async function getDatabaseStaffProfileRows() {
   return sql<StaffProfileRow[]>`
     select *
     from staff_profiles
-    order by is_deleted asc, display_name asc
+    order by is_deleted asc, first_name asc
   `;
 }
 
@@ -422,7 +425,7 @@ async function upsertDatabaseStaffProfile(
   const now = new Date().toISOString();
   await sql`
     insert into staff_profiles (
-      id, display_name, email, email_lower, phone, country, region, regions_json, roles_json,
+      id, first_name, last_name, email, email_lower, phone, country, region, regions_json, roles_json,
       priority, availability, approval_status, access_role_label, registration_status,
       registration_label, profile_approved, profile_approval_label, profile_image_name,
       profile_image_url, bank_name, bank_details, personal_number, driver_license_manual,
@@ -430,7 +433,8 @@ async function upsertDatabaseStaffProfile(
       pending_records_json, is_deleted, created_at, updated_at
     ) values (
       ${profile.id},
-      ${profile.displayName},
+      ${profile.firstName},
+      ${profile.lastName},
       ${profile.email},
       ${profile.email.toLowerCase()},
       ${profile.phone},
@@ -463,7 +467,8 @@ async function upsertDatabaseStaffProfile(
       ${now}
     )
     on conflict (id) do update set
-      display_name = excluded.display_name,
+      first_name = excluded.first_name,
+      last_name = excluded.last_name,
       email = excluded.email,
       email_lower = excluded.email_lower,
       phone = excluded.phone,
@@ -504,7 +509,8 @@ function createSeedStaffProfiles(): StoredStaffProfile[] {
 
     return normalizeStoredStaffProfile({
       id: person.id,
-      displayName: profile.displayName,
+      firstName: profile.firstName,
+      lastName: profile.lastName,
       email: profile.email,
       phone: profile.phone,
       country: profile.country,
@@ -705,7 +711,8 @@ export async function getStoredStaffProfileByEmail(email: string) {
 }
 
 type NewStaffProfileInput = {
-  displayName: string;
+  firstName: string;
+  lastName: string;
   email: string;
   phone: string;
   country: string;
@@ -734,7 +741,8 @@ type NewStaffProfileInput = {
 type StaffProfileUpdate = Partial<
   Pick<
     StoredStaffProfile,
-    | "displayName"
+    | "firstName"
+    | "lastName"
     | "email"
     | "phone"
     | "country"
@@ -883,7 +891,8 @@ export async function createStoredStaffProfile(input: NewStaffProfileInput) {
   const profileId = `staff-${randomUUID().slice(0, 8)}`;
   const normalizedProfile = normalizeStoredStaffProfile({
     id: profileId,
-    displayName: input.displayName,
+    firstName: input.firstName,
+    lastName: input.lastName,
     email: input.email,
     phone: input.phone,
     country: input.country,
@@ -976,7 +985,7 @@ export async function deleteStoredStaffProfile(personId: string) {
       ...document,
       archivedId: `old-doc-${randomUUID().slice(0, 8)}`,
       sourceProfileId: profile.id,
-      sourceDisplayName: profile.displayName,
+      sourceDisplayName: `${profile.firstName} ${profile.lastName}`,
       sourceCountry: profile.country,
       sourceRegion: profile.region,
       archivedAt,
@@ -994,7 +1003,7 @@ export async function deleteStoredStaffProfile(personId: string) {
       uploadedByUserId: document.userId,
       archivedId: `old-doc-${randomUUID().slice(0, 8)}`,
       sourceProfileId: profile.id,
-      sourceDisplayName: profile.displayName,
+      sourceDisplayName: `${profile.firstName} ${profile.lastName}`,
       sourceCountry: profile.country,
       sourceRegion: profile.region,
       archivedAt,

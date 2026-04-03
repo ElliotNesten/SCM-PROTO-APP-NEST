@@ -38,12 +38,12 @@ export async function sendScmStaffActivationEmail(input: {
   const template = await getApprovedApplicationEmailTemplate();
   const supportEmail = template.supportEmail.trim() || "INFO@scm.se";
   const roleLabel = getScmRoleDefinition(input.profile.roleKey).label;
-  const headline = `Set your SCM Staff password, ${input.profile.displayName}`;
+  const headline = `Set your SCM Staff password, ${input.profile.firstName}`;
   const expiryLabel = formatTimestampForEmail(input.expiresAt);
   const subject = `Your SCM Staff account is ready`;
   const preheader = `Create your password and activate your SCM Staff access within 24 hours.`;
   const appBaseUrl = getPublicAppBaseUrl(input.createPasswordUrl);
-  const logoUrl = `${appBaseUrl}/brand/uploads/scmlogobl-medtext-381f5bdd.png`;
+  const logoUrl = `${appBaseUrl}/brand/scm-logo.svg`;
   const htmlBody = `
     <html lang="en">
       <body style="margin:0;padding:0;background:#eef3f8;font-family:Aptos,'Segoe UI',Arial,sans-serif;color:#14233d;">

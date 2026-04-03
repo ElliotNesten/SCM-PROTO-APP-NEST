@@ -12,10 +12,10 @@ function getDisplayInitials(name: string) {
 }
 
 export function StaffApplicationAvatar({
-  displayName,
+  fullName,
   imageUrl,
 }: {
-  displayName: string;
+  fullName: string;
   imageUrl: string;
 }) {
   const [hasImageError, setHasImageError] = useState(false);
@@ -35,7 +35,7 @@ export function StaffApplicationAvatar({
         />
       ) : (
         <span className="staff-application-avatar-fallback">
-          {getDisplayInitials(displayName)}
+          {getDisplayInitials(fullName)}
         </span>
       )}
     </div>

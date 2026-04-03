@@ -62,8 +62,12 @@ export default async function NewScmStaffPage({ searchParams }: NewScmStaffPageP
 
             <div className="field-grid">
               <label className="field">
-                <span>Display name</span>
-                <input name="displayName" placeholder="Edwin Jones" required />
+                <span>First name</span>
+                <input name="firstName" placeholder="Edwin" required />
+              </label>
+              <label className="field">
+                <span>Last name</span>
+                <input name="lastName" placeholder="Jones" required />
               </label>
               <label className="field">
                 <span>Email</span>

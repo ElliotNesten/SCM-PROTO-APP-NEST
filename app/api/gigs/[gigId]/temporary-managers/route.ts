@@ -24,7 +24,8 @@ type TemporaryGigManagerPayload = {
 
 type ResolvedTemporaryGigManager = {
   staffProfileId: string;
-  displayName: string;
+  firstName: string;
+  lastName: string;
   email: string;
   country: string;
   region: string;
@@ -51,7 +52,8 @@ function resolveTemporaryGigManagers(
 
       return {
         staffProfileId: linkedStaffProfile.id,
-        displayName: linkedStaffProfile.displayName,
+        firstName: linkedStaffProfile.firstName,
+        lastName: linkedStaffProfile.lastName,
         email: linkedStaffProfile.email,
         country: linkedStaffProfile.country,
         region: linkedStaffProfile.region,
@@ -115,7 +117,8 @@ export async function POST(request: Request, context: RouteContext) {
 
   await ensureStaffAppAccountForLinkedStaffProfile({
     id: staffProfile.id,
-    displayName: staffProfile.displayName,
+    firstName: staffProfile.firstName,
+    lastName: staffProfile.lastName,
     email: staffProfile.email,
     phone: staffProfile.phone,
     country: staffProfile.country,

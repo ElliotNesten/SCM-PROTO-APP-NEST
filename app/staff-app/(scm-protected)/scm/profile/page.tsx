@@ -11,7 +11,7 @@ export default async function StaffAppScmProfilePage() {
       <div className="staff-app-card staff-app-scm-hero profile">
         <div className="staff-app-scm-hero-copy">
           <p className="staff-app-kicker">SCM profile</p>
-          <h1>{profile.displayName}</h1>
+          <h1>{profile.firstName} {profile.lastName}</h1>
           <p>{scmData.roleDefinition.description}</p>
         </div>
 
@@ -25,7 +25,7 @@ export default async function StaffAppScmProfilePage() {
         <div className="staff-app-detail-grid">
           <div className="staff-app-detail-cell">
             <span>Name</span>
-            <strong>{profile.displayName}</strong>
+            <strong>{profile.firstName} {profile.lastName}</strong>
           </div>
           <div className="staff-app-detail-cell">
             <span>Email</span>

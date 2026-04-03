@@ -24,7 +24,8 @@ const storePath = path.join(storeDirectory, "scm-staff-store.json");
 
 type ScmStaffProfileRow = {
   id: string;
-  display_name: string;
+  first_name: string;
+  last_name: string;
   email: string;
   email_lower: string;
   password_hash: string;
@@ -89,8 +90,8 @@ function createScmStaffId(roleKey: StoredScmStaffProfile["roleKey"]) {
   return `${rolePrefixByKey[roleKey]}-${Date.now().toString(36)}`;
 }
 
-function getDisplayInitials(displayName: string) {
-  return displayName
+function getDisplayInitials(fullName: string) {
+  return fullName
     .split(" ")
     .map((part) => part.trim()[0] ?? "")
     .join("")
@@ -113,7 +114,8 @@ function createSeedScmStaffProfiles(): StoredScmStaffProfile[] {
   return [
     {
       id: "office-1",
-      displayName: "Edwin Jones",
+      firstName: "Edwin",
+      lastName: "Jones",
       email: "edwin.jones@scm.se",
       passwordHash: createPasswordHash(getSeedScmStaffPassword("edwin.jones@scm.se")),
       phone: "+46 70 123 45 67",
@@ -128,7 +130,8 @@ function createSeedScmStaffProfiles(): StoredScmStaffProfile[] {
     },
     {
       id: "scm-office-2",
-      displayName: "Mia Lund",
+      firstName: "Mia",
+      lastName: "Lund",
       email: "mia.lund@scm.se",
       passwordHash: createPasswordHash(getSeedScmStaffPassword("mia.lund@scm.se")),
       phone: "+46 70 333 10 20",
@@ -143,7 +146,8 @@ function createSeedScmStaffProfiles(): StoredScmStaffProfile[] {
     },
     {
       id: "scm-region-1",
-      displayName: "Henrik Borg",
+      firstName: "Henrik",
+      lastName: "Borg",
       email: "henrik.borg@scm.se",
       passwordHash: createPasswordHash(getSeedScmStaffPassword("henrik.borg@scm.se")),
       phone: "+46 70 555 11 12",
@@ -158,7 +162,8 @@ function createSeedScmStaffProfiles(): StoredScmStaffProfile[] {
     },
     {
       id: "scm-region-2",
-      displayName: "Ingrid Olsen",
+      firstName: "Ingrid",
+      lastName: "Olsen",
       email: "ingrid.olsen@scm.no",
       passwordHash: createPasswordHash(getSeedScmStaffPassword("ingrid.olsen@scm.no")),
       phone: "+47 91 200 300",
@@ -173,7 +178,8 @@ function createSeedScmStaffProfiles(): StoredScmStaffProfile[] {
     },
     {
       id: "scm-region-3",
-      displayName: "Nora Beck",
+      firstName: "Nora",
+      lastName: "Beck",
       email: "nora.beck@scm.dk",
       passwordHash: createPasswordHash(getSeedScmStaffPassword("nora.beck@scm.dk")),
       phone: "+45 21 30 40 50",
@@ -224,7 +230,8 @@ function mapScmStaffProfileRow(
 ): StoredScmStaffProfile | null {
   return normalizeStoredScmStaffProfile({
     id: row.id,
-    displayName: row.display_name,
+    firstName: row.first_name,
+    lastName: row.last_name,
     email: row.email,
     passwordHash: row.password_hash,
     passwordPlaintext: undefined,
@@ -273,7 +280,7 @@ async function getDatabaseScmStaffRows() {
   return sql<ScmStaffProfileRow[]>`
     select *
     from scm_staff_profiles
-    order by is_deleted asc, updated_at desc, display_name asc
+    order by is_deleted asc, updated_at desc, first_name asc
   `;
 }
 
@@ -330,7 +337,8 @@ async function upsertDatabaseScmStaffProfile(
   await sql`
     insert into scm_staff_profiles (
       id,
-      display_name,
+      first_name,
+      last_name,
       email,
       email_lower,
       password_hash,
@@ -350,7 +358,8 @@ async function upsertDatabaseScmStaffProfile(
       updated_at
     ) values (
       ${profile.id},
-      ${profile.displayName},
+      ${profile.firstName},
+      ${profile.lastName},
       ${profile.email},
       ${profile.email.toLowerCase()},
       ${profile.passwordHash},
@@ -370,7 +379,8 @@ async function upsertDatabaseScmStaffProfile(
       ${now}
     )
     on conflict (id) do update set
-      display_name = excluded.display_name,
+      first_name = excluded.first_name,
+      last_name = excluded.last_name,
       email = excluded.email,
       email_lower = excluded.email_lower,
       password_hash = excluded.password_hash,
@@ -547,7 +557,8 @@ export async function getCurrentStoredScmStaffProfile(baseSummary: {
 export async function getCurrentScmStaffUserSummary(baseSummary: {
   id: string;
   email: string;
-  displayName: string;
+  firstName: string;
+  lastName: string;
   initials: string;
   roleLabel: string;
   profileImageUrl?: string;
@@ -558,12 +569,14 @@ export async function getCurrentScmStaffUserSummary(baseSummary: {
     return baseSummary;
   }
 
-  const displayName = matchedProfile.displayName.trim() || baseSummary.displayName;
+  const firstName = matchedProfile.firstName.trim() || baseSummary.firstName;
+  const lastName = matchedProfile.lastName.trim() || baseSummary.lastName;
 
   return {
     ...baseSummary,
-    displayName,
-    initials: getDisplayInitials(displayName),
+    firstName,
+    lastName,
+    initials: getDisplayInitials(`${firstName} ${lastName}`),
     roleLabel: getScmRoleDefinition(matchedProfile.roleKey).label,
     profileImageUrl: matchedProfile.profileImageUrl?.trim() ?? "",
   };

@@ -29,7 +29,8 @@ type RouteContext = {
 };
 
 type StaffProfilePayload = {
-  displayName?: string;
+  firstName?: string;
+  lastName?: string;
   email?: string;
   phone?: string;
   country?: string;
@@ -118,7 +119,8 @@ export async function PATCH(request: Request, context: RouteContext) {
   }
 
   const updatedProfile = await updateStoredStaffProfile(personId, {
-    displayName: payload.displayName ?? existingProfile.displayName,
+    firstName: payload.firstName ?? existingProfile.firstName,
+    lastName: payload.lastName ?? existingProfile.lastName,
     email: payload.email ?? existingProfile.email,
     phone: payload.phone ?? existingProfile.phone,
     country: payload.country ?? existingProfile.country,
@@ -165,7 +167,8 @@ export async function PATCH(request: Request, context: RouteContext) {
 
   await syncStaffAppAccountFromLinkedStaffProfile({
     id: updatedProfile.id,
-    displayName: updatedProfile.displayName,
+    firstName: updatedProfile.firstName,
+    lastName: updatedProfile.lastName,
     email: updatedProfile.email,
     phone: updatedProfile.phone,
     country: updatedProfile.country,

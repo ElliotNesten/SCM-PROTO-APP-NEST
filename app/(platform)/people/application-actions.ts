@@ -82,7 +82,8 @@ export async function approveStaffApplication(formData: FormData) {
   }
 
   const createdProfile = await createStoredStaffProfile({
-    displayName: application.displayName,
+    firstName: application.firstName,
+    lastName: application.lastName,
     email: application.email,
     phone: application.phone,
     country: application.country,
@@ -109,7 +110,8 @@ export async function approveStaffApplication(formData: FormData) {
 
   const pendingAccount = await createPendingStaffAppAccountForLinkedStaffProfile({
     id: createdProfile.id,
-    displayName: createdProfile.displayName,
+    firstName: createdProfile.firstName,
+    lastName: createdProfile.lastName,
     email: createdProfile.email,
     phone: createdProfile.phone,
     country: createdProfile.country,
@@ -136,7 +138,7 @@ export async function approveStaffApplication(formData: FormData) {
   await reviewStoredStaffApplication(application.id, {
     status: "approved",
     reviewedByProfileId: currentProfile.id,
-    reviewedByName: currentProfile.displayName,
+    reviewedByName: `${currentProfile.firstName} ${currentProfile.lastName}`,
     convertedStaffProfileId: createdProfile.id,
     approvalEmailStatus: emailDelivery.ok ? "sent" : "failed",
     approvalEmailLastAttemptAt: new Date().toISOString(),
@@ -170,7 +172,7 @@ export async function rejectStaffApplication(formData: FormData) {
   await reviewStoredStaffApplication(application.id, {
     status: "rejected",
     reviewedByProfileId: currentProfile.id,
-    reviewedByName: currentProfile.displayName,
+    reviewedByName: `${currentProfile.firstName} ${currentProfile.lastName}`,
     rejectionReason: "Rejected from the People application review panel.",
   });
 
@@ -209,7 +211,8 @@ export async function resendStaffApplicationActivationEmail(formData: FormData) 
     existingAccount ??
     (await createPendingStaffAppAccountForLinkedStaffProfile({
       id: staffProfile.id,
-      displayName: staffProfile.displayName,
+      firstName: staffProfile.firstName,
+      lastName: staffProfile.lastName,
       email: staffProfile.email,
       phone: staffProfile.phone,
       country: staffProfile.country,

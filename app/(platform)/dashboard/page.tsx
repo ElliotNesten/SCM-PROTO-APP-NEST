@@ -12,6 +12,7 @@ export default async function DashboardPage() {
   return (
     <DashboardClient
       gigs={filterPlatformGigsForProfile(gigs, profile)}
+      firstName={profile.firstName}
     />
   );
 }

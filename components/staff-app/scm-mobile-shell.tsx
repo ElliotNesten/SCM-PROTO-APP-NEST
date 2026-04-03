@@ -29,7 +29,7 @@ export function StaffAppScmMobileShell({
   profile: StoredScmStaffProfile;
   children: ReactNode;
 }) {
-  const initials = getStaffAppInitials(profile.displayName);
+  const initials = getStaffAppInitials(`${profile.firstName} ${profile.lastName}`);
   const roleLabel = getScmRoleDefinition(profile.roleKey).label;
   const scopeLabel = formatStaffAppScmScopeLabel(profile);
 
@@ -64,7 +64,7 @@ export function StaffAppScmMobileShell({
             >
               {profile.profileImageUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={profile.profileImageUrl} alt={profile.displayName} />
+                <img src={profile.profileImageUrl} alt={`${profile.firstName} ${profile.lastName}`} />
               ) : (
                 <span>{initials}</span>
               )}

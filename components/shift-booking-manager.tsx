@@ -8,7 +8,8 @@ import type { BookingStatus } from "@/types/scm";
 
 type BookingCandidate = {
   id: string;
-  displayName: string;
+  firstName: string;
+  lastName: string;
   region: string;
   country: string;
   roles: string[];
@@ -99,7 +100,7 @@ export function ShiftBookingManager({
             return (
               <div key={person.id} className="tile staff-tile">
                 <div className="row">
-                  <strong>{person.displayName}</strong>
+                  <strong>{person.firstName} {person.lastName}</strong>
                   {currentStatus ? (
                     <StatusBadge label={currentStatus} />
                   ) : (

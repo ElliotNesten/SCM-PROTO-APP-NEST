@@ -117,7 +117,8 @@ export async function POST(request: Request, context: RouteContext) {
 
   await syncStaffAppAccountFromLinkedStaffProfile({
     id: updatedProfile.id,
-    displayName: updatedProfile.displayName,
+    firstName: updatedProfile.firstName,
+    lastName: updatedProfile.lastName,
     email: updatedProfile.email,
     phone: updatedProfile.phone,
     country: updatedProfile.country,

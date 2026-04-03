@@ -8,7 +8,7 @@ export interface BrandSettings {
 const storeDirectory = path.join(process.cwd(), "data");
 const storePath = path.join(storeDirectory, "brand-store.json");
 const defaultBrandSettings: BrandSettings = {
-  logoUrl: "/brand/scm-wordmark.svg",
+  logoUrl: "/brand/scm-logo.svg",
 };
 
 async function ensureBrandStore() {

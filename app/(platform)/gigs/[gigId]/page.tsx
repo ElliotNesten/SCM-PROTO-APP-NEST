@@ -50,7 +50,8 @@ type GigDetailPageProps = {
 type GigShiftHubTab = "overview" | "booking" | "waitlist" | "messages";
 type GigTemporaryManagerEntry = {
   staffProfileId: string;
-  displayName: string;
+  firstName: string;
+  lastName: string;
   email: string;
   country: string;
   region: string;
@@ -165,7 +166,8 @@ export default async function GigDetailPage({
       : [[], [], null, [], []];
   const mappedStaffProfiles = allStaffProfiles.map((person) => ({
     id: person.id,
-    displayName: person.displayName,
+    firstName: person.firstName,
+    lastName: person.lastName,
     region: person.region,
     country: person.country,
     roles: person.roles,
@@ -187,7 +189,8 @@ export default async function GigDetailPage({
 
             return {
               staffProfileId: linkedStaffProfile.id,
-              displayName: linkedStaffProfile.displayName,
+              firstName: linkedStaffProfile.firstName,
+              lastName: linkedStaffProfile.lastName,
               email: linkedStaffProfile.email,
               country: linkedStaffProfile.country,
               region: linkedStaffProfile.region,
@@ -216,7 +219,8 @@ export default async function GigDetailPage({
               shiftId: shift.id,
               candidates: candidates.map((person) => ({
                 id: person.id,
-                displayName: person.displayName,
+                firstName: person.firstName,
+    lastName: person.lastName,
                 region: person.region,
                 country: person.country,
                 roles: person.roles,
@@ -307,7 +311,8 @@ export default async function GigDetailPage({
           candidatePools={shiftCandidatePools}
           staffProfiles={staffProfiles.map((person) => ({
             id: person.id,
-            displayName: person.displayName,
+            firstName: person.firstName,
+    lastName: person.lastName,
             region: person.region,
             country: person.country,
             roles: person.roles,

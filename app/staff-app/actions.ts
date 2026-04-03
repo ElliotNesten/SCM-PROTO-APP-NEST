@@ -368,7 +368,7 @@ export async function sendStaffAppMessageReply(formData: FormData) {
       threadId,
       body,
       attachments,
-      authorName: account.displayName,
+      authorName: `${account.firstName} ${account.lastName}`,
       authorProfileId: account.linkedStaffProfileId,
       authorType: "staff",
     });

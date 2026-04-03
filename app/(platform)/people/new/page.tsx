@@ -49,8 +49,12 @@ export default async function NewStaffPage() {
 
             <div className="field-grid">
               <label className="field">
-                <span>Display name</span>
-                <input name="displayName" placeholder="Sandra Munoz" required />
+                <span>First name</span>
+                <input name="firstName" placeholder="Sandra" required />
+              </label>
+              <label className="field">
+                <span>Last name</span>
+                <input name="lastName" placeholder="Munoz" required />
               </label>
               <label className="field">
                 <span>Email</span>

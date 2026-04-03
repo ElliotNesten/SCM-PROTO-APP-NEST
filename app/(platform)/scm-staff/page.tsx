@@ -1,6 +1,5 @@
 import Link from "next/link";
 
-import { PageHeader } from "@/components/page-header";
 import { ProfileImage } from "@/components/profile-image";
 import { ScmRolePermissionGuide } from "@/components/scm-role-permission-guide";
 import { StatusBadge } from "@/components/status-badge";
@@ -157,7 +156,8 @@ function buildDerivedTemporaryGigManagerProfiles(
 
     derivedProfiles.push({
       id: `derived-temp-${staffProfile.id}`,
-      displayName: staffProfile.displayName,
+      firstName: staffProfile.firstName,
+      lastName: staffProfile.lastName,
       email: staffProfile.email,
       passwordHash: "",
       phone: staffProfile.phone,
@@ -166,7 +166,7 @@ function buildDerivedTemporaryGigManagerProfiles(
       regions: staffProfile.regions ?? [staffProfile.region].filter(Boolean),
       assignedGigIds: Array.from(gigIds),
       linkedStaffId: staffProfile.id,
-      linkedStaffName: staffProfile.displayName,
+      linkedStaffName: `${staffProfile.firstName} ${staffProfile.lastName}`,
       profileImageName: staffProfile.profileImageName,
       profileImageUrl: staffProfile.profileImageUrl,
       notes: "Derived from Share gig info access.",
@@ -239,20 +239,6 @@ export default async function ScmStaffPage() {
 
   return (
     <>
-      <PageHeader
-        title="SCM Staff"
-        subtitle="Role-based access and admin scope for the platform."
-        actions={
-          canManageScmStaffProfiles ? (
-            <div className="page-actions">
-              <Link href="/scm-staff/new" className="button">
-                New SCM Staff
-              </Link>
-            </div>
-          ) : undefined
-        }
-      />
-
       <div className="scm-staff-top-grid">
         <section className="card staff-top-stats-card scm-staff-rbac-card">
           <div className="staff-top-stats-grid scm-staff-rbac-grid">
@@ -325,17 +311,17 @@ export default async function ScmStaffPage() {
                 <>
                   <div className="staff-list-avatar" aria-hidden="true">
                     <ProfileImage
-                      displayName={profile.displayName}
+                      fullName={`${profile.firstName} ${profile.lastName}`}
                       imageUrl={profile.profileImageUrl}
-                      alt={`${profile.displayName} profile`}
+                      alt={`${profile.firstName} ${profile.lastName} profile`}
                       className="staff-list-avatar-img"
-                      fallbackText={getDisplayInitials(profile.displayName)}
+                      fallbackText={getDisplayInitials(`${profile.firstName} ${profile.lastName}`)}
                     />
                   </div>
 
                   <div className="staff-grid-card-body scm-staff-card-body">
                     <div className="staff-list-name-row">
-                      <strong>{profile.displayName}</strong>
+                      <strong>{profile.firstName} {profile.lastName}</strong>
                     </div>
                     <div className="scm-staff-card-role-row">
                       <StatusBadge

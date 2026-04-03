@@ -731,7 +731,13 @@ export function GigRegisterClient({
     router.push(`/gigs/${gigId}`);
   }
 
+  const today = new Date().toISOString().slice(0, 10);
+  const pastGigs = registerGigs
+    .filter((gig) => gig.date < today && !isGigArchivedForRegister(gig))
+    .sort((a, b) => b.date.localeCompare(a.date));
+
   return (
+    <>
     <section
       className={`card gig-register-shell ${resizingColumn ? "resizing" : ""}`}
       style={gigRegisterGridStyle}
@@ -743,11 +749,6 @@ export function GigRegisterClient({
         </div>
 
         <div className="gig-register-toolbar-actions">
-          {canCreateGig ? (
-            <Link href="/gigs/new" className="button gig-register-new-button">
-              New Gig
-            </Link>
-          ) : null}
         </div>
       </div>
 
@@ -1046,5 +1047,42 @@ export function GigRegisterClient({
         </div>
       </div>
     </section>
+
+    <section className="card past-gigs-section">
+      <div className="section-head compact">
+        <div>
+          <p className="eyebrow">History</p>
+          <h3>Past Gigs</h3>
+        </div>
+        <span className="helper-caption">{pastGigs.length} gigs</span>
+      </div>
+
+      <div className="past-gigs-list">
+        {pastGigs.length === 0 ? (
+          <div className="empty-panel">No past gigs.</div>
+        ) : (
+          pastGigs.map((gig) => (
+            <article
+              key={gig.id}
+              className="past-gig-row"
+              role="link"
+              tabIndex={0}
+              onClick={() => openGig(gig.id)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  openGig(gig.id);
+                }
+              }}
+            >
+              <span className="past-gig-date">{formatGigRegisterDate(gig.date)}</span>
+              <strong className="past-gig-artist">{gig.artist}</strong>
+              <span className="past-gig-venue">{gig.arena}{gig.city ? `, ${gig.city}` : ""}</span>
+            </article>
+          ))
+        )}
+      </div>
+    </section>
+    </>
   );
 }

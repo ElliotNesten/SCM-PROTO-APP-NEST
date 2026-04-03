@@ -88,7 +88,8 @@ export default async function StaffAppScmTimeReportPage({
 
     return {
       id: staffId,
-      displayName: staffProfile?.displayName ?? rosterEntry?.staffName ?? staffId,
+      firstName: staffProfile?.firstName ?? rosterEntry?.staffName ?? staffId,
+      lastName: staffProfile?.lastName ?? "",
       region: staffProfile?.region ?? "",
       country: staffProfile?.country ?? "",
     } satisfies TimeReportStaffProfile;

@@ -49,7 +49,8 @@ function isAllowedSwedenRegion(value: string) {
 export async function POST(request: Request) {
   const formData = await request.formData();
   const profileImage = formData.get("profileImage");
-  const displayName = String(formData.get("displayName") ?? "").trim();
+  const firstName = String(formData.get("firstName") ?? "").trim();
+  const lastName = String(formData.get("lastName") ?? "").trim();
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
   const phone = String(formData.get("phone") ?? "").trim();
   const country = String(formData.get("country") ?? "").trim();
@@ -59,7 +60,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Profile image is required." }, { status: 400 });
   }
 
-  if (!displayName || !email || !phone || !country || !region) {
+  if (!firstName || !lastName || !email || !phone || !country || !region) {
     return NextResponse.json({ error: "All fields are required." }, { status: 400 });
   }
 
@@ -140,7 +141,8 @@ export async function POST(request: Request) {
     id: applicationId,
     profileImageName: storageFileName,
     profileImageUrl,
-    displayName,
+    firstName,
+    lastName,
     email,
     phone,
     country,

@@ -149,13 +149,13 @@ export async function getStaffAppScmData(profile: StoredScmStaffProfile) {
   const staffingGapGigs = accessibleGigs.filter((gig) => gig.staffingProgress < 100);
   const fieldStaffProfiles = allFieldStaff
     .filter((staffProfile) => canAccessPlatformFieldStaffProfile(profile, staffProfile))
-    .sort((left, right) => left.displayName.localeCompare(right.displayName));
+    .sort((left, right) => `${left.firstName} ${left.lastName}`.localeCompare(`${right.firstName} ${right.lastName}`));
   const scmDirectoryProfiles = allScmProfiles
     .filter((candidateProfile) => canAccessScmDirectoryProfile(profile, candidateProfile))
-    .sort((left, right) => left.displayName.localeCompare(right.displayName));
+    .sort((left, right) => `${left.firstName} ${left.lastName}`.localeCompare(`${right.firstName} ${right.lastName}`));
   const scmPeers = scmDirectoryProfiles
     .filter((peerProfile) => canAccessScmPeer(profile, peerProfile))
-    .sort((left, right) => left.displayName.localeCompare(right.displayName));
+    .sort((left, right) => `${left.firstName} ${left.lastName}`.localeCompare(`${right.firstName} ${right.lastName}`));
 
   return {
     roleDefinition,

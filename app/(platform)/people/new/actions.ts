@@ -24,7 +24,8 @@ export async function submitNewStaff(formData: FormData) {
   const roleScope = readString(formData, "roles");
 
   const createdProfile = await createStoredStaffProfile({
-    displayName: readString(formData, "displayName"),
+    firstName: readString(formData, "firstName"),
+    lastName: readString(formData, "lastName"),
     email: readString(formData, "email"),
     phone: readString(formData, "phone"),
     country: readString(formData, "country"),
@@ -55,7 +56,8 @@ export async function submitNewStaff(formData: FormData) {
 
   await ensureStaffAppAccountForLinkedStaffProfile({
     id: createdProfile.id,
-    displayName: createdProfile.displayName,
+    firstName: createdProfile.firstName,
+    lastName: createdProfile.lastName,
     email: createdProfile.email,
     phone: createdProfile.phone,
     country: createdProfile.country,

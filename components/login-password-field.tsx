@@ -32,8 +32,8 @@ export function LoginPasswordField({
   }
 
   return (
-    <label className="field full-width">
-      <span>{label}</span>
+    <label className="login-field">
+      <span className="login-field-label">{label}</span>
       <div className="login-password-field-shell">
         <input
           name={name}

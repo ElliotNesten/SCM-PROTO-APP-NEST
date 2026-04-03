@@ -178,7 +178,8 @@ export async function getCurrentStaffAppAccount() {
 
   return syncStaffAppAccountFromLinkedStaffProfile({
     id: linkedProfile.id,
-    displayName: linkedProfile.displayName,
+    firstName: linkedProfile.firstName,
+    lastName: linkedProfile.lastName,
     email: linkedProfile.email,
     phone: linkedProfile.phone,
     country: linkedProfile.country,

@@ -39,7 +39,8 @@ type StaffApplicationRow = {
   status: StaffApplicationStatus;
   profile_image_name: string;
   profile_image_url: string;
-  display_name: string;
+  first_name: string;
+  last_name: string;
   email: string;
   phone: string;
   country: string;
@@ -62,7 +63,8 @@ function mapStaffApplicationRow(row: StaffApplicationRow): StoredStaffApplicatio
     status: row.status,
     profileImageName: row.profile_image_name,
     profileImageUrl: row.profile_image_url,
-    displayName: row.display_name,
+    firstName: row.first_name,
+    lastName: row.last_name,
     email: row.email,
     phone: row.phone,
     country: row.country,
@@ -178,7 +180,8 @@ type CreateStaffApplicationInput = {
   id?: string;
   profileImageName: string;
   profileImageUrl: string;
-  displayName: string;
+  firstName: string;
+  lastName: string;
   email: string;
   phone: string;
   country: string;
@@ -197,7 +200,8 @@ export async function createStoredStaffApplication(
       status: "pending",
       profileImageName: input.profileImageName,
       profileImageUrl: input.profileImageUrl,
-      displayName: input.displayName.trim(),
+      firstName: input.firstName.trim(),
+      lastName: input.lastName.trim(),
       email: input.email.trim(),
       phone: input.phone.trim(),
       country: input.country.trim(),
@@ -216,7 +220,7 @@ export async function createStoredStaffApplication(
 
     await sql`
       insert into staff_applications (
-        id, status, profile_image_name, profile_image_url, display_name, email, email_lower,
+        id, status, profile_image_name, profile_image_url, first_name, last_name, email, email_lower,
         phone, country, region, submitted_at, reviewed_at, reviewed_by_profile_id,
         reviewed_by_name, rejection_reason, converted_staff_profile_id, approval_email_status,
         approval_email_last_attempt_at, approval_email_error, password_setup_token_id
@@ -225,7 +229,8 @@ export async function createStoredStaffApplication(
         ${createdApplication.status},
         ${createdApplication.profileImageName},
         ${createdApplication.profileImageUrl},
-        ${createdApplication.displayName},
+        ${createdApplication.firstName},
+        ${createdApplication.lastName},
         ${createdApplication.email},
         ${createdApplication.email.toLowerCase()},
         ${createdApplication.phone},
@@ -253,7 +258,8 @@ export async function createStoredStaffApplication(
     status: "pending",
     profileImageName: input.profileImageName,
     profileImageUrl: input.profileImageUrl,
-    displayName: input.displayName.trim(),
+    firstName: input.firstName.trim(),
+    lastName: input.lastName.trim(),
     email: input.email.trim(),
     phone: input.phone.trim(),
     country: input.country.trim(),

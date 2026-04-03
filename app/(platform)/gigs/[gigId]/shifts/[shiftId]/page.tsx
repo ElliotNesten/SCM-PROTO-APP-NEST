@@ -77,7 +77,8 @@ export default async function ShiftDetailPage({
 
         return {
           id: candidate.id,
-          displayName: candidate.displayName,
+          firstName: candidate.firstName,
+          lastName: candidate.lastName,
           region: candidate.region,
           country: candidate.country,
           roles: candidate.roles,
@@ -108,7 +109,7 @@ export default async function ShiftDetailPage({
         dateLabel={formatDateLabel(gig.date)}
         shift={shift}
         candidates={[...editorCandidateById.values()].sort((left, right) =>
-          left.displayName.localeCompare(right.displayName),
+          `${left.firstName} ${left.lastName}`.localeCompare(`${right.firstName} ${right.lastName}`),
         )}
       />
     </>

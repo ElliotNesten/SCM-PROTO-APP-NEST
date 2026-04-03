@@ -10,7 +10,8 @@ type ShiftRoleOption = "Stand Leader" | "Seller" | "Runner" | "Other";
 
 type ShiftCandidate = {
   id: string;
-  displayName: string;
+  firstName: string;
+  lastName: string;
   region: string;
   country: string;
   roles: string[];
@@ -40,7 +41,8 @@ type ShiftFormState = {
 
 type ShiftPersonSummary = {
   id: string;
-  displayName: string;
+  firstName: string;
+  lastName: string;
   region: string;
   country: string;
 };
@@ -64,7 +66,7 @@ function buildInitialState(shift: Shift): ShiftFormState {
 
 function sortPeopleByName(people: ShiftPersonSummary[]) {
   return [...people].sort((left, right) =>
-    left.displayName.localeCompare(right.displayName),
+    `${left.firstName} ${left.lastName}`.localeCompare(`${right.firstName} ${right.lastName}`),
   );
 }
 
@@ -165,7 +167,8 @@ export function ShiftOverviewEditor({
             return [
               {
                 id: person.id,
-                displayName: person.displayName,
+                firstName: person.firstName,
+                lastName: person.lastName,
                 region: person.region,
                 country: person.country,
               },
@@ -189,7 +192,8 @@ export function ShiftOverviewEditor({
             return [
               {
                 id: person.id,
-                displayName: person.displayName,
+                firstName: person.firstName,
+                lastName: person.lastName,
                 region: person.region,
                 country: person.country,
               },
@@ -218,7 +222,7 @@ export function ShiftOverviewEditor({
             return right.appliedAt.localeCompare(left.appliedAt);
           }
 
-          return left.displayName.localeCompare(right.displayName);
+          return `${left.firstName} ${left.lastName}`.localeCompare(`${right.firstName} ${right.lastName}`);
         }),
     [assignmentMap, candidates],
   );
@@ -239,7 +243,7 @@ export function ShiftOverviewEditor({
             return statusDifference;
           }
 
-          return left.displayName.localeCompare(right.displayName);
+          return `${left.firstName} ${left.lastName}`.localeCompare(`${right.firstName} ${right.lastName}`);
         }),
     [assignmentMap, candidates],
   );
@@ -539,7 +543,7 @@ export function ShiftOverviewEditor({
                     >
                       {manualCandidates.map((candidate) => (
                         <option key={candidate.id} value={candidate.id}>
-                          {candidate.displayName} | {candidate.region}, {candidate.country}
+                          {candidate.firstName} {candidate.lastName} | {candidate.region}, {candidate.country}
                         </option>
                       ))}
                     </select>
@@ -549,7 +553,7 @@ export function ShiftOverviewEditor({
                     <article className="tile staff-tile shift-detail-candidate-card">
                       <div className="shift-detail-candidate-head">
                         <div className="shift-detail-candidate-copy">
-                          <strong>{selectedManualCandidate.displayName}</strong>
+                          <strong>{selectedManualCandidate.firstName} {selectedManualCandidate.lastName}</strong>
                           <p className="muted">
                             {selectedManualCandidate.region}, {selectedManualCandidate.country}
                           </p>
@@ -642,7 +646,7 @@ export function ShiftOverviewEditor({
                   >
                     <div className="shift-detail-candidate-head">
                       <div className="shift-detail-candidate-copy">
-                        <strong>{candidate.displayName}</strong>
+                        <strong>{candidate.firstName} {candidate.lastName}</strong>
                         <p className="muted">
                           {candidate.region}, {candidate.country}
                         </p>
@@ -731,7 +735,7 @@ export function ShiftOverviewEditor({
               {bookedPeople.map((person) => (
                 <article key={person.id} className="list-row shift-detail-roster-row">
                   <div>
-                    <strong>{person.displayName}</strong>
+                    <strong>{person.firstName} {person.lastName}</strong>
                     <p className="muted">
                       {person.region}, {person.country}
                     </p>
@@ -759,7 +763,7 @@ export function ShiftOverviewEditor({
               {waitlistedPeople.map((person) => (
                 <article key={person.id} className="list-row shift-detail-roster-row">
                   <div>
-                    <strong>{person.displayName}</strong>
+                    <strong>{person.firstName} {person.lastName}</strong>
                     <p className="muted">
                       {person.region}, {person.country}
                     </p>

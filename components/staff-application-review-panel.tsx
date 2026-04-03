@@ -92,14 +92,14 @@ export function StaffApplicationReviewPanel({
             <article key={application.id} className="staff-application-card">
               <div className="staff-application-card-main">
                 <StaffApplicationAvatar
-                  displayName={application.displayName}
+                  fullName={`${application.firstName} ${application.lastName}`}
                   imageUrl={application.profileImageUrl}
                 />
 
                 <div className="staff-application-copy">
                   <div className="staff-application-copy-head">
                     <div>
-                      <strong>{application.displayName}</strong>
+                      <strong>{application.firstName} {application.lastName}</strong>
                       <p className="muted">
                         {application.region}, {application.country}
                       </p>

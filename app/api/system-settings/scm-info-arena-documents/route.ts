@@ -152,7 +152,7 @@ export async function POST(request: Request) {
       pdfUrl: uploadedPdfUrl,
       fileName: uploadedEntry.name,
       uploadedAt: new Date().toISOString(),
-      uploadedBy: currentProfile.displayName,
+      uploadedBy: `${currentProfile.firstName} ${currentProfile.lastName}`,
     });
 
     await deleteStoredPublicUpload({

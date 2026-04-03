@@ -7,7 +7,8 @@ import {
 
 export type ScmRepresentativeOption = {
   id: string;
-  displayName: string;
+  firstName: string;
+  lastName: string;
   email: string;
   country: string;
   region: string;
@@ -24,17 +25,17 @@ function normalizeRepresentativeDisplayName(value: string) {
 }
 
 function compareOptionDisplayName(
-  left: Pick<ScmRepresentativeOption, "displayName">,
-  right: Pick<ScmRepresentativeOption, "displayName">,
+  left: Pick<ScmRepresentativeOption, "firstName" | "lastName">,
+  right: Pick<ScmRepresentativeOption, "firstName" | "lastName">,
 ) {
-  return left.displayName.localeCompare(right.displayName, "en", {
+  return `${left.firstName} ${left.lastName}`.localeCompare(`${right.firstName} ${right.lastName}`, "en", {
     sensitivity: "base",
   });
 }
 
 export function buildScmStaffRepresentativeOptions(
   profiles: Array<
-    Pick<StoredScmStaffProfile, "id" | "displayName" | "email" | "country" | "regions" | "roleKey">
+    Pick<StoredScmStaffProfile, "id" | "firstName" | "lastName" | "email" | "country" | "regions" | "roleKey">
   >,
 ) {
   return profiles
@@ -51,7 +52,8 @@ export function buildScmStaffRepresentativeOptions(
 
       return {
         id: profile.id,
-        displayName: profile.displayName,
+        firstName: profile.firstName,
+        lastName: profile.lastName,
         email: profile.email,
         country: profile.country,
         region: scopeLabel,
@@ -64,13 +66,14 @@ export function buildScmStaffRepresentativeOptions(
 
 export function buildTemporaryGigManagerOptions(
   profiles: Array<
-    Pick<StoredStaffProfile, "id" | "displayName" | "email" | "country" | "region">
+    Pick<StoredStaffProfile, "id" | "firstName" | "lastName" | "email" | "country" | "region">
   >,
 ) {
   return profiles
     .map((profile) => ({
       id: profile.id,
-      displayName: profile.displayName,
+      firstName: profile.firstName,
+      lastName: profile.lastName,
       email: profile.email,
       country: profile.country,
       region: profile.region,
@@ -91,6 +94,6 @@ export function hasRepresentativeOptionDisplayName(
   }
 
   return options.some(
-    (option) => normalizeRepresentativeDisplayName(option.displayName) === normalizedValue,
+    (option) => normalizeRepresentativeDisplayName(`${option.firstName} ${option.lastName}`) === normalizedValue,
   );
 }

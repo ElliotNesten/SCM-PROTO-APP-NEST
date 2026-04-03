@@ -25,14 +25,16 @@ export interface PeopleDirectoryEntry extends StaffMember {
 export interface CurrentUserSummary {
   id: string;
   email: string;
-  displayName: string;
+  firstName: string;
+  lastName: string;
   initials: string;
   roleLabel: string;
 }
 
 export interface CurrentUserProfileView {
   id: string;
-  displayName: string;
+  firstName: string;
+  lastName: string;
   email: string;
   phone: string;
   country: string;
@@ -653,7 +655,8 @@ export function getCurrentUserSummary(): CurrentUserSummary {
   return {
     id: user.id,
     email: user.email,
-    displayName: toDisplayName(user),
+    firstName: user.firstName,
+    lastName: user.lastName,
     initials: toInitials(user),
     roleLabel: getPrimaryRoleLabel(user.id),
   };
@@ -671,7 +674,8 @@ function buildProfileView(userId: string): CurrentUserProfileView {
 
   return {
     id: user.id,
-    displayName: toDisplayName(user),
+    firstName: user.firstName,
+    lastName: user.lastName,
     email: user.email,
     phone: toDisplayPhone(user.phoneNumber),
     country: profile.mainCountryName ?? "Unassigned country",

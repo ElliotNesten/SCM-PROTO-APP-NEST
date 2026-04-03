@@ -22,7 +22,8 @@ type RouteContext = {
 };
 
 type ScmStaffPayload = {
-  displayName?: string;
+  firstName?: string;
+  lastName?: string;
   email?: string;
   currentPassword?: string;
   password?: string;
@@ -157,10 +158,14 @@ export async function PATCH(request: Request, context: RouteContext) {
   }
 
   const updatedProfile = await updateStoredScmStaffProfile(personId, {
-    displayName:
+    firstName:
       canEditBasicFields
-        ? (payload.displayName ?? existingProfile.displayName)
-        : existingProfile.displayName,
+        ? (payload.firstName ?? existingProfile.firstName)
+        : existingProfile.firstName,
+    lastName:
+      canEditBasicFields
+        ? (payload.lastName ?? existingProfile.lastName)
+        : existingProfile.lastName,
     email:
       canEditBasicFields
         ? (payload.email ?? existingProfile.email)

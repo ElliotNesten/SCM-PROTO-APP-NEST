@@ -63,7 +63,8 @@ export async function submitNewScmStaff(formData: FormData) {
   const regions = roleKey === "regionalManager" ? readRegions(formData) : [];
 
   const createdProfile = await createStoredScmStaffProfile({
-    displayName: readString(formData, "displayName"),
+    firstName: readString(formData, "firstName"),
+    lastName: readString(formData, "lastName"),
     email,
     passwordHash: createPasswordHash(randomUUID()),
     passwordPlaintext: "",

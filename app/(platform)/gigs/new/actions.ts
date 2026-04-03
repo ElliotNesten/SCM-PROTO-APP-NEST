@@ -63,7 +63,7 @@ export async function submitNewGig(formData: FormData) {
     ? await getStoredStaffProfileById(selectedTemporaryGigManagerStaffProfileId)
     : null;
   const resolvedScmRepresentative = selectedTemporaryGigManagerProfile
-    ? selectedTemporaryGigManagerProfile.displayName
+    ? `${selectedTemporaryGigManagerProfile.firstName} ${selectedTemporaryGigManagerProfile.lastName}`
     : hasRepresentativeOptionDisplayName(
           scmStaffRepresentativeOptions,
           requestedScmRepresentative,
@@ -104,7 +104,8 @@ export async function submitNewGig(formData: FormData) {
   if (selectedTemporaryGigManagerProfile) {
     await ensureStaffAppAccountForLinkedStaffProfile({
       id: selectedTemporaryGigManagerProfile.id,
-      displayName: selectedTemporaryGigManagerProfile.displayName,
+      firstName: selectedTemporaryGigManagerProfile.firstName,
+      lastName: selectedTemporaryGigManagerProfile.lastName,
       email: selectedTemporaryGigManagerProfile.email,
       phone: selectedTemporaryGigManagerProfile.phone,
       country: selectedTemporaryGigManagerProfile.country,

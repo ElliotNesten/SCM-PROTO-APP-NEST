@@ -1,10 +1,7 @@
-import Image from "next/image";
-import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { loginWithScmStaff, logoutCurrentUser } from "@/app/auth-actions";
 import { LoginPasswordField } from "@/components/login-password-field";
-import { getBrandSettings } from "@/lib/brand-store";
 import { getCurrentAuthenticatedUserSummary } from "@/lib/auth-session";
 import { getSessionCookieConfigurationNotice, isSessionCookieConfigurationMissingInProduction } from "@/lib/session-cookie";
 
@@ -50,7 +47,6 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
     redirect("/dashboard");
   }
 
-  const brandSettings = await getBrandSettings();
   const savedEmail = pickQueryValue(resolvedSearchParams?.email) ?? "";
   const errorMessage = getErrorMessage(pickQueryValue(resolvedSearchParams?.error));
 
@@ -58,113 +54,96 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
     <main className="login-page">
       <div className="login-shell">
         <section className="login-card">
-          <div className="login-surface">
-            <div className="login-brand-panel">
-              <div className="login-brand">
-                <Link href="/" className="login-brand-logo" aria-label="SCM home">
-                  <Image
-                    src={brandSettings.logoUrl}
-                    alt="SCM"
-                    width={240}
-                    height={84}
-                    className="login-brand-logo-image"
-                    unoptimized
-                  />
-                </Link>
-                <div className="login-brand-copy">
-                  <p className="eyebrow">SCM PLATFORM</p>
-                  <h1>Welcome back</h1>
-                  <p className="page-subtitle">
-                    Sign in with your SCM Staff account or gig access.
-                  </p>
-                </div>
+          <div className="login-icon-wrap">
+            <svg className="login-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+              <circle cx="12" cy="16.5" r="1.5" />
+            </svg>
+          </div>
+
+          <div className="login-form-head">
+            <h2>Sign in with email</h2>
+            <p className="login-subtitle">Enter your credentials to access your account</p>
+          </div>
+
+          {currentUser ? (
+            <div className="login-session-banner">
+              <div>
+                <strong>Signed in as {currentUser.firstName} {currentUser.lastName}</strong>
+                <p className="muted">
+                  Continue, log out, or switch account.
+                </p>
+              </div>
+              <div className="page-actions">
+                <a href="/dashboard" className="button ghost">
+                  Back to dashboard
+                </a>
+                <form action={logoutCurrentUser}>
+                  <button type="submit" className="button ghost">
+                    Log out
+                  </button>
+                </form>
               </div>
             </div>
+          ) : null}
 
-            <div className="login-form-panel">
-              {currentUser ? (
-                <div className="login-session-banner">
-                  <div>
-                    <strong>Signed in as {currentUser.displayName}</strong>
-                    <p className="muted">
-                      Continue, log out, or switch account.
-                    </p>
-                  </div>
-                  <div className="page-actions">
-                    <Link href="/dashboard" className="button ghost">
-                      Back to dashboard
-                    </Link>
-                    <form action={logoutCurrentUser}>
-                      <button type="submit" className="button ghost">
-                        Log out
-                      </button>
-                    </form>
-                  </div>
-                </div>
-              ) : null}
+          {authConfigurationIssue ? (
+            <div className="note-block tone-warn">
+              <p>{getSessionCookieConfigurationNotice()}</p>
+            </div>
+          ) : null}
 
-              <form action={loginWithScmStaff} className="login-form-card">
-                <div className="login-form-head">
-                  <p className="eyebrow">SCM Staff account</p>
-                  <h2>Sign in</h2>
-                </div>
+          <form action={loginWithScmStaff} className="login-form">
+            {loginMode === "switch" ? (
+              <input type="hidden" name="mode" value="switch" />
+            ) : null}
 
-                {authConfigurationIssue ? (
-                  <div className="note-block tone-warn">
-                    <p>{getSessionCookieConfigurationNotice()}</p>
-                  </div>
-                ) : null}
-
-                {loginMode === "switch" ? (
-                  <input type="hidden" name="mode" value="switch" />
-                ) : null}
-
-                <div className="login-form-fields">
-                  <label className="field full-width">
-                    <span>Email</span>
-                    <input
-                      name="email"
-                      type="email"
-                      placeholder="edwin.jones@scm.se"
-                      defaultValue={savedEmail}
-                      disabled={authConfigurationIssue}
-                      required
-                    />
-                  </label>
-                  <LoginPasswordField
-                    name="password"
-                    label="Password"
-                    placeholder="Enter your password"
+            <div className="login-form-fields">
+              <label className="login-field">
+                <span className="login-field-label">Email address</span>
+                <div className="login-input-wrap">
+                  <svg className="login-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <rect x="2" y="4" width="20" height="16" rx="2" />
+                    <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+                  </svg>
+                  <input
+                    name="email"
+                    type="email"
+                    placeholder="name@scm.se"
+                    defaultValue={savedEmail}
                     disabled={authConfigurationIssue}
                     required
                   />
                 </div>
-
-                {errorMessage ? <p className="login-error">{errorMessage}</p> : null}
-
-                <div className="login-assistance">
-                  <span className="login-forgot-link">Forgot password?</span>
-                  <span className="login-forgot-copy">
-                    Contact a Super Admin for help.
-                  </span>
-                </div>
-
-                <button
-                  type="submit"
-                  className="button login-submit-button"
-                  disabled={authConfigurationIssue}
-                >
-                  {authConfigurationIssue ? "Authentication unavailable" : "Log in"}
-                </button>
-
-                <div className="login-footnote">
-                  <p className="muted">
-                    Demo accounts use first name + <code>123</code> as password.
-                  </p>
-                </div>
-              </form>
+              </label>
+              <LoginPasswordField
+                name="password"
+                label="Password"
+                placeholder="Enter your password"
+                disabled={authConfigurationIssue}
+                required
+              />
             </div>
-          </div>
+
+            {errorMessage ? <p className="login-error">{errorMessage}</p> : null}
+
+            <div className="login-forgot">
+              <span className="login-forgot-link">Forgot password?</span>
+            </div>
+
+            <button
+              type="submit"
+              className="login-submit-button"
+              disabled={authConfigurationIssue}
+            >
+              {authConfigurationIssue ? "Authentication unavailable" : "Sign in"}
+            </button>
+
+            <p className="login-footnote">
+              Demo accounts use first name + <code>123</code> as password.
+            </p>
+          </form>
         </section>
       </div>
     </main>

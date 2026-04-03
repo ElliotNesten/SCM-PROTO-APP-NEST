@@ -295,7 +295,7 @@ export async function sendScmGigMessageAction(formData: FormData) {
     recipientIds,
     body,
     groupId,
-    authorName: profile.displayName,
+    authorName: `${profile.firstName} ${profile.lastName}`,
     authorProfileId: profile.id,
     authorType: "scm",
     allowReplies,
@@ -334,7 +334,7 @@ export async function sendScmGigConversationReplyAction(formData: FormData) {
       threadId,
       body,
       attachments,
-      authorName: profile.displayName,
+      authorName: `${profile.firstName} ${profile.lastName}`,
       authorProfileId: profile.id,
       authorType: "scm",
     });

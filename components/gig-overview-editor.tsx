@@ -56,7 +56,8 @@ type GigOverviewEditorProps = {
   temporaryGigManagerOptions: ScmRepresentativeOption[];
   temporaryGigManagers: Array<{
     staffProfileId: string;
-    displayName: string;
+    firstName: string;
+    lastName: string;
     email: string;
     country: string;
     region: string;
@@ -471,7 +472,7 @@ export function GigOverviewEditor({
 
     const nextForm = {
       ...form,
-      scmRepresentative: option.displayName,
+      scmRepresentative: `${option.firstName} ${option.lastName}`,
     };
 
     setForm(nextForm);
@@ -691,7 +692,7 @@ export function GigOverviewEditor({
                           data-text-edit-exclude="true"
                         >
                           <div>
-                            <strong>{manager.displayName}</strong>
+                            <strong>{manager.firstName} {manager.lastName}</strong>
                             <p className="muted small-text">
                               {manager.email} | {manager.region}, {manager.country}
                             </p>

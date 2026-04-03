@@ -299,7 +299,8 @@ export function ScmStaffProfileEditor({
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        displayName: canEditBasicFields ? profile.displayName.trim() : undefined,
+        firstName: canEditBasicFields ? profile.firstName.trim() : undefined,
+        lastName: canEditBasicFields ? profile.lastName.trim() : undefined,
         email: canEditBasicFields ? profile.email.trim() : undefined,
         currentPassword: requiresCurrentPassword ? trimmedCurrentPasswordDraft : undefined,
         password: nextPassword,
@@ -405,17 +406,17 @@ export function ScmStaffProfileEditor({
   return (
     <div className="staff-profile-editor">
       <PageHeader
-        title={profile.displayName}
+        title={`${profile.firstName} ${profile.lastName}`}
         subtitle={getScopeSubtitle(profile)}
         leading={
           <div className="staff-profile-header-image">
             <div className="staff-profile-header-image-preview">
               <ProfileImage
-                displayName={profile.displayName}
+                fullName={`${profile.firstName} ${profile.lastName}`}
                 imageUrl={profile.profileImageUrl}
-                alt={`${profile.displayName} profile`}
+                alt={`${profile.firstName} ${profile.lastName} profile`}
                 className="staff-profile-header-image-media"
-                fallbackText={getDisplayInitials(profile.displayName)}
+                fallbackText={getDisplayInitials(`${profile.firstName} ${profile.lastName}`)}
                 loading="eager"
               />
               {canEditProfileImage ? (
@@ -477,12 +478,22 @@ export function ScmStaffProfileEditor({
 
             <div className="key-value-grid staff-profile-compact-grid">
               <label className="key-value-card key-value-card-editable">
-                <small>Name</small>
+                <small>First name</small>
                 <input
                   type="text"
-                  value={profile.displayName}
+                  value={profile.firstName}
                   disabled={!canEditBasicFields}
-                  onChange={(event) => updateField("displayName", event.currentTarget.value)}
+                  onChange={(event) => updateField("firstName", event.currentTarget.value)}
+                />
+              </label>
+
+              <label className="key-value-card key-value-card-editable">
+                <small>Last name</small>
+                <input
+                  type="text"
+                  value={profile.lastName}
+                  disabled={!canEditBasicFields}
+                  onChange={(event) => updateField("lastName", event.currentTarget.value)}
                 />
               </label>
 

@@ -87,7 +87,8 @@ export function NavMenu({
   canAccessScmStaff,
   canAccessStaffDirectory,
   canManageSystemSettings,
-  displayName,
+  firstName,
+  lastName,
   roleLabel,
   logoUrl,
   logoutAction,
@@ -95,7 +96,8 @@ export function NavMenu({
   canAccessScmStaff: boolean;
   canAccessStaffDirectory: boolean;
   canManageSystemSettings: boolean;
-  displayName: string;
+  firstName: string;
+  lastName: string;
   roleLabel: string;
   logoUrl: string;
   logoutAction: () => Promise<void>;
@@ -200,7 +202,7 @@ export function NavMenu({
           </div>
 
           <div className="nav-menu-user">
-            <strong className="nav-menu-user-name">{displayName}</strong>
+            <strong className="nav-menu-user-name">{`${firstName} ${lastName}`}</strong>
             <span className="nav-menu-user-role">{roleLabel}</span>
           </div>
         </div>

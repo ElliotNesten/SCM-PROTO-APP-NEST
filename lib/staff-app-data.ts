@@ -1213,7 +1213,7 @@ export async function getStaffAppColleagues(account: StaffAppAccount) {
     .filter((profile) => profile.id !== account.linkedStaffProfileId)
     .map<StaffAppColleague>((profile) => ({
       id: profile.id,
-      fullName: profile.displayName,
+      fullName: `${profile.firstName} ${profile.lastName}`,
       phone: profile.phone,
       email: profile.email,
       country: profile.country,
@@ -1250,8 +1250,8 @@ export async function getStaffAppHomeOverview(account: StaffAppAccount) {
   };
 }
 
-export function getStaffAppInitials(displayName: string) {
-  return displayName
+export function getStaffAppInitials(fullName: string) {
+  return fullName
     .split(" ")
     .map((part) => part.trim().charAt(0))
     .join("")

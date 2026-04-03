@@ -40,6 +40,13 @@ function getSearchBadgeClassName(result: GlobalSearchResult) {
   return `header-search-badge gig-status ${normalizedBadge}`;
 }
 
+function getSearchPlaceholder(pathname: string) {
+  if (pathname.startsWith("/gigs")) return "Search gigs...";
+  if (pathname.startsWith("/scm-staff")) return "Search staff...";
+  if (pathname.startsWith("/people")) return "Search staff...";
+  return "Search gigs, artists, arenas...";
+}
+
 export function GlobalSearch() {
   const router = useRouter();
   const pathname = usePathname();
@@ -50,6 +57,7 @@ export function GlobalSearch() {
   const [isLoading, setIsLoading] = useState(false);
 
   const deferredQuery = useDeferredValue(query.trim());
+  const placeholder = getSearchPlaceholder(pathname);
 
   useEffect(() => {
     setIsOpen(false);
@@ -133,8 +141,8 @@ export function GlobalSearch() {
         <input
           type="search"
           value={query}
-          placeholder="Search gigs, artists, arenas..."
-          aria-label="Search gigs, artists, arenas, staff, dates, files, and shifts"
+          placeholder={placeholder}
+          aria-label={placeholder}
           onChange={(event) => setQuery(event.target.value)}
           onFocus={() => {
             if (query.trim()) {

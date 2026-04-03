@@ -45,7 +45,7 @@ export async function sendApprovedStaffApplicationEmail(input: {
   const template = await getApprovedApplicationEmailTemplate();
   const supportEmail = template.supportEmail.trim() || "INFO@scm.se";
   const variables = {
-    name: input.application.displayName,
+    name: `${input.application.firstName} ${input.application.lastName}`,
     createPasswordUrl: input.createPasswordUrl,
     expiresAt: formatTimestampForEmail(input.expiresAt),
     supportEmail,

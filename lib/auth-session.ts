@@ -56,8 +56,8 @@ function isStoredAuthSessionFresh(session: StoredAuthSession) {
   return Date.now() - createdAt <= sessionMaxAgeMs;
 }
 
-function getDisplayInitials(displayName: string) {
-  return displayName
+function getDisplayInitials(fullName: string) {
+  return fullName
     .split(" ")
     .map((part) => part.trim()[0] ?? "")
     .join("")
@@ -77,7 +77,8 @@ async function resolvePlatformTemporaryGigManagerProfile(linkedStaffProfileId: s
 
   return {
     id: `temporary-gig-manager-${staffProfile.id}`,
-    displayName: staffProfile.displayName,
+    firstName: staffProfile.firstName,
+    lastName: staffProfile.lastName,
     email: staffProfile.email,
     passwordHash: "",
     phone: staffProfile.phone,
@@ -86,7 +87,7 @@ async function resolvePlatformTemporaryGigManagerProfile(linkedStaffProfileId: s
     regions: staffProfile.regions ?? [staffProfile.region].filter(Boolean),
     assignedGigIds: activeGigIds,
     linkedStaffId: staffProfile.id,
-    linkedStaffName: staffProfile.displayName,
+    linkedStaffName: `${staffProfile.firstName} ${staffProfile.lastName}`,
     profileImageName: staffProfile.profileImageName,
     profileImageUrl: staffProfile.profileImageUrl,
     notes: "Temporary gig manager access shared from the staff directory.",
@@ -228,13 +229,15 @@ export async function getCurrentAuthenticatedUserSummary(): Promise<
 }
 
 export function createUserSummaryFromScmProfile(profile: StoredScmStaffProfile) {
-  const displayName = profile.displayName.trim();
+  const firstName = (profile.firstName ?? "").trim();
+  const lastName = (profile.lastName ?? "").trim();
 
   return {
     id: profile.id,
     email: profile.email,
-    displayName,
-    initials: getDisplayInitials(displayName),
+    firstName,
+    lastName,
+    initials: getDisplayInitials(`${firstName} ${lastName}`),
     roleKey: profile.roleKey,
     roleLabel: getScmRoleDefinition(profile.roleKey).label,
     profileImageUrl: profile.profileImageUrl?.trim() ?? "",

@@ -41,16 +41,16 @@ function normalizeSearchValue(value: string) {
 }
 
 function getSearchScore(option: ScmRepresentativeOption, query: string) {
-  const normalizedDisplayName = normalizeSearchValue(option.displayName);
+  const normalizedFullName = normalizeSearchValue(`${option.firstName} ${option.lastName}`);
   const normalizedEmail = normalizeSearchValue(option.email);
   const normalizedBadge = normalizeSearchValue(option.badge);
   const normalizedDetail = normalizeSearchValue(option.detail);
   const normalizedCountry = normalizeSearchValue(option.country);
   const normalizedRegion = normalizeSearchValue(option.region);
-  const normalizedTokens = normalizedDisplayName.split(/\s+/).filter(Boolean);
+  const normalizedTokens = normalizedFullName.split(/\s+/).filter(Boolean);
 
   if (
-    !normalizedDisplayName.includes(query) &&
+    !normalizedFullName.includes(query) &&
     !normalizedEmail.includes(query) &&
     !normalizedBadge.includes(query) &&
     !normalizedDetail.includes(query) &&
@@ -60,11 +60,11 @@ function getSearchScore(option: ScmRepresentativeOption, query: string) {
     return Number.NEGATIVE_INFINITY;
   }
 
-  if (normalizedDisplayName === query || normalizedEmail === query) {
+  if (normalizedFullName === query || normalizedEmail === query) {
     return 1200;
   }
 
-  if (normalizedDisplayName.startsWith(query)) {
+  if (normalizedFullName.startsWith(query)) {
     return 1100;
   }
 
@@ -72,7 +72,7 @@ function getSearchScore(option: ScmRepresentativeOption, query: string) {
     return 1000;
   }
 
-  if (normalizedDisplayName.includes(query)) {
+  if (normalizedFullName.includes(query)) {
     return 900;
   }
 
@@ -143,7 +143,7 @@ export function ScmRepresentativeSelector({
   );
   const currentValue = value ?? internalValue;
   const scmStaffNames = useMemo(
-    () => Array.from(new Set(scmStaffOptions.map((option) => option.displayName))),
+    () => Array.from(new Set(scmStaffOptions.map((option) => `${option.firstName} ${option.lastName}`))),
     [scmStaffOptions],
   );
   const filteredTemporaryGigManagerOptions = useMemo(
@@ -200,8 +200,8 @@ export function ScmRepresentativeSelector({
 
   async function selectTemporaryGigManagerOption(option: ScmRepresentativeOption) {
     setSelectedTemporaryGigManagerId(option.id);
-    setSelectedTemporaryGigManagerName(option.displayName);
-    updateValue(option.displayName);
+    setSelectedTemporaryGigManagerName(`${option.firstName} ${option.lastName}`);
+    updateValue(`${option.firstName} ${option.lastName}`);
     setTemporaryGigManagerQuery("");
     setShowTemporaryGigManagerPicker(false);
     await onTemporaryGigManagerSelect?.(option);
@@ -301,7 +301,7 @@ export function ScmRepresentativeSelector({
                     }}
                   >
                     <span>
-                      <strong>{option.displayName}</strong>
+                      <strong>{option.firstName} {option.lastName}</strong>
                       <small>
                         {option.badge} | {option.email}
                       </small>

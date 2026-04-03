@@ -39,7 +39,8 @@ type NewShiftFormState = {
 
 type BookingCandidate = {
   id: string;
-  displayName: string;
+  firstName: string;
+  lastName: string;
   region: string;
   country: string;
   roles: string[];
@@ -197,9 +198,9 @@ const messageRecipientSectionMeta: Record<
   },
 };
 
-function sortPeopleByName<T extends { displayName: string }>(people: T[]) {
+function sortPeopleByName<T extends { firstName: string; lastName: string }>(people: T[]) {
   return [...people].sort((left, right) =>
-    left.displayName.localeCompare(right.displayName),
+    `${left.firstName} ${left.lastName}`.localeCompare(`${right.firstName} ${right.lastName}`),
   );
 }
 
@@ -606,7 +607,7 @@ export function GigShiftsPanel({
               ? "Stand leaders"
               : thread.audience === "customGroup"
                 ? linkedGroup?.name ?? thread.audienceLabel
-                : directRecipient?.displayName ?? thread.audienceLabel;
+                : directRecipient ? `${directRecipient.firstName} ${directRecipient.lastName}` : thread.audienceLabel;
 
         return {
           ...thread,
@@ -665,7 +666,7 @@ export function GigShiftsPanel({
     if (messageAudience === "individualPeople") {
       return {
         audience: "individualPeople" as const,
-        label: selectedPerson?.displayName ?? "Individual person",
+        label: selectedPerson ? `${selectedPerson.firstName} ${selectedPerson.lastName}` : "Individual person",
         recipientIds: selectedPerson ? [selectedPerson.id] : [],
         recipients: selectedPerson ? [selectedPerson] : [],
         shiftId: undefined,
@@ -1481,7 +1482,7 @@ export function GigShiftsPanel({
                         .filter(
                           (person): person is BookingCandidate => Boolean(person),
                         ),
-                    ).map((person) => person.displayName);
+                    ).map((person) => `${person.firstName} ${person.lastName}`);
                     const collapsedBookingSummary =
                       confirmedNames.length === 0
                         ? `No confirmed staff booked yet. ${
@@ -1519,7 +1520,7 @@ export function GigShiftsPanel({
                           return 1;
                         }
 
-                        return left.displayName.localeCompare(right.displayName);
+                        return `${left.firstName} ${left.lastName}`.localeCompare(`${right.firstName} ${right.lastName}`);
                       })
                       .filter((person) => {
                         const currentStatus = shift.assignments.find(
@@ -1609,7 +1610,7 @@ export function GigShiftsPanel({
                               return (
                                 <div key={person.id} className="booking-board-row">
                                   <div className="booking-board-primary">
-                                    <strong>{person.displayName}</strong>
+                                    <strong>{person.firstName} {person.lastName}</strong>
                                     <p className="small-text">
                                       {person.roles.join(", ")}
                                     </p>
@@ -1792,7 +1793,7 @@ export function GigShiftsPanel({
                   }));
                 const waitlistNames = waitlistedPeople.map(
                   ({ assignment, person }) =>
-                    person?.displayName ?? assignment.staffId,
+                    person ? `${person.firstName} ${person.lastName}` : assignment.staffId,
                 );
                 const waitlistExpanded =
                   waitlistShiftExpansion[shift.id] ?? false;
@@ -1880,7 +1881,7 @@ export function GigShiftsPanel({
                           return (
                             <div key={assignment.staffId} className="booking-board-row">
                               <div className="booking-board-primary">
-                                <strong>{person?.displayName ?? assignment.staffId}</strong>
+                                <strong>{person ? `${person.firstName} ${person.lastName}` : assignment.staffId}</strong>
                                 <p className="small-text">
                                   {person?.roles.join(", ") ?? "Staff member"}
                                 </p>
@@ -1995,7 +1996,7 @@ export function GigShiftsPanel({
                       >
                         {section.people.map((person) => (
                           <option key={person.id} value={person.id}>
-                            {person.displayName}
+                            {person.firstName} {person.lastName}
                             {section.key === "Confirmed"
                               ? ""
                               : ` (${section.optionLabel})`}
@@ -2090,7 +2091,7 @@ export function GigShiftsPanel({
                                     onClick={() => toggleGroupMember(person.id)}
                                   >
                                     <div className="message-member-pill-head">
-                                      <strong>{person.displayName}</strong>
+                                      <strong>{person.firstName} {person.lastName}</strong>
                                       <StatusBadge
                                         label={section.badgeLabel}
                                         tone={section.badgeTone}
@@ -2177,7 +2178,7 @@ export function GigShiftsPanel({
                         <div className="message-recipient-grid">
                           {section.people.map((person) => (
                             <span key={person.id} className="message-recipient-pill">
-                              <span>{person.displayName}</span>
+                              <span>{person.firstName} {person.lastName}</span>
                               <StatusBadge
                                 label={section.badgeLabel}
                                 tone={section.badgeTone}

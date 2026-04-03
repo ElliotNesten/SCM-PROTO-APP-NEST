@@ -797,7 +797,7 @@ export async function getAvailableStaffProfilesForShift(
         return priorityDifference;
       }
 
-      return left.displayName.localeCompare(right.displayName);
+      return `${left.firstName} ${left.lastName}`.localeCompare(`${right.firstName} ${right.lastName}`);
     });
 }
 

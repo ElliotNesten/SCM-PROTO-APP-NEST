@@ -7,7 +7,8 @@ import type { Shift } from "@/types/scm";
 
 export type TimeReportStaffProfile = {
   id: string;
-  displayName: string;
+  firstName: string;
+  lastName: string;
   region: string;
   country: string;
 };
@@ -722,7 +723,7 @@ export function GigTimeReportPanel({
                             className="booking-board-row booking-board-row-time-report"
                           >
                             <div className="booking-board-primary">
-                              <strong>{person?.displayName ?? assignment.staffId}</strong>
+                              <strong>{person ? `${person.firstName} ${person.lastName}` : assignment.staffId}</strong>
                               <p className="small-text">
                                 {person
                                   ? `${person.region}, ${person.country}`

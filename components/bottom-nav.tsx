@@ -80,11 +80,11 @@ function ProfileIcon({ filled }: { filled: boolean }) {
 export function BottomNav({
   canAccessScmStaff,
   profileImageUrl,
-  displayName,
+  firstName,
 }: {
   canAccessScmStaff: boolean;
   profileImageUrl: string;
-  displayName: string;
+  firstName: string;
 }) {
   const pathname = usePathname();
 
@@ -98,7 +98,7 @@ export function BottomNav({
         <span className="bottom-nav-icon">
           <OverviewIcon filled={isActive("/dashboard")} />
         </span>
-        <span className="bottom-nav-label">Overview</span>
+        <span className="bottom-nav-label">Home</span>
       </Link>
 
       <Link href="/gigs" className={`bottom-nav-tab ${isActive("/gigs") ? "active" : ""}`}>
@@ -130,12 +130,12 @@ export function BottomNav({
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={profileImageUrl}
-              alt={displayName}
+              alt={firstName}
               className="bottom-nav-profile-img"
             />
           ) : (
             <span className="bottom-nav-profile-initial">
-              {(displayName ?? "?").charAt(0).toUpperCase()}
+              {(firstName ?? "?").charAt(0).toUpperCase()}
             </span>
           )}
         </span>

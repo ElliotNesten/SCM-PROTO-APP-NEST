@@ -104,7 +104,7 @@ export default async function StaffAppScmShiftPage({
                 <div className="staff-app-scm-live-compact-person-head">
                   <div className="staff-app-scm-live-person-avatar compact">
                     <ProfileImage
-                      displayName={entry.staffName}
+                      fullName={entry.staffName}
                       imageUrl={entry.staffProfileImageUrl}
                       alt={entry.staffName}
                       className="staff-app-scm-live-person-avatar-image"
@@ -190,7 +190,7 @@ export default async function StaffAppScmShiftPage({
               <select name="staffId" defaultValue={workspace.availableStaff[0]?.id ?? ""}>
                 {workspace.availableStaff.map((staffProfile) => (
                   <option key={staffProfile.id} value={staffProfile.id}>
-                    {staffProfile.displayName} | {staffProfile.roleLabel} | {staffProfile.regionLabel}
+                    {staffProfile.firstName} {staffProfile.lastName} | {staffProfile.roleLabel} | {staffProfile.regionLabel}
                   </option>
                 ))}
               </select>

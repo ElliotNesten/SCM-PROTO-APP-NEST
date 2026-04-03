@@ -36,7 +36,7 @@ export function StaffAppMobileShell({
   account: StaffAppAccount;
   children: ReactNode;
 }) {
-  const initials = getStaffAppInitials(account.displayName);
+  const initials = getStaffAppInitials(`${account.firstName} ${account.lastName}`);
 
   return (
     <div className="staff-app-shell">
@@ -61,7 +61,7 @@ export function StaffAppMobileShell({
             >
             {account.profileImageUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={account.profileImageUrl} alt={account.displayName} />
+              <img src={account.profileImageUrl} alt={`${account.firstName} ${account.lastName}`} />
             ) : (
               <span>{initials}</span>
             )}

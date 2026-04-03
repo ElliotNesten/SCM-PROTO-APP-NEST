@@ -194,7 +194,8 @@ export function StaffProfileEditor({
     const nextRoleProfiles = buildSanitizedRoleProfiles(profileDraft);
 
     return {
-      displayName: profileDraft.displayName.trim(),
+      firstName: profileDraft.firstName.trim(),
+      lastName: profileDraft.lastName.trim(),
       email: profileDraft.email.trim(),
       phone: profileDraft.phone.trim(),
       country: profileDraft.country.trim(),
@@ -750,15 +751,15 @@ export function StaffProfileEditor({
   return (
     <div className="staff-profile-editor">
       <PageHeader
-        title={profile.displayName}
+        title={`${profile.firstName} ${profile.lastName}`}
         subtitle={`${profile.country}, ${subtitleRegions}`}
         leading={
           <div className="staff-profile-header-image">
             <div className="staff-profile-header-image-preview">
               <ProfileImage
-                displayName={profile.displayName}
+                fullName={`${profile.firstName} ${profile.lastName}`}
                 imageUrl={profile.profileImageUrl}
-                alt={`${profile.displayName} profile`}
+                alt={`${profile.firstName} ${profile.lastName} profile`}
                 className="staff-profile-header-image-media"
                 loading="eager"
               />
@@ -828,11 +829,20 @@ export function StaffProfileEditor({
 
             <div className="key-value-grid staff-profile-compact-grid">
               <label className="key-value-card key-value-card-editable">
-                <small>Name</small>
+                <small>First name</small>
                 <input
                   type="text"
-                  value={profile.displayName}
-                  onChange={(event) => updateField("displayName", event.currentTarget.value)}
+                  value={profile.firstName}
+                  onChange={(event) => updateField("firstName", event.currentTarget.value)}
+                />
+              </label>
+
+              <label className="key-value-card key-value-card-editable">
+                <small>Last name</small>
+                <input
+                  type="text"
+                  value={profile.lastName}
+                  onChange={(event) => updateField("lastName", event.currentTarget.value)}
                 />
               </label>
 

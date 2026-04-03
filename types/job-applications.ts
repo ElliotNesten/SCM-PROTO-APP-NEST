@@ -27,7 +27,8 @@ export interface StoredStaffApplication {
   status: StaffApplicationStatus;
   profileImageName: string;
   profileImageUrl: string;
-  displayName: string;
+  firstName: string;
+  lastName: string;
   email: string;
   phone: string;
   country: string;

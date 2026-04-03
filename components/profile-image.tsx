@@ -12,7 +12,7 @@ function getDisplayInitials(name: string) {
 }
 
 export function ProfileImage({
-  displayName,
+  fullName,
   imageUrl,
   alt,
   className,
@@ -20,7 +20,7 @@ export function ProfileImage({
   fallbackText,
   loading = "lazy",
 }: {
-  displayName: string;
+  fullName: string;
   imageUrl?: string | null;
   alt: string;
   className?: string;
@@ -48,7 +48,7 @@ export function ProfileImage({
     );
   }
 
-  const initials = fallbackText ?? getDisplayInitials(displayName);
+  const initials = fallbackText ?? getDisplayInitials(fullName);
 
   if (fallbackClassName) {
     return <span className={fallbackClassName}>{initials}</span>;

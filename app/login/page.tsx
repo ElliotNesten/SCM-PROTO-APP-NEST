@@ -75,8 +75,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
                   <p className="eyebrow">SCM PLATFORM</p>
                   <h1>Welcome back</h1>
                   <p className="page-subtitle">
-                    Sign in with your SCM Staff account or shared gig access to manage the
-                    platform areas available to you.
+                    Sign in with your SCM Staff account or gig access.
                   </p>
                 </div>
               </div>
@@ -86,9 +85,9 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
               {currentUser ? (
                 <div className="login-session-banner">
                   <div>
-                    <strong>Currently signed in as {currentUser.displayName}</strong>
+                    <strong>Signed in as {currentUser.displayName}</strong>
                     <p className="muted">
-                      Continue working, sign out, or switch to another platform account below.
+                      Continue, log out, or switch account.
                     </p>
                   </div>
                   <div className="page-actions">
@@ -146,7 +145,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
                 <div className="login-assistance">
                   <span className="login-forgot-link">Forgot password?</span>
                   <span className="login-forgot-copy">
-                    Contact a Super Admin to resend activation or reset your access.
+                    Contact a Super Admin for help.
                   </span>
                 </div>
 
@@ -160,8 +159,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
 
                 <div className="login-footnote">
                   <p className="muted">
-                    Legacy seeded accounts may still use a demo password based on first name +
-                    <code>123</code> until they are changed or replaced by an activation invite.
+                    Demo accounts use first name + <code>123</code> as password.
                   </p>
                 </div>
               </form>

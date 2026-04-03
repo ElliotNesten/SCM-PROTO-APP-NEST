@@ -18,7 +18,7 @@ const timeframeFilters = [
   { label: "Today", value: "today" },
   { label: "Week", value: "week" },
   { label: "Month", value: "month" },
-  { label: "Set date / interval", value: "custom" },
+  { label: "Custom dates", value: "custom" },
 ] as const;
 
 const dateMonthOptions = [
@@ -650,7 +650,7 @@ export function DashboardClient({
               }`}
               onClick={clearAllFilters}
             >
-              Clear Filters
+              Clear
             </button>
           </div>
 
@@ -832,8 +832,8 @@ export function DashboardClient({
             {filteredGigs.length === 0 ? (
               <div className="overview-empty-state">
                 {activeGigView === "toBeClosed"
-                  ? "No to-be-closed gigs match the current filters."
-                  : "No gigs match the current filters."}
+                  ? "No closing gigs match your filters."
+                  : "No gigs match your filters."}
               </div>
             ) : (
               filteredGigs.map((gig) => <DashboardGigRow key={gig.id} gig={gig} />)

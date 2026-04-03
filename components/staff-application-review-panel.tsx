@@ -37,21 +37,21 @@ function getEmailStatusTone(status: StoredStaffApplication["approvalEmailStatus"
 function getReviewMessage(reviewCode: string | undefined) {
   switch (reviewCode) {
     case "approved":
-      return "Application approved and activation email sent.";
+      return "Approved — email sent.";
     case "approved-email-failed":
-      return "Application approved, but the activation email could not be sent. Check Postmark configuration.";
+      return "Approved, but email failed. Check Postmark settings.";
     case "rejected":
-      return "Application rejected.";
+      return "Rejected.";
     case "email-resent":
-      return "Activation email sent again.";
+      return "Email resent.";
     case "duplicate-email":
-      return "This applicant already exists as a staff profile.";
+      return "Applicant already exists.";
     case "already-reviewed":
-      return "This application has already been reviewed.";
+      return "Already reviewed.";
     case "already-activated":
-      return "This employee account is already activated.";
+      return "Already activated.";
     case "not-found":
-      return "Application not found.";
+      return "Not found.";
     default:
       return "";
   }
@@ -76,7 +76,7 @@ export function StaffApplicationReviewPanel({
           <p className="eyebrow">Applications</p>
           <h2>Work at SCM</h2>
           <p className="page-subtitle">
-            Review incoming applications, approve profiles, and trigger account activation.
+            Review applications and activate accounts.
           </p>
         </div>
         <span className="helper-caption">{visibleApplications.length} pending</span>
@@ -85,7 +85,7 @@ export function StaffApplicationReviewPanel({
       {reviewMessage ? <p className="system-settings-feedback">{reviewMessage}</p> : null}
 
       {visibleApplications.length === 0 ? (
-        <div className="empty-panel">No pending job applications right now.</div>
+        <div className="empty-panel">No pending applications.</div>
       ) : (
         <div className="staff-application-list">
           {visibleApplications.map((application) => (

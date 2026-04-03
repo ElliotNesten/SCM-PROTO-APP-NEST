@@ -107,17 +107,17 @@ const standardNoteFieldOptions: Array<{
   {
     key: "arenaNotes",
     label: "Arena notes",
-    placeholder: "Add arena notes for this gig.",
+    placeholder: "Add arena notes",
   },
   {
     key: "securitySetup",
     label: "Security setup",
-    placeholder: "Add security notes for this gig.",
+    placeholder: "Add security notes",
   },
   {
     key: "generalComments",
     label: "General comments",
-    placeholder: "Add general comments for this gig.",
+    placeholder: "Add general comments",
   },
 ];
 
@@ -298,19 +298,19 @@ export function GigOverviewEditor({
 
   async function saveOverview(
     nextForm = form,
-    successMessage = "Gig details saved.",
+    successMessage = "Saved.",
     options?: { refresh?: boolean },
   ) {
     if (!isScmRepresentativeSelectionValid) {
       setSaveMessage(
-        "Choose an SCM representative from the profile list, or use Temporary Gig Manager.",
+        "Select an SCM representative or assign a Temporary Gig Manager.",
       );
       return false;
     }
 
     if (isGigDateLocked && nextForm.date !== gig.date) {
       setSaveMessage(
-        "Gig date is locked after the full time report has been approved because legal payroll documents and contracts have been signed.",
+        "Date locked — time report approved, payroll finalized.",
       );
       return false;
     }
@@ -451,7 +451,7 @@ export function GigOverviewEditor({
     setAssignedTemporaryGigManagers(payload?.temporaryGigManagers ?? []);
     if (options?.successMessage !== null) {
       setShareGigMessage(
-        options?.successMessage ?? "Gig info shared with Temporary Gig Manager access.",
+        options?.successMessage ?? "Shared with Temporary Gig Manager.",
       );
     }
     setUpdatingTemporaryGigManagerId(null);
@@ -477,14 +477,14 @@ export function GigOverviewEditor({
     setForm(nextForm);
     const didSave = await saveOverview(
       nextForm,
-      "SCM representative updated and gig info shared.",
+      "Representative updated.",
       { refresh: false },
     );
 
     setShareGigMessage(
       didSave
-        ? "Gig info shared with Temporary Gig Manager access."
-        : "Gig info shared, but the SCM representative could not be saved.",
+        ? "Shared with Temporary Gig Manager."
+        : "Shared, but representative update failed.",
     );
   }
 
@@ -601,8 +601,7 @@ export function GigOverviewEditor({
               />
               {isGigDateLocked ? (
                 <span className="muted small-text">
-                  Date locked because the full time report was approved and legal payroll
-                  documents and contracts have been signed.
+                  Locked — time report approved, payroll finalized.
                 </span>
               ) : null}
             </label>
@@ -680,7 +679,7 @@ export function GigOverviewEditor({
                     <div className="temporary-gig-manager-head">
                       <div className="temporary-gig-manager-copy">
                         <span>Temporary Gig Manager</span>
-                        <small>Gig-specific access only</small>
+                        <small>This gig only</small>
                       </div>
                     </div>
 
@@ -894,7 +893,7 @@ export function GigOverviewEditor({
 
             {showNoteFieldPicker ? (
               <div className="note-field-picker">
-                <p className="small-text">Choose a heading for the new comment field.</p>
+                <p className="small-text">Add a new section</p>
                 <div className="note-field-picker-actions">
                   {availableSuggestedNoteFields.map((field) => (
                     <button

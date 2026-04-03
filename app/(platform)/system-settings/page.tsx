@@ -44,7 +44,7 @@ export default async function SystemSettingsPage() {
       <PageHeader
         eyebrow="SYSTEM SETTINGS"
         title="System Settings"
-        subtitle="Manage salary defaults, PDF templates, arena catalog, and shared SCM content used across the platform and staff app."
+        subtitle="Platform settings, compensation, templates, and content."
         actions={
           <Link href="/dashboard" className="button ghost">
             Back to dashboard
@@ -59,7 +59,7 @@ export default async function SystemSettingsPage() {
             eyebrow: "Quick Actions",
             title: "Global text and labels",
             description:
-              "Enable inline editing for shared UI copy across the platform.",
+              "Edit shared text and labels.",
             summary: "Interface copy, labels, and helper text",
             keywords: ["text", "copy", "labels", "buttons", "headings"],
             content: <SystemSettingsTextEditingPanel />,
@@ -69,7 +69,7 @@ export default async function SystemSettingsPage() {
             eyebrow: "Onboarding",
             title: "Approved application email",
             description:
-              "Adjust the activation email, support details, and Postmark delivery setup.",
+              "Configure welcome email and delivery.",
             summary: "Email template and delivery settings",
             keywords: ["email", "activation", "postmark", "support", "approval"],
             content: (
@@ -84,7 +84,7 @@ export default async function SystemSettingsPage() {
             eyebrow: "Documents",
             title: "SCM staff policy PDF",
             description:
-              "Replace the live policy PDF that opens inside the staff app.",
+              "Update the staff app policy file.",
             summary: "Policy upload and current live file",
             keywords: ["policy", "pdf", "upload", "staff app", "document"],
             content: (
@@ -99,7 +99,7 @@ export default async function SystemSettingsPage() {
             eyebrow: "Compensation",
             title: "Hourly wage defaults",
             description:
-              "Manage country-by-country standard rates for each staff role.",
+              "Set hourly rates by country and role.",
             summary: "Salary defaults for Sweden, Norway, Denmark, and Finland",
             keywords: ["salary", "wage", "hourly", "compensation", "rates"],
             content: (
@@ -111,7 +111,7 @@ export default async function SystemSettingsPage() {
             eyebrow: "Staff App",
             title: "Guides, arenas, and SCM info",
             description:
-              "Edit roles and training, checklists, arena content, policy links, and shared SCM info.",
+              "Guides, arena info, and resources.",
             summary: "Guides, PDFs, arena info, and staff app content",
             keywords: ["guides", "arena", "roles", "training", "checklists", "cash"],
             content: (
@@ -127,7 +127,7 @@ export default async function SystemSettingsPage() {
             eyebrow: "PDF Output",
             title: "Employment and time report templates",
             description:
-              "Configure generated PDF content and preview the final output before saving.",
+              "Preview and configure PDF templates.",
             summary: "Contract and time report templates with live preview",
             keywords: ["template", "pdf", "contract", "time report", "placeholders"],
             content: <SystemSettingsTemplateEditor initialTemplates={templateState.templates} />,

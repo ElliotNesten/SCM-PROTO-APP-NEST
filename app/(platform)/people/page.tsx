@@ -199,7 +199,7 @@ export default async function PeoplePage({ searchParams }: PeoplePageProps) {
     <div className="staff-directory-page">
       <PageHeader
         title="Staff"
-        subtitle="Registry and profile area for field staff and applicants."
+        subtitle="Field staff and applicant directory."
         actions={
           <div className="page-actions">
             <Link href="/people/new" className="button">
@@ -381,7 +381,7 @@ export default async function PeoplePage({ searchParams }: PeoplePageProps) {
             )
           ) : (
             filteredPeople.length === 0 ? (
-              <div className="empty-panel">No staff match the current filters.</div>
+              <div className="empty-panel">No staff match your filters.</div>
             ) : (
               <div className="staff-list-grid">
                 {filteredPeople.map((person) => (

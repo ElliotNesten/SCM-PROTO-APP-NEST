@@ -5,9 +5,9 @@ export default function NotFound() {
     <div className="center-shell">
       <div className="card centered-card">
         <p className="eyebrow">404</p>
-        <h1>Route not found</h1>
+        <h1>Page not found</h1>
         <p className="page-subtitle">
-          This part of the SCM prototype has not been scaffolded yet.
+          This page doesn't exist yet.
         </p>
         <div className="page-actions">
           <Link href="/dashboard" className="button">

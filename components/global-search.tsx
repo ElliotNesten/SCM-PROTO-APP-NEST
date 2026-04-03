@@ -151,10 +151,10 @@ export function GlobalSearch() {
       {isOpen && query.trim() ? (
         <div className="header-search-panel" role="listbox" aria-label="Search results">
           {isLoading ? (
-            <div className="header-search-status">Searching everything in the platform...</div>
+            <div className="header-search-status">Searching...</div>
           ) : results.length === 0 ? (
             <div className="header-search-status">
-              No matches yet. Try gigs, artists, dates, arenas, staff, files, or shifts.
+              No results. Try a different search.
             </div>
           ) : (
             <div className="header-search-list">

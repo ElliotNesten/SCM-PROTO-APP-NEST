@@ -1,31 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 162" fill="none">
-  <defs>
-    <linearGradient id="brandLogoGradient" x1="180" y1="0" x2="180" y2="128">
-      <stop offset="0%" stop-color="#5ea6ff" />
-      <stop offset="100%" stop-color="#2f72d8" />
-    </linearGradient>
-  </defs>
-  <path
-    d="M93 11H35C16 11 0 27 0 47C0 67 16 83 35 83H58C67 83 74 90 74 99C74 108 67 115 58 115H0V127H60C79 127 95 111 95 91C95 71 79 55 60 55H37C28 55 21 48 21 39C21 30 28 23 37 23H93V11Z"
-    fill="url(#brandLogoGradient)"
-  />
-  <path
-    d="M198 11H149C118 11 96 35 96 69C96 103 118 127 149 127H198V115H151C130 115 117 98 117 69C117 40 130 23 151 23H198V11Z"
-    fill="url(#brandLogoGradient)"
-  />
-  <path
-    d="M214 127V39C214 18 229 0 251 0C265 0 277 6 285 18C293 6 305 0 319 0C341 0 356 18 356 39V127H334V41C334 30 326 22 316 22C306 22 298 30 298 41V127H276V41C276 30 268 22 258 22C248 22 240 30 240 41V127H214Z"
-    fill="url(#brandLogoGradient)"
-  />
-  <text
-    x="2"
-    y="156"
-    fill="url(#brandLogoGradient)"
-    font-family="Arial, Helvetica, sans-serif"
-    font-size="21"
-    font-weight="700"
-    letter-spacing="1.65"
-  >
-    SCANDINAVIAN CONCESSIONS MANAGEMENT
-  </text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 580 200" fill="#0d0d0d">
+  <!-- s — rounded bold S -->
+  <path d="M128 0H48C22 0 0 22 0 48C0 74 22 96 48 96L80 96C94 96 106 108 106 122C106 136 94 148 80 148H0V200H82C114 200 140 176 140 144C140 112 116 88 80 88L50 88C34 88 24 78 24 64C24 50 36 40 50 40H128V0Z"/>
+  <!-- c — rounded bold C -->
+  <path d="M356 0H258C214 0 176 36 176 100C176 164 214 200 258 200H356V160H260C234 160 218 134 218 100C218 66 234 40 260 40H356V0Z"/>
+  <!-- m — rounded bold M -->
+  <path d="M580 200V72C580 32 556 0 520 0C502 0 486 8 474 22C462 8 446 0 428 0C392 0 368 32 368 72V200H410V74C410 56 420 42 436 42C452 42 462 56 462 74V200H502V74C502 56 514 42 530 42C546 42 558 56 558 74V200H580Z"/>
 </svg>

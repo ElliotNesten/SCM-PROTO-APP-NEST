@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -88,6 +89,7 @@ export function NavMenu({
   canManageSystemSettings,
   displayName,
   roleLabel,
+  logoUrl,
   logoutAction,
 }: {
   canAccessScmStaff: boolean;
@@ -95,6 +97,7 @@ export function NavMenu({
   canManageSystemSettings: boolean;
   displayName: string;
   roleLabel: string;
+  logoUrl: string;
   logoutAction: () => Promise<void>;
 }) {
   const pathname = usePathname();
@@ -134,6 +137,19 @@ export function NavMenu({
 
       {open && (
         <div className="nav-menu-dropdown" role="dialog" aria-label="Navigation menu">
+          <div className="nav-menu-logo">
+            <Image
+              src={logoUrl}
+              alt="SCM"
+              width={72}
+              height={26}
+              unoptimized
+              priority
+            />
+          </div>
+
+          <div className="nav-menu-divider" style={{ marginTop: "0.1rem" }} />
+
           <nav className="nav-menu-section">
             <Link href="/dashboard" className={`nav-menu-item ${isActive("/dashboard") ? "active" : ""}`}>
               <span className="nav-menu-icon"><DashboardIcon /></span>

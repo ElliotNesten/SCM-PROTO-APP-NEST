@@ -363,7 +363,7 @@ export function DashboardClient({
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
   const [monthOffset, setMonthOffset] = useState(0);
-  const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false);
+  const isFilterPanelOpen = searchParams.get("fp") === "1";
 
   const cityOptions = getUniqueGigValues(gigs, (gig) => gig.city);
   const scmRepOptions = getUniqueGigValues(gigs, (gig) => gig.scmRepresentative);
@@ -480,6 +480,7 @@ export function DashboardClient({
 
   function pushFilterRoute(nextFilters: DashboardFilters) {
     const params = new URLSearchParams(searchParams.toString());
+    params.set("fp", "1"); // keep filter panel open while adjusting filters
 
     [
       ["country", nextFilters.country],
@@ -601,19 +602,10 @@ export function DashboardClient({
 
   function clearAllFilters() {
     setMonthOffset(0);
-    setIsFilterPanelOpen(false);
-    pushFilterRoute({
-      country: "all",
-      city: "all",
-      scmRep: "all",
-      arena: "all",
-      artist: "all",
-      view: "all",
-      range: "all",
-      marker: "all",
-      month: getCurrentMonthValue(),
-      fromDate: "",
-      toDate: "",
+    const params = new URLSearchParams();
+    params.set("fp", "1"); // keep filter panel open after clearing
+    startTransition(() => {
+      router.push(`${pathname}?${params.toString()}`);
     });
   }
 
@@ -630,189 +622,98 @@ export function DashboardClient({
 
   return (
     <div className="dashboard-overview compact" aria-busy={isPending}>
-      <section className="overview-toolbar compact">
-        <div className="overview-filter-stack">
-          <div className="overview-filter-action-row">
-            <button
-              type="button"
-              className={`segment-chip overview-filter-group-button ${
-                isFilterPanelOpen || hasAnyActiveFilters ? "active" : ""
-              }`}
-              onClick={() => setIsFilterPanelOpen((current) => !current)}
-            >
-              Filter
-            </button>
+      {isFilterPanelOpen ? (
+        <div className="dashboard-filter-dropdown">
+          <div className="dashboard-filter-grid">
+            <label className="overview-filter-field">
+              <span>Country</span>
+              <select value={activeCountry} onChange={(e) => updateCountryFilter(e.currentTarget.value)}>
+                <option value="all">All countries</option>
+                {countryOptions.map((c) => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </label>
 
-            <button
-              type="button"
-              className={`segment-chip overview-filter-group-button ${
-                hasAnyActiveFilters ? "active" : ""
-              }`}
-              onClick={clearAllFilters}
-            >
-              Clear
-            </button>
+            <label className="overview-filter-field">
+              <span>Date range</span>
+              <select value={activeRange} onChange={(e) => updateRangeFilter(e.currentTarget.value as DashboardRangeFilter)}>
+                {timeframeFilters.map((f) => <option key={f.value} value={f.value}>{f.label}</option>)}
+              </select>
+            </label>
+
+            <label className="overview-filter-field">
+              <span>Progress</span>
+              <select value={activeMarker} onChange={(e) => updateMarkerFilter(e.currentTarget.value as DashboardMarkerFilter)}>
+                {markerFilters.map((f) => <option key={f.value} value={f.value}>{f.label}</option>)}
+              </select>
+            </label>
+
+            <label className="overview-filter-field">
+              <span>SCM Rep</span>
+              <select value={activeScmRep} onChange={(e) => updateScmRepFilter(e.currentTarget.value)}>
+                <option value="all">All reps</option>
+                {scmRepOptions.map((r) => <option key={r} value={r}>{r}</option>)}
+              </select>
+            </label>
+
+            <label className="overview-filter-field">
+              <span>Arena</span>
+              <select value={activeArena} onChange={(e) => updateArenaFilter(e.currentTarget.value)}>
+                <option value="all">All arenas</option>
+                {arenaOptions.map((a) => <option key={a} value={a}>{a}</option>)}
+              </select>
+            </label>
+
+            <label className="overview-filter-field">
+              <span>Artist</span>
+              <select value={activeArtist} onChange={(e) => updateArtistFilter(e.currentTarget.value)}>
+                <option value="all">All artists</option>
+                {artistOptions.map((a) => <option key={a} value={a}>{a}</option>)}
+              </select>
+            </label>
+
+            <label className="overview-filter-field">
+              <span>City</span>
+              <select value={activeCity} onChange={(e) => updateCityFilter(e.currentTarget.value)}>
+                <option value="all">All cities</option>
+                {cityOptions.map((c) => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </label>
+
+            {activeRange === "month" && (
+              <label className="overview-filter-field">
+                <span>Month</span>
+                <select value={activeMonth} onChange={(e) => updateMonthFilter(e.currentTarget.value)}>
+                  {dateMonthOptions.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
+                </select>
+              </label>
+            )}
+
+            {activeRange === "custom" && (
+              <>
+                <label className="overview-filter-field">
+                  <span>From</span>
+                  <input type="date" value={activeFromDate} onChange={(e) => updateCustomDates(e.currentTarget.value, activeToDate)} />
+                </label>
+                <label className="overview-filter-field">
+                  <span>To</span>
+                  <input type="date" value={activeToDate} onChange={(e) => updateCustomDates(activeFromDate, e.currentTarget.value)} />
+                </label>
+              </>
+            )}
           </div>
 
-          {isFilterPanelOpen ? (
-            <div className="overview-filter-panel">
-              <div className="overview-filter-select-grid">
-                <label className="overview-filter-field">
-                  <span>Country</span>
-                  <select
-                    value={activeCountry}
-                    onChange={(event) => updateCountryFilter(event.currentTarget.value)}
-                  >
-                    <option value="all">All</option>
-                    {countryOptions.map((country) => (
-                      <option key={country} value={country}>
-                        {country}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-
-                <label className="overview-filter-field">
-                  <span>Date</span>
-                  <select
-                    value={activeRange}
-                    onChange={(event) =>
-                      updateRangeFilter(event.currentTarget.value as DashboardRangeFilter)
-                    }
-                  >
-                    {timeframeFilters.map((filter) => (
-                      <option key={filter.value} value={filter.value}>
-                        {filter.label}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-
-                <label className="overview-filter-field">
-                  <span>Progress</span>
-                  <select
-                    value={activeMarker}
-                    onChange={(event) =>
-                      updateMarkerFilter(event.currentTarget.value as DashboardMarkerFilter)
-                    }
-                  >
-                    {markerFilters.map((filter) => (
-                      <option key={filter.value} value={filter.value}>
-                        {filter.label}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-
-                <label className="overview-filter-field">
-                  <span>SCM REP</span>
-                  <select
-                    value={activeScmRep}
-                    onChange={(event) => updateScmRepFilter(event.currentTarget.value)}
-                  >
-                    <option value="all">All</option>
-                    {scmRepOptions.map((scmRep) => (
-                      <option key={scmRep} value={scmRep}>
-                        {scmRep}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-
-                <label className="overview-filter-field">
-                  <span>Arena</span>
-                  <select
-                    value={activeArena}
-                    onChange={(event) => updateArenaFilter(event.currentTarget.value)}
-                  >
-                    <option value="all">All</option>
-                    {arenaOptions.map((arena) => (
-                      <option key={arena} value={arena}>
-                        {arena}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-
-                <label className="overview-filter-field">
-                  <span>Artist</span>
-                  <select
-                    value={activeArtist}
-                    onChange={(event) => updateArtistFilter(event.currentTarget.value)}
-                  >
-                    <option value="all">All</option>
-                    {artistOptions.map((artist) => (
-                      <option key={artist} value={artist}>
-                        {artist}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-
-                <label className="overview-filter-field">
-                  <span>City</span>
-                  <select
-                    value={activeCity}
-                    onChange={(event) => updateCityFilter(event.currentTarget.value)}
-                  >
-                    <option value="all">All</option>
-                    {cityOptions.map((city) => (
-                      <option key={city} value={city}>
-                        {city}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              </div>
-
-              {activeRange === "month" ? (
-                <div className="overview-filter-date-row">
-                  <label className="overview-filter-field overview-filter-field-narrow">
-                    <span>Month</span>
-                    <select
-                      value={activeMonth}
-                      onChange={(event) => updateMonthFilter(event.currentTarget.value)}
-                    >
-                      {dateMonthOptions.map((month) => (
-                        <option key={month.value} value={month.value}>
-                          {month.label}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                </div>
-              ) : null}
-
-              {activeRange === "custom" ? (
-                <div className="overview-filter-date-row">
-                  <label className="overview-filter-field overview-filter-field-narrow">
-                    <span>From</span>
-                    <input
-                      type="date"
-                      value={activeFromDate}
-                      onChange={(event) => updateCustomDates(event.currentTarget.value, activeToDate)}
-                    />
-                  </label>
-
-                  <label className="overview-filter-field overview-filter-field-narrow">
-                    <span>To</span>
-                    <input
-                      type="date"
-                      value={activeToDate}
-                      onChange={(event) => updateCustomDates(activeFromDate, event.currentTarget.value)}
-                    />
-                  </label>
-                </div>
-              ) : null}
+          <div className="dashboard-filter-footer">
+            <div className="dashboard-filter-stats">
+              <span>{openGigs} open · {filteredGigs.length} shown</span>
             </div>
-          ) : null}
+            {hasAnyActiveFilters && (
+              <button type="button" className="dashboard-filter-clear" onClick={clearAllFilters}>
+                Clear filters
+              </button>
+            )}
+          </div>
         </div>
-
-        <div className="overview-actions compact">
-          <SummaryCard label="Open gigs" value={openGigs} />
-          <SummaryCard label="Shown" value={filteredGigs.length} />
-        </div>
-      </section>
+      ) : null}
 
       <section className="overview-content-grid compact">
         <div className="overview-gigs-panel compact">

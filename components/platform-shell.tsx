@@ -1,8 +1,9 @@
 import type { ReactNode } from "react";
+import { Suspense } from "react";
 
 import { logoutCurrentUser } from "@/app/auth-actions";
-import { BrandLogoUploader } from "@/components/brand-logo-uploader";
 import { NavMenu } from "@/components/nav-menu";
+import { DashboardFilterButton } from "@/components/dashboard-filter-button";
 import { getBrandSettings } from "@/lib/brand-store";
 import { GlobalSearch } from "@/components/global-search";
 import {
@@ -42,18 +43,15 @@ export async function PlatformShell({ children }: { children: ReactNode }) {
             canManageSystemSettings={canManageSystemSettings}
             displayName={currentUser.displayName}
             roleLabel={currentUser.roleLabel}
+            logoUrl={brandSettings.logoUrl}
             logoutAction={logoutCurrentUser}
           />
 
-          <div className="platform-header-logo">
-            <BrandLogoUploader
-              initialLogoUrl={brandSettings.logoUrl}
-              canUpload={canManageSystemSettings}
-            />
-          </div>
-
           <div className="platform-header-right">
             {canSearchPlatform ? <GlobalSearch /> : null}
+            <Suspense>
+              <DashboardFilterButton />
+            </Suspense>
           </div>
         </div>
       </header>

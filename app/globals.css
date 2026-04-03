@@ -2991,7 +2991,8 @@ textarea {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  padding: 0.3rem 0.7rem;
+  padding: 0 0.9rem;
+  align-self: stretch;
   border-radius: var(--radius-sm);
   border: 1px solid rgba(212, 205, 192, 0.85);
   background: rgba(255, 255, 255, 0.8);
@@ -3173,6 +3174,37 @@ textarea {
   font-weight: 700;
 }
 /* ── End Bottom Nav ──────────────────────────────────── */
+
+/* ── Calendar page ──────────────────────────────────── */
+.calendar-page-wrap {
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid rgba(212, 205, 192, 0.7);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.calendar-page-wrap .calendar-head {
+  padding: 0.85rem 1rem 0.75rem;
+}
+
+.calendar-page-wrap .calendar-body {
+  padding: 0 0.5rem 0.75rem;
+}
+
+.calendar-page-wrap .calendar-day-cell {
+  min-height: 80px;
+  padding: 0.25rem 0.3rem;
+}
+
+.calendar-page-wrap .calendar-gig-button {
+  font-size: 0.75rem;
+  padding: 0.18rem 0.35rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
 
 /* ── Profile logout section ─────────────────────────── */
 .profile-logout-section {
@@ -3464,7 +3496,7 @@ textarea {
 
 .main-shell {
   min-height: calc(100vh - 60px);
-  padding: 0 clamp(1rem, 2.2vw, 2.25rem) calc(1.5rem + 68px);
+  padding: 0.65rem clamp(1rem, 2.2vw, 2.25rem) calc(1.5rem + 68px);
 }
 
 .page-stack {

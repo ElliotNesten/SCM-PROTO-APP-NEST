@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
 import { Suspense } from "react";
-import Image from "next/image";
 
 import { BottomNav } from "@/components/bottom-nav";
 import { DashboardFilterButton } from "@/components/dashboard-filter-button";
@@ -37,18 +36,6 @@ export async function PlatformShell({ children }: { children: ReactNode }) {
 
       <header className="platform-header">
         <div className="platform-nav-row">
-          <div className="platform-header-brand">
-            <Image
-              src={brandSettings.logoUrl}
-              alt="SCM"
-              width={72}
-              height={26}
-              unoptimized
-              priority
-              className="platform-header-logo"
-            />
-          </div>
-
           <div className="platform-header-right">
             {canSearchPlatform ? <GlobalSearch /> : null}
             <Suspense>
@@ -64,7 +51,6 @@ export async function PlatformShell({ children }: { children: ReactNode }) {
 
       <BottomNav
         canAccessScmStaff={canAccessScmStaffDirectory(currentUser.roleKey)}
-        canAccessStaffDirectory={canAccessStaffDirectory}
       />
     </div>
   );

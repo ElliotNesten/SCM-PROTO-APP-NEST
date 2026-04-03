@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useTransition } from "react";
 
 import { resolveGigOverviewIndicator } from "@/data/scm-data";
 import {
@@ -362,7 +362,6 @@ export function DashboardClient({
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
-  const [monthOffset, setMonthOffset] = useState(0);
   const isFilterPanelOpen = searchParams.get("fp") === "1";
 
   const cityOptions = getUniqueGigValues(gigs, (gig) => gig.city);
@@ -466,12 +465,6 @@ export function DashboardClient({
     );
   });
 
-  const baseCalendarMonth =
-    activeRange === "month"
-      ? new Date(getInitialCalendarMonth(filteredGigs.length > 0 ? filteredGigs : gigs).getFullYear(), Number(activeMonth) - 1, 1)
-      : getInitialCalendarMonth(filteredGigs.length > 0 ? filteredGigs : gigs);
-  const calendarMonth = addMonths(baseCalendarMonth, monthOffset);
-  const calendarRows = buildCalendarRows(calendarMonth, filteredGigs);
   const openGigs = gigs.filter(
     (gig) =>
       resolveGigRegisterSection(gig) !== "closed" &&
@@ -545,32 +538,26 @@ export function DashboardClient({
   }
 
   function updateCountryFilter(country: string) {
-    setMonthOffset(0);
     pushFilterRoute({ ...currentFilters, country });
   }
 
   function updateCityFilter(city: string) {
-    setMonthOffset(0);
     pushFilterRoute({ ...currentFilters, city });
   }
 
   function updateScmRepFilter(scmRep: string) {
-    setMonthOffset(0);
     pushFilterRoute({ ...currentFilters, scmRep });
   }
 
   function updateArenaFilter(arena: string) {
-    setMonthOffset(0);
     pushFilterRoute({ ...currentFilters, arena });
   }
 
   function updateArtistFilter(artist: string) {
-    setMonthOffset(0);
     pushFilterRoute({ ...currentFilters, artist });
   }
 
   function updateRangeFilter(range: DashboardRangeFilter) {
-    setMonthOffset(0);
     pushFilterRoute({
       ...currentFilters,
       range,
@@ -581,17 +568,14 @@ export function DashboardClient({
   }
 
   function updateMonthFilter(month: string) {
-    setMonthOffset(0);
     pushFilterRoute({ ...currentFilters, range: "month", month });
   }
 
   function updateMarkerFilter(marker: DashboardMarkerFilter) {
-    setMonthOffset(0);
     pushFilterRoute({ ...currentFilters, marker });
   }
 
   function updateCustomDates(nextFromDate: string, nextToDate: string) {
-    setMonthOffset(0);
     pushFilterRoute({
       ...currentFilters,
       range: "custom",
@@ -601,7 +585,6 @@ export function DashboardClient({
   }
 
   function clearAllFilters() {
-    setMonthOffset(0);
     const params = new URLSearchParams();
     params.set("fp", "1"); // keep filter panel open after clearing
     startTransition(() => {
@@ -612,7 +595,6 @@ export function DashboardClient({
   function toggleToBeClosedCountry(country: string) {
     const isActiveCountry = activeGigView === "toBeClosed" && activeCountry === country;
 
-    setMonthOffset(0);
     pushFilterRoute({
       ...currentFilters,
       view: isActiveCountry ? "all" : "toBeClosed",
@@ -715,93 +697,31 @@ export function DashboardClient({
         </div>
       ) : null}
 
-      <section className="overview-content-grid compact">
-        <div className="overview-gigs-panel compact">
-          <div className="overview-country-card-grid compact">
-            {toBeClosedCountryCards.map((entry) => (
-              <ToBeClosedCountryCard
-                key={entry.country}
-                country={entry.country}
-                count={entry.count}
-                active={activeGigView === "toBeClosed" && activeCountry === entry.country}
-                onClick={() => toggleToBeClosedCountry(entry.country)}
-              />
-            ))}
-          </div>
-
-          <div className="overview-gig-list compact">
-            {filteredGigs.length === 0 ? (
-              <div className="overview-empty-state">
-                {activeGigView === "toBeClosed"
-                  ? "No closing gigs match your filters."
-                  : "No gigs match your filters."}
-              </div>
-            ) : (
-              filteredGigs.map((gig) => <DashboardGigRow key={gig.id} gig={gig} />)
-            )}
-          </div>
+      <div className="overview-gigs-panel compact">
+        <div className="overview-country-card-grid compact">
+          {toBeClosedCountryCards.map((entry) => (
+            <ToBeClosedCountryCard
+              key={entry.country}
+              country={entry.country}
+              count={entry.count}
+              active={activeGigView === "toBeClosed" && activeCountry === entry.country}
+              onClick={() => toggleToBeClosedCountry(entry.country)}
+            />
+          ))}
         </div>
 
-        <aside className="overview-side-panel compact">
-          <section className="overview-card calendar-card compact">
-            <div className="calendar-head">
-              <h2>{formatMonthLabel(calendarMonth)}</h2>
-              <div className="calendar-nav">
-                <button
-                  type="button"
-                  aria-label="Previous month"
-                  onClick={() => setMonthOffset((current) => current - 1)}
-                >
-                  &lt;
-                </button>
-                <button
-                  type="button"
-                  aria-label="Next month"
-                  onClick={() => setMonthOffset((current) => current + 1)}
-                >
-                  &gt;
-                </button>
-              </div>
+        <div className="overview-gig-list compact">
+          {filteredGigs.length === 0 ? (
+            <div className="overview-empty-state">
+              {activeGigView === "toBeClosed"
+                ? "No closing gigs match your filters."
+                : "No gigs match your filters."}
             </div>
-
-            <div className="calendar-grid calendar-grid-head">
-              <span />
-              {calendarWeekdays.map((day) => (
-                <span key={day}>{day}</span>
-              ))}
-            </div>
-
-            <div className="calendar-body compact">
-              {calendarRows.map((row) => (
-                <div key={row.week} className="calendar-grid calendar-grid-row">
-                  <span className="calendar-week">{row.week}</span>
-                  {row.days.map((day) => (
-                    <div
-                      key={day.key}
-                      className={`calendar-day-cell ${
-                        day.inMonth ? "" : "outside-month"
-                      } ${day.gigs.length > 0 ? "has-gigs" : ""}`}
-                    >
-                      <span className="calendar-day-number">{day.label}</span>
-                      <div className="calendar-day-gigs">
-                        {day.gigs.slice(0, 2).map((gig) => (
-                          <Link
-                            key={gig.id}
-                            href={`/gigs/${gig.id}`}
-                            className="calendar-gig-button"
-                          >
-                            {gig.artist}
-                          </Link>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ))}
-            </div>
-          </section>
-        </aside>
-      </section>
+          ) : (
+            filteredGigs.map((gig) => <DashboardGigRow key={gig.id} gig={gig} />)
+          )}
+        </div>
+      </div>
     </div>
   );
 }

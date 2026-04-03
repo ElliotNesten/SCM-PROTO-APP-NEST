@@ -3039,19 +3039,19 @@ textarea {
 .profile-chip {
   display: inline-flex;
   align-items: center;
-  gap: 0.85rem;
-  padding: 0.4rem 0.7rem 0.4rem 0.45rem;
+  gap: 0.55rem;
+  padding: 0.25rem 0.55rem 0.25rem 0.3rem;
   min-width: 0;
   max-width: 100%;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.68);
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.75);
   border: 1px solid rgba(212, 205, 192, 0.75);
-  box-shadow: 0 18px 34px rgba(107, 101, 96, 0.06);
+  box-shadow: var(--shadow);
 }
 
 .profile-avatar {
-  width: 44px;
-  height: 44px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   display: inline-flex;
   align-items: center;
@@ -3060,8 +3060,9 @@ textarea {
     radial-gradient(circle at 30% 30%, #f9d5ca, #d5a58d 46%, #835f4e 100%);
   color: #fff;
   font-weight: 700;
-  font-size: 0.95rem;
+  font-size: 0.75rem;
   overflow: hidden;
+  flex-shrink: 0;
 }
 
 .profile-avatar-image {
@@ -3073,31 +3074,34 @@ textarea {
 .profile-copy {
   display: flex;
   flex-direction: column;
-  gap: 0.15rem;
+  gap: 0.05rem;
 }
 
 .profile-copy strong {
   color: #2f2b26;
-  font-size: 0.98rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  line-height: 1.2;
 }
 
 .profile-copy small {
   color: #8a8078;
-  font-size: 0.92rem;
+  font-size: 0.75rem;
+  line-height: 1.2;
 }
 
 .profile-caret {
   color: #8a8078;
-  font-size: 1.1rem;
+  font-size: 0.85rem;
 }
 
 .main-shell {
-  min-height: calc(100vh - 96px);
-  padding: 0 clamp(1rem, 2.6vw, 2.75rem) clamp(1.5rem, 3vw, 3.5rem);
+  min-height: calc(100vh - 60px);
+  padding: 0 clamp(1rem, 2.2vw, 2.25rem) 1.5rem;
 }
 
 .page-stack {
-  gap: clamp(1rem, 1.8vw, 1.6rem);
+  gap: 1rem;
 }
 
 .shell-orb {
@@ -3350,14 +3354,14 @@ textarea {
 
 .overview-gigs-panel {
   height: 100%;
-  padding: clamp(1rem, 1.5vw, 1.3rem);
+  padding: 0.65rem;
 }
 
 .overview-country-card-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.72rem;
-  margin-bottom: 0.9rem;
+  gap: 0.4rem;
+  margin-bottom: 0.5rem;
   flex: 0 0 auto;
 }
 
@@ -3382,9 +3386,9 @@ textarea {
 }
 
 .overview-country-card.compact {
-  gap: 0.08rem;
-  min-height: 3.7rem;
-  padding: 0.46rem 0.9rem;
+  gap: 0.06rem;
+  min-height: 0;
+  padding: 0.4rem 0.75rem;
 }
 
 .overview-country-card-title-row {
@@ -3453,7 +3457,7 @@ textarea {
 .overview-gig-list {
   display: flex;
   flex-direction: column;
-  gap: clamp(0.8rem, 1.2vw, 1rem);
+  gap: 0.4rem;
 }
 
 .overview-empty-state {
@@ -3536,14 +3540,14 @@ textarea {
 
 .overview-card {
   height: 100%;
-  padding: clamp(1rem, 1.5vw, 1.35rem);
+  padding: 0.65rem;
 }
 
 .calendar-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 1rem;
+  margin-bottom: 0.65rem;
 }
 
 .calendar-head h2 {
@@ -3837,79 +3841,75 @@ textarea {
 }
 
 .dashboard-overview.compact {
-  min-height: calc(100vh - 178px);
-  max-height: calc(100vh - 178px);
+  min-height: calc(100vh - 80px);
+  max-height: calc(100vh - 80px);
   overflow: hidden;
-  gap: 0.8rem;
+  gap: 0.65rem;
 }
 
 .overview-toolbar.compact {
   display: flex;
   flex-wrap: wrap;
-  align-items: flex-start;
-  gap: 0.8rem 1rem;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  flex-shrink: 0;
 }
 
 .dashboard-overview.compact .overview-filter-stack {
-  flex: 0 1 560px;
-  align-self: flex-start;
-  width: min(100%, 560px);
-  max-width: 560px;
-  min-width: min(100%, 320px);
-  gap: 0.6rem;
-  padding: 0.55rem;
-  border: 1px solid rgba(212, 205, 192, 0.88);
-  border-radius: var(--radius-md);
-  background: rgba(255, 255, 255, 0.74);
-  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-width: 0;
+  gap: 0.5rem;
 }
 
 .dashboard-overview.compact .overview-filter-action-row {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 0.55rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
   width: 100%;
 }
 
 .dashboard-overview.compact .overview-filter-group-button {
-  width: 100%;
-  min-width: 120px;
-  min-height: 36px;
-  padding: 0.4rem 0.75rem;
-  font-size: 0.88rem;
+  min-width: 0;
+  min-height: 30px;
+  padding: 0.3rem 0.75rem;
+  font-size: 0.82rem;
   border-radius: var(--radius-sm);
 }
 
 .dashboard-overview.compact .overview-filter-panel {
   display: flex;
   flex-direction: column;
-  gap: 0.62rem;
+  gap: 0.5rem;
   width: 100%;
+  padding: 0.6rem;
+  border: 1px solid rgba(212, 205, 192, 0.88);
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.8);
+  box-shadow: var(--shadow);
 }
 
 .dashboard-overview.compact .overview-filter-select-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 0.62rem;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 0.45rem;
   width: 100%;
 }
 
 .dashboard-overview.compact .overview-filter-field {
   display: flex;
   flex-direction: column;
-  gap: 0.32rem;
+  gap: 0.2rem;
   min-width: 0;
-  padding: 0.6rem 0.7rem;
-  border: 1px solid rgba(212, 205, 192, 0.88);
-  border-radius: var(--radius-sm);
-  background: rgba(250, 248, 245, 0.92);
 }
 
 .dashboard-overview.compact .overview-filter-field span {
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 700;
   color: var(--muted);
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
 }
 
@@ -3917,43 +3917,41 @@ textarea {
 .dashboard-overview.compact .overview-filter-field input {
   width: 100%;
   min-width: 0;
-  min-height: 36px;
-  padding: 0 0.75rem;
+  min-height: 30px;
+  padding: 0 0.6rem;
   border-radius: var(--radius-sm);
   border: 1px solid rgba(212, 205, 192, 0.95);
   background: rgba(255, 255, 255, 0.96);
   color: var(--text);
   font: inherit;
+  font-size: 0.85rem;
 }
 
 .dashboard-overview.compact .overview-filter-field select:focus,
 .dashboard-overview.compact .overview-filter-field input:focus {
   outline: none;
   border-color: rgba(197, 115, 78, 0.92);
-  box-shadow: 0 0 0 3px rgba(197, 115, 78, 0.14);
+  box-shadow: 0 0 0 2px rgba(197, 115, 78, 0.14);
 }
 
 .dashboard-overview.compact .overview-filter-date-row {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(180px, 220px));
-  gap: 0.62rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
   width: 100%;
 }
 
 .dashboard-overview.compact .overview-filter-field-narrow {
-  width: 100%;
+  flex: 1 1 140px;
+  min-width: 0;
 }
 
 .overview-actions.compact {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(180px, 250px));
-  align-self: flex-start;
-  width: min(100%, 32rem);
-  max-width: 32rem;
-  min-width: 0;
-  gap: 0.7rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-shrink: 0;
   margin-left: auto;
-  justify-content: end;
 }
 
 .new-gig-button.compact {
@@ -3967,27 +3965,40 @@ textarea {
 }
 
 .summary-card-grid.compact {
-  flex: 1 1 240px;
+  display: flex;
+  flex-direction: row;
+  gap: 0.4rem;
   width: auto;
-  max-width: 360px;
-  min-width: min(100%, 240px);
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.58rem;
 }
 
 .summary-card.compact {
   min-width: 0;
-  padding: 0.7rem 0.85rem;
+  padding: 0.3rem 0.65rem;
   border-radius: var(--radius-sm);
+  gap: 0.5rem;
+  flex: 0 0 auto;
+}
+
+.summary-card.compact p {
+  font-size: 0.75rem;
+  white-space: nowrap;
 }
 
 .summary-card.compact strong {
-  font-size: 1.42rem;
+  font-size: 1rem;
+  margin-top: 0.1rem;
+}
+
+.summary-card.compact .summary-icon {
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  font-size: 0.75rem;
 }
 
 .overview-content-grid.compact {
-  grid-template-columns: minmax(0, 1.34fr) minmax(330px, 0.82fr);
-  gap: 1rem;
+  grid-template-columns: minmax(0, 1.4fr) minmax(280px, 0.7fr);
+  gap: 0.65rem;
   min-height: 0;
   overflow: hidden;
 }
@@ -4014,9 +4025,9 @@ textarea {
 }
 
 .overview-gig-row.compact {
-  grid-template-columns: 40px minmax(0, 1fr);
-  gap: 0.7rem;
-  padding: 0.7rem 0.85rem;
+  grid-template-columns: 36px minmax(0, 1fr);
+  gap: 0.6rem;
+  padding: 0.5rem 0.75rem;
   border-radius: var(--radius-sm);
 }
 
@@ -4039,17 +4050,19 @@ textarea {
 }
 
 .overview-gig-head.compact h3 {
-  margin-bottom: 0.12rem;
-  font-size: 1rem;
+  margin-bottom: 0.06rem;
+  font-size: 0.88rem;
+  font-weight: 600;
 }
 
 .overview-gig-row.compact .overview-gig-venue,
 .overview-gig-row.compact .overview-gig-date {
-  font-size: 0.86rem;
+  font-size: 0.78rem;
 }
 
 .overview-gig-row.compact .overview-gig-date {
-  font-size: 1rem;
+  font-size: 0.78rem;
+  margin-top: 0.1rem;
 }
 
 .overview-gig-meta {
@@ -4072,13 +4085,13 @@ textarea {
 }
 
 .overview-gig-status-dot {
-  width: 12px;
-  height: 12px;
+  width: 8px;
+  height: 8px;
   border-radius: 999px;
   flex-shrink: 0;
   margin-left: auto;
-  margin-right: 0.9rem;
-  box-shadow: 0 0 0 4px rgba(243, 239, 231, 0.95);
+  margin-right: 0.6rem;
+  box-shadow: 0 0 0 2px rgba(243, 239, 231, 0.95);
 }
 
 .overview-gig-status-dot.identified {
@@ -4168,33 +4181,48 @@ textarea {
 }
 
 .calendar-card.compact {
-  padding: 0.75rem;
+  padding: 0.6rem;
+}
+
+.calendar-card.compact .calendar-head {
+  margin-bottom: 0.5rem;
 }
 
 .calendar-card.compact .calendar-head h2 {
-  font-size: 1rem;
+  font-size: 0.88rem;
+}
+
+.calendar-card.compact .calendar-nav button {
+  width: 32px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  font-size: 0.8rem;
 }
 
 .calendar-body.compact {
-  gap: 0.28rem;
-  padding: 0.55rem;
+  gap: 0.2rem;
+  padding: 0.4rem;
 }
 
 .calendar-card.compact .calendar-day-cell {
-  min-height: 62px;
-  padding: 0.3rem 0.24rem;
-  gap: 0.18rem;
-  border-radius: 12px;
+  min-height: 46px;
+  padding: 0.2rem 0.18rem;
+  gap: 0.12rem;
+  border-radius: var(--radius-sm);
 }
 
 .calendar-card.compact .calendar-day-number {
-  font-size: 0.76rem;
+  font-size: 0.68rem;
 }
 
 .calendar-card.compact .calendar-gig-button {
-  padding: 0.15rem 0.32rem;
-  font-size: 0.58rem;
-  border-radius: 8px;
+  padding: 0.1rem 0.25rem;
+  font-size: 0.52rem;
+  border-radius: 4px;
+}
+
+.calendar-card.compact .calendar-grid-head span {
+  font-size: 0.72rem;
 }
 
 .list-row,
@@ -4266,9 +4294,7 @@ a.queue-card:hover {
   .overview-actions.compact {
     width: 100%;
     margin-left: 0;
-    max-width: none;
-    min-width: 0;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    justify-content: flex-start;
   }
 
   .overview-content-grid.compact {

@@ -3082,6 +3082,19 @@ textarea {
   background: rgba(197, 115, 78, 0.08);
 }
 
+/* ── Platform header brand (logo in header) ─────────── */
+.platform-header-brand {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+}
+
+.platform-header-logo {
+  display: block;
+  height: 22px;
+  width: auto;
+}
+
 .platform-header-right {
   display: flex;
   align-items: center;
@@ -3089,6 +3102,104 @@ textarea {
   flex: 1 1 auto;
   min-width: 0;
   overflow: visible;
+}
+
+/* ── Bottom navigation bar ──────────────────────────── */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  display: flex;
+  align-items: stretch;
+  background: rgba(255, 255, 255, 0.97);
+  border-top: 1px solid rgba(212, 205, 192, 0.6);
+  box-shadow: 0 -4px 20px rgba(26, 24, 21, 0.07);
+  backdrop-filter: blur(12px);
+  padding: 0 0.5rem env(safe-area-inset-bottom, 0px);
+  height: 64px;
+}
+
+.bottom-nav-tab {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 8px 4px 10px;
+  text-decoration: none;
+  color: var(--muted);
+  transition: color 140ms ease;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  min-width: 0;
+}
+
+.bottom-nav-tab:hover {
+  color: var(--text);
+}
+
+.bottom-nav-tab.active {
+  color: var(--text);
+}
+
+.bottom-nav-icon {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bottom-nav-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.bottom-nav-label {
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.bottom-nav-tab.active .bottom-nav-label {
+  font-weight: 700;
+}
+/* ── End Bottom Nav ──────────────────────────────────── */
+
+/* ── Profile logout section ─────────────────────────── */
+.profile-logout-section {
+  padding: 1.5rem clamp(1rem, 2.2vw, 2.25rem) 0.5rem;
+  display: flex;
+  justify-content: center;
+}
+
+.profile-logout-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 1.5rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(184, 50, 50, 0.3);
+  background: rgba(216, 72, 72, 0.05);
+  color: #b83232;
+  font-size: 0.88rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 130ms ease, border-color 130ms ease;
+}
+
+.profile-logout-button:hover {
+  background: rgba(216, 72, 72, 0.1);
+  border-color: rgba(184, 50, 50, 0.5);
 }
 
 .global-search {
@@ -3354,7 +3465,7 @@ textarea {
 
 .main-shell {
   min-height: calc(100vh - 60px);
-  padding: 0 clamp(1rem, 2.2vw, 2.25rem) 1.5rem;
+  padding: 0 clamp(1rem, 2.2vw, 2.25rem) calc(1.5rem + 68px);
 }
 
 .page-stack {

@@ -1,8 +1,8 @@
 import type { ReactNode } from "react";
 import { Suspense } from "react";
+import Image from "next/image";
 
-import { logoutCurrentUser } from "@/app/auth-actions";
-import { NavMenu } from "@/components/nav-menu";
+import { BottomNav } from "@/components/bottom-nav";
 import { DashboardFilterButton } from "@/components/dashboard-filter-button";
 import { getBrandSettings } from "@/lib/brand-store";
 import { GlobalSearch } from "@/components/global-search";
@@ -37,15 +37,17 @@ export async function PlatformShell({ children }: { children: ReactNode }) {
 
       <header className="platform-header">
         <div className="platform-nav-row">
-          <NavMenu
-            canAccessScmStaff={canAccessScmStaffDirectory(currentUser.roleKey)}
-            canAccessStaffDirectory={canAccessStaffDirectory}
-            canManageSystemSettings={canManageSystemSettings}
-            displayName={currentUser.displayName}
-            roleLabel={currentUser.roleLabel}
-            logoUrl={brandSettings.logoUrl}
-            logoutAction={logoutCurrentUser}
-          />
+          <div className="platform-header-brand">
+            <Image
+              src={brandSettings.logoUrl}
+              alt="SCM"
+              width={72}
+              height={26}
+              unoptimized
+              priority
+              className="platform-header-logo"
+            />
+          </div>
 
           <div className="platform-header-right">
             {canSearchPlatform ? <GlobalSearch /> : null}
@@ -59,6 +61,11 @@ export async function PlatformShell({ children }: { children: ReactNode }) {
       <main className="main-shell">
         <div className="page-stack">{children}</div>
       </main>
+
+      <BottomNav
+        canAccessScmStaff={canAccessScmStaffDirectory(currentUser.roleKey)}
+        canAccessStaffDirectory={canAccessStaffDirectory}
+      />
     </div>
   );
 }

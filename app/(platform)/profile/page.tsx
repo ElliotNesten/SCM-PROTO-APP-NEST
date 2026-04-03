@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { logoutCurrentUser } from "@/app/auth-actions";
 import { PageHeader } from "@/components/page-header";
 import { ScmStaffProfileEditor } from "@/components/scm-staff-profile-editor";
 import {
@@ -117,6 +118,13 @@ export default async function ProfilePage() {
         canRevealStoredPassword={canRevealStoredPassword}
         requiresCurrentPassword={!canRevealStoredPassword}
       />
+      <div className="profile-logout-section">
+        <form action={logoutCurrentUser}>
+          <button type="submit" className="profile-logout-button">
+            Log out
+          </button>
+        </form>
+      </div>
     </>
   );
 }

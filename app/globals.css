@@ -31,6 +31,7 @@
 
 html {
   color-scheme: light;
+  font-size: 87.5%; /* 14px base — scales all rem values down */
 }
 
 body {
@@ -3200,7 +3201,7 @@ textarea {
 
 .upcoming-gig-row {
   display: grid;
-  grid-template-columns: 6.5rem 1fr auto;
+  grid-template-columns: 1fr 5.5rem auto;
   align-items: center;
   gap: 0.5rem;
   padding: 0.42rem 0.85rem;

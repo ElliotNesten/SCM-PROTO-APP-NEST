@@ -460,7 +460,10 @@ export function DashboardClient({
 
   function pushFilterRoute(nextFilters: DashboardFilters) {
     const params = new URLSearchParams(searchParams.toString());
-    params.set("fp", "1"); // keep filter panel open while adjusting filters
+    // preserve current fp state — don't force-open the filter panel on every filter change
+    if (!isFilterPanelOpen) {
+      params.delete("fp");
+    }
 
     [
       ["country", nextFilters.country],
@@ -691,8 +694,8 @@ export function DashboardClient({
             <div className="upcoming-gigs-list">
               {upcomingGigs.map((gig) => (
                 <Link key={gig.id} href={`/gigs/${gig.id}`} className="upcoming-gig-row">
-                  <span className="upcoming-gig-date">{gig.date}</span>
                   <span className="upcoming-gig-name">{gig.artist}</span>
+                  <span className="upcoming-gig-date">{gig.date}</span>
                   <span className="upcoming-gig-venue">{gig.arena}, {gig.city}</span>
                 </Link>
               ))}

@@ -6,17 +6,13 @@ import { usePathname } from "next/navigation";
 function OverviewIcon({ filled }: { filled: boolean }) {
   return filled ? (
     <svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor">
-      <rect x="3" y="3" width="7" height="7" rx="1.5" />
-      <rect x="14" y="3" width="7" height="7" rx="1.5" />
-      <rect x="3" y="14" width="7" height="7" rx="1.5" />
-      <rect x="14" y="14" width="7" height="7" rx="1.5" />
+      <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
     </svg>
   ) : (
     <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="3" y="3" width="7" height="7" rx="1.5" />
-      <rect x="14" y="3" width="7" height="7" rx="1.5" />
-      <rect x="3" y="14" width="7" height="7" rx="1.5" />
-      <rect x="14" y="14" width="7" height="7" rx="1.5" />
+      <path d="M3 12l9-9 9 9" />
+      <path d="M9 21V12h6v9" />
+      <path d="M5 10v11h14V10" />
     </svg>
   );
 }

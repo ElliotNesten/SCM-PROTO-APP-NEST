@@ -3113,10 +3113,9 @@ textarea {
   z-index: 100;
   display: flex;
   align-items: stretch;
-  background: rgba(255, 255, 255, 0.97);
+  background: #ffffff;
   border-top: 1px solid rgba(212, 205, 192, 0.6);
   box-shadow: 0 -4px 20px rgba(26, 24, 21, 0.07);
-  backdrop-filter: blur(12px);
   padding: 0 0.5rem env(safe-area-inset-bottom, 0px);
   height: 64px;
 }

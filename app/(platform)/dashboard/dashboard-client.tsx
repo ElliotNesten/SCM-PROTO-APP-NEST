@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useTransition } from "react";
@@ -314,40 +313,18 @@ function DashboardGigRow({ gig }: { gig: Gig }) {
       className="overview-gig-row compact"
       data-text-edit-exclude="true"
     >
-      <div className="overview-gig-thumb" aria-hidden="true">
-        {gig.profileImageUrl ? (
-          <Image
-            src={gig.profileImageUrl}
-            alt=""
-            fill
-            sizes="56px"
-            className="overview-gig-thumb-image"
-          />
-        ) : (
-          gig.artist.charAt(0)
-        )}
-      </div>
-
-      <div className="overview-gig-body">
-        <div className="overview-gig-head compact">
-          <div className="overview-gig-copy">
-            <h3>{gig.artist}</h3>
-            <p className="overview-gig-date">{formatDisplayDate(gig.date)}</p>
-            <p className="overview-gig-venue">
-              {gig.arena}, {gig.city}, {gig.country}
-            </p>
-          </div>
-
-          <span
-            className={`overview-gig-status-dot ${getOverviewIndicatorClass(gig)}`}
-            aria-label={`${resolveGigOverviewIndicator(gig)} status marker`}
-          />
-
-          <div className="overview-gig-meta">
-            <span>{gig.scmRepresentative}</span>
-            <small>{gig.merchCompany}</small>
-          </div>
+      <div className="overview-gig-head compact">
+        <div className="overview-gig-copy">
+          <h3>{gig.artist}</h3>
+          <p className="overview-gig-venue">
+            {gig.date} · {gig.arena}, {gig.city}, {gig.country}
+          </p>
         </div>
+
+        <span
+          className={`overview-gig-status-dot ${getOverviewIndicatorClass(gig)}`}
+          aria-label={`${resolveGigOverviewIndicator(gig)} status marker`}
+        />
       </div>
     </Link>
   );
@@ -470,6 +447,16 @@ export function DashboardClient({
       resolveGigRegisterSection(gig) !== "closed" &&
       !isGigArchivedOnlyForRegister(gig),
   ).length;
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const upcomingGigs = [...gigs]
+    .filter((gig) => {
+      const [y, m, d] = gig.date.split("-").map(Number);
+      return new Date(y, m - 1, d) >= today && resolveGigRegisterSection(gig) !== "closed";
+    })
+    .sort((a, b) => a.date.localeCompare(b.date))
+    .slice(0, 5);
 
   function pushFilterRoute(nextFilters: DashboardFilters) {
     const params = new URLSearchParams(searchParams.toString());
@@ -698,6 +685,21 @@ export function DashboardClient({
       ) : null}
 
       <div className="overview-gigs-panel compact">
+        {upcomingGigs.length > 0 && (
+          <div className="upcoming-gigs-block">
+            <p className="upcoming-gigs-label">Upcoming gigs</p>
+            <div className="upcoming-gigs-list">
+              {upcomingGigs.map((gig) => (
+                <Link key={gig.id} href={`/gigs/${gig.id}`} className="upcoming-gig-row">
+                  <span className="upcoming-gig-date">{gig.date}</span>
+                  <span className="upcoming-gig-name">{gig.artist}</span>
+                  <span className="upcoming-gig-venue">{gig.arena}, {gig.city}</span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="overview-country-card-grid compact">
           {toBeClosedCountryCards.map((entry) => (
             <ToBeClosedCountryCard

@@ -2991,8 +2991,8 @@ textarea {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  padding: 0 0.9rem;
-  align-self: stretch;
+  padding: 0.42rem 0.9rem;
+  flex: 0 0 auto;
   border-radius: var(--radius-sm);
   border: 1px solid rgba(212, 205, 192, 0.85);
   background: rgba(255, 255, 255, 0.8);
@@ -3175,6 +3175,69 @@ textarea {
 }
 /* ── End Bottom Nav ──────────────────────────────────── */
 
+/* ── Upcoming gigs block ────────────────────────────── */
+.upcoming-gigs-block {
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid rgba(212, 205, 192, 0.7);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  margin-bottom: 0.65rem;
+}
+
+.upcoming-gigs-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--muted);
+  padding: 0.55rem 0.85rem 0.35rem;
+}
+
+.upcoming-gigs-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.upcoming-gig-row {
+  display: grid;
+  grid-template-columns: 6.5rem 1fr auto;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.42rem 0.85rem;
+  border-top: 1px solid rgba(212, 205, 192, 0.45);
+  text-decoration: none;
+  color: var(--text);
+  transition: background 120ms ease;
+}
+
+.upcoming-gig-row:hover {
+  background: rgba(236, 229, 216, 0.5);
+}
+
+.upcoming-gig-date {
+  font-size: 0.75rem;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.upcoming-gig-name {
+  font-size: 0.84rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.upcoming-gig-venue {
+  font-size: 0.75rem;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: right;
+}
+
 /* ── Calendar page ──────────────────────────────────── */
 .calendar-page-wrap {
   background: rgba(255, 255, 255, 0.88);
@@ -3237,7 +3300,6 @@ textarea {
   position: relative;
   flex: 1 1 auto;
   min-width: 0;
-  max-width: 480px;
   z-index: 40;
 }
 
@@ -4378,9 +4440,9 @@ textarea {
 }
 
 .overview-gig-row.compact {
-  grid-template-columns: 36px minmax(0, 1fr);
-  gap: 0.6rem;
-  padding: 0.5rem 0.75rem;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0;
+  padding: 0.45rem 0.75rem;
   border-radius: var(--radius-sm);
 }
 

@@ -375,13 +375,10 @@ export function GigOverviewEditor({
   }
 
   function updateOverviewIndicator(nextIndicator: GigOverviewIndicator) {
-    const nextForm = {
-      ...form,
+    setForm((current) => ({
+      ...current,
       overviewIndicator: nextIndicator,
-    };
-
-    setForm(nextForm);
-    void saveOverview(nextForm, "Gig marker updated.");
+    }));
   }
 
   function canEditCoreField(
@@ -525,8 +522,8 @@ export function GigOverviewEditor({
         <div className="card gig-overview-core-card">
           <div className="section-head">
             <div>
-              <p className="eyebrow">Gig overview</p>
-              <h2>Core details</h2>
+              <p className="eyebrow">GIG DETAILS</p>
+              <h2>Gig details</h2>
             </div>
             <StatusBadge
               label={getIndicatorLabel(form.overviewIndicator)}
@@ -639,10 +636,10 @@ export function GigOverviewEditor({
             </div>
 
             <div className="key-value-card key-value-card-editable overview-contact-card">
-              <small>SCM & project manager</small>
+              <small>Team</small>
               <div className="overview-stack-fields">
                 <ScmRepresentativeSelector
-                  label="SCM representative"
+                  label="SCM Onsite Rep"
                   className="overview-stack-subfield"
                   value={form.scmRepresentative}
                   persistedValue={gig.scmRepresentative}
@@ -679,7 +676,7 @@ export function GigOverviewEditor({
                   <div className="temporary-gig-manager-panel">
                     <div className="temporary-gig-manager-head">
                       <div className="temporary-gig-manager-copy">
-                        <span>Temporary Gig Manager</span>
+                        <span>Temporary manager</span>
                         <small>This gig only</small>
                       </div>
                     </div>
@@ -748,7 +745,7 @@ export function GigOverviewEditor({
                 </label>
 
                 <label className="sales-estimate-field">
-                  <span>Estimated sales per person</span>
+                  <span>Avg. spend per person</span>
                   <input
                     type="number"
                     min="0"
@@ -799,7 +796,7 @@ export function GigOverviewEditor({
       <div className="stack-column">
         <div className="card">
           <div className="overview-indicator-panel">
-            <p className="eyebrow">Overview marker</p>
+            <p className="eyebrow">STATUS</p>
             <div className="overview-indicator-buttons">
               {overviewIndicatorOptions.map((option) => (
                 <button

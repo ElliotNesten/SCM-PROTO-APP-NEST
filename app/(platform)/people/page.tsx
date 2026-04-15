@@ -361,7 +361,7 @@ export default async function PeoplePage({ searchParams }: PeoplePageProps) {
         <div className="list-stack">
           {activeFilter === "Archived" && activeArchiveView === "Old staff documents" ? (
             filteredArchivedDocuments.length === 0 ? (
-              <div className="empty-panel">No old staff documents have been archived yet.</div>
+              <div className="empty-panel">No archived documents found.</div>
             ) : (
               filteredArchivedDocuments.map((document) => (
                 <div key={document.archivedId} className="list-row">
@@ -381,7 +381,7 @@ export default async function PeoplePage({ searchParams }: PeoplePageProps) {
             )
           ) : (
             filteredPeople.length === 0 ? (
-              <div className="empty-panel">No staff match your filters.</div>
+              <div className="empty-panel">No staff found. Try adjusting your filters.</div>
             ) : (
               <div className="staff-list-grid">
                 {filteredPeople.map((person) => (

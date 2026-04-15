@@ -140,7 +140,8 @@ export async function ensureProductionStorageSchema() {
       .unsafe(`
       create table if not exists staff_profiles (
         id text primary key,
-        display_name text not null,
+        first_name text not null default '',
+        last_name text not null default '',
         email text not null,
         email_lower text not null unique,
         phone text not null,
@@ -180,7 +181,8 @@ export async function ensureProductionStorageSchema() {
         id text primary key,
         linked_staff_profile_id text,
         created_from_application_id text,
-        display_name text not null,
+        first_name text not null default '',
+        last_name text not null default '',
         email text not null,
         email_lower text not null unique,
         phone text not null,
@@ -200,7 +202,8 @@ export async function ensureProductionStorageSchema() {
 
       create table if not exists scm_staff_profiles (
         id text primary key,
-        display_name text not null,
+        first_name text not null default '',
+        last_name text not null default '',
         email text not null,
         email_lower text not null,
         password_hash text not null,
@@ -228,7 +231,8 @@ export async function ensureProductionStorageSchema() {
         status text not null,
         profile_image_name text not null,
         profile_image_url text not null,
-        display_name text not null,
+        first_name text not null default '',
+        last_name text not null default '',
         email text not null,
         email_lower text not null,
         phone text not null,

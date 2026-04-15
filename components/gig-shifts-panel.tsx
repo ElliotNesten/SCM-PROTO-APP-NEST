@@ -1428,8 +1428,8 @@ export function GigShiftsPanel({
           {shiftItems.length === 0 ? (
             <div className="empty-panel">
               {canCreateShifts
-                ? "No open shifts have been created for this gig yet."
-                : shiftCreationMessage ?? "No shifts can be created for this gig yet."}
+                ? "No shifts yet. Create one above to get started."
+                : shiftCreationMessage ?? "Shifts can't be created for this gig right now."}
             </div>
           ) : (
             <div className="gig-grid">
@@ -1461,7 +1461,7 @@ export function GigShiftsPanel({
 
               {bookingShiftItems.length === 0 ? (
                 <div className="empty-panel">
-                  No shifts have been created for this gig yet.
+                  No shifts yet. Create shifts in the overview tab to start booking.
                 </div>
               ) : (
                 <div className="shift-booking-board">
@@ -1771,7 +1771,7 @@ export function GigShiftsPanel({
 
           {waitlistedShiftItems.length === 0 ? (
             <div className="empty-panel">
-              No staff are currently waitlisted on this gig.
+              No one is on the waitlist for this gig.
             </div>
           ) : (
             <div className="shift-booking-board">

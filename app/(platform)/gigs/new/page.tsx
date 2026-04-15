@@ -54,8 +54,8 @@ export default async function NewGigPage({ searchParams }: NewGigPageProps) {
   return (
     <>
       <PageHeader
-        title="Create Gig"
-        subtitle="Base route for the multi-step creation flow from the prototype."
+        title="New Gig"
+        subtitle="Fill in the basics to create a new gig. You can add files and more details after saving."
         actions={
           <Link href="/gigs" className="button ghost">
             Back to gigs
@@ -124,7 +124,7 @@ export default async function NewGigPage({ searchParams }: NewGigPageProps) {
                 <input name="ticketsSold" type="number" placeholder="12000" min="0" />
               </label>
               <label className="field full-width">
-                <span>Estimated spend per visitor</span>
+                <span>Avg. spend per person</span>
                 <input name="estimatedSpendPerVisitor" type="number" placeholder="145" min="0" />
               </label>
             </div>

@@ -39,8 +39,8 @@ export default async function NewScmStaffPage({ searchParams }: NewScmStaffPageP
   return (
     <>
       <PageHeader
-        title="Create SCM Staff"
-        subtitle="Add a new SCM Staff profile with role-based platform access. Temporary Gig Manager is shared from each gig."
+        title="Add Team Member"
+        subtitle="Create a new staff account. Choose their role and region to set what they can access."
         actions={
           <Link href="/scm-staff" className="button ghost">
             Back to SCM Staff
@@ -56,7 +56,7 @@ export default async function NewScmStaffPage({ searchParams }: NewScmStaffPageP
             <div className="section-head">
               <div>
                 <p className="eyebrow">Basics</p>
-                <h2>SCM Staff profile</h2>
+                <h2>New staff profile</h2>
               </div>
             </div>
 

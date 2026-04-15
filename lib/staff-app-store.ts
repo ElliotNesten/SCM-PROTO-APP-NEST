@@ -208,7 +208,7 @@ async function getDatabaseStaffAppAccounts() {
   const rows = await sql<StaffAppAccountRow[]>`
     select *
     from staff_app_accounts
-    order by display_name asc
+    order by first_name asc
   `;
 
   return rows.map(mapStaffAppAccountRow);
@@ -278,7 +278,7 @@ async function upsertDatabaseStaffAppAccount(account: StaffAppAccount) {
   await ensureProductionStorageSchema();
   await sql`
     insert into staff_app_accounts (
-      id, linked_staff_profile_id, created_from_application_id, display_name, email,
+      id, linked_staff_profile_id, created_from_application_id, first_name, last_name, email,
       email_lower, phone, country, region, role_scopes_json, profile_image_url,
       password_hash, is_active, must_complete_onboarding, password_set_at, activated_at,
       last_login_at, created_at, updated_at
@@ -286,7 +286,8 @@ async function upsertDatabaseStaffAppAccount(account: StaffAppAccount) {
       ${account.id},
       ${account.linkedStaffProfileId ?? null},
       ${account.createdFromApplicationId ?? null},
-      ${`${account.firstName} ${account.lastName}`},
+      ${account.firstName},
+      ${account.lastName},
       ${account.email},
       ${account.email.toLowerCase()},
       ${account.phone},
@@ -306,7 +307,8 @@ async function upsertDatabaseStaffAppAccount(account: StaffAppAccount) {
     on conflict (id) do update set
       linked_staff_profile_id = excluded.linked_staff_profile_id,
       created_from_application_id = excluded.created_from_application_id,
-      display_name = excluded.display_name,
+      first_name = excluded.first_name,
+      last_name = excluded.last_name,
       email = excluded.email,
       email_lower = excluded.email_lower,
       phone = excluded.phone,

@@ -144,7 +144,7 @@ export function ScmStaffProfileEditor({
     canEditBasicFields || canManageAdministrativeFields || canEditRole || canEditPassword;
   const canViewStoredPasswordReference = canViewStoredPassword && !canRevealStoredPassword;
   const passwordFieldLabel = canRevealStoredPassword
-    ? "Registered password"
+    ? "Password"
     : canViewStoredPasswordReference
       ? "Password"
     : requiresCurrentPassword
@@ -456,7 +456,7 @@ export function ScmStaffProfileEditor({
             <div className="section-head">
               <div>
                 <p className="eyebrow">SCM Staff</p>
-                <h2>Role assignment</h2>
+                <h2>Account details</h2>
               </div>
               <div className="staff-profile-status-actions">
                 <StatusBadge
@@ -790,7 +790,7 @@ export function ScmStaffProfileEditor({
             <div className="section-head compact">
               <div>
                 <p className="eyebrow">Scope</p>
-                <h3>Assigned coverage</h3>
+                <h3>Access area</h3>
               </div>
             </div>
 

@@ -300,7 +300,7 @@ export default async function ScmStaffPage() {
         </div>
 
         {directoryProfiles.length === 0 ? (
-          <div className="empty-panel">No SCM staff profiles available yet.</div>
+          <div className="empty-panel">No staff profiles have been added yet.</div>
         ) : (
           <div className="staff-list-grid">
             {directoryProfiles.map((profile) => {

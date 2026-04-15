@@ -800,7 +800,7 @@ export function StaffProfileEditor({
             <div className="section-head">
               <div>
                 <p className="eyebrow">Employee profile</p>
-                <h2>Profile-backed records</h2>
+                <h2>Personal details</h2>
               </div>
               <div className="staff-profile-status-actions">
                 <StatusBadge label={profile.approvalStatus} />
@@ -1048,7 +1048,7 @@ export function StaffProfileEditor({
               <div className="section-head">
                 <div>
                   <p className="eyebrow">Roles</p>
-                  <h2>Role scope and notes</h2>
+                  <h2>Roles and notes</h2>
                 </div>
               </div>
 
@@ -1243,7 +1243,7 @@ export function StaffProfileEditor({
               <div className="section-head">
                 <div>
                   <p className="eyebrow">Staff App Access</p>
-                  <h2>Mobile login and password</h2>
+                  <h2>App login</h2>
                 </div>
               </div>
 

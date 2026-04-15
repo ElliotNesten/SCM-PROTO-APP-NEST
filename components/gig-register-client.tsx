@@ -180,7 +180,7 @@ const registerColumns: Array<{
   },
   {
     key: "promoter",
-    label: "PROMOTOR",
+    label: "PROMOTER",
     allLabel: "ALL",
     minimumWidth: 12,
     maximumWidth: 16,
@@ -189,7 +189,7 @@ const registerColumns: Array<{
   },
   {
     key: "merchCompany",
-    label: "M B",
+    label: "MERCH",
     allLabel: "ALL",
     minimumWidth: 7,
     maximumWidth: 12,
@@ -198,7 +198,7 @@ const registerColumns: Array<{
   },
   {
     key: "merchRepresentative",
-    label: "M.REP",
+    label: "MERCH REP",
     allLabel: "ALL",
     minimumWidth: 9,
     maximumWidth: 14,
@@ -216,7 +216,7 @@ const registerColumns: Array<{
   },
   {
     key: "projectManager",
-    label: "P.M",
+    label: "PM",
     allLabel: "ALL",
     minimumWidth: 7,
     maximumWidth: 10,
@@ -744,8 +744,7 @@ export function GigRegisterClient({
     >
       <div className="gig-register-toolbar">
         <div className="gig-register-copy">
-          <h1>Gig register</h1>
-          <p className="muted">Filter and open gigs</p>
+          <p className="muted">Browse and manage your gigs</p>
         </div>
 
         <div className="gig-register-toolbar-actions">
@@ -939,7 +938,7 @@ export function GigRegisterClient({
 
         <div className="gig-register-list">
           {filteredGigs.length === 0 ? (
-            <div className="empty-panel">No gigs match the current filters.</div>
+            <div className="empty-panel">No gigs found. Try adjusting your filters.</div>
           ) : (
             filteredGigs.map((gig) => {
               const marker = resolveGigOverviewIndicator(gig);
@@ -982,7 +981,7 @@ export function GigRegisterClient({
                     [
                       ["merchCompany", "No merch company"],
                       ["merchRepresentative", "No merch representative"],
-                      ["scmRepresentative", "No SCM representative"],
+                      ["scmRepresentative", "No SCM onsite rep"],
                       ["projectManager", "No project manager"],
                     ] as const satisfies readonly [EditableRegisterField, string][]
                   ).map(([field, fallbackLabel]) => {
@@ -1051,7 +1050,6 @@ export function GigRegisterClient({
     <section className="card past-gigs-section">
       <div className="section-head compact">
         <div>
-          <p className="eyebrow">History</p>
           <h3>Past Gigs</h3>
         </div>
         <span className="helper-caption">{pastGigs.length} gigs</span>
@@ -1059,7 +1057,7 @@ export function GigRegisterClient({
 
       <div className="past-gigs-list">
         {pastGigs.length === 0 ? (
-          <div className="empty-panel">No past gigs.</div>
+          <div className="empty-panel">No completed gigs yet.</div>
         ) : (
           pastGigs.map((gig) => (
             <article

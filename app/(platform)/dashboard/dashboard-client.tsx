@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 
 import { resolveGigOverviewIndicator } from "@/data/scm-data";
 import {
@@ -43,7 +43,6 @@ const markerFilters = [
   { label: "No merch", value: "noMerch" },
 ] as const;
 
-const calendarWeekdays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] as const;
 const countryOptions = ["Sweden", "Norway", "Denmark", "Finland"] as const;
 
 type DashboardRangeFilter = (typeof timeframeFilters)[number]["value"];
@@ -110,18 +109,8 @@ function normalizeDate(date: Date) {
   return normalized;
 }
 
-function formatDateKey(date: Date) {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
-
 function matchesMarkerFilter(gig: Gig, filter: DashboardMarkerFilter) {
-  if (filter === "all") {
-    return true;
-  }
-
+  if (filter === "all") return true;
   return resolveGigOverviewIndicator(gig) === filter;
 }
 
@@ -138,175 +127,54 @@ function matchesDateFilter(
     (gigDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24),
   );
 
-  if (range === "today") {
-    return diffInDays === 0;
-  }
-
-  if (range === "week") {
-    return diffInDays >= 0 && diffInDays <= 7;
-  }
-
-  if (range === "month") {
-    return dateValue.slice(5, 7) === monthValue && diffInDays >= 0;
-  }
-
+  if (range === "today") return diffInDays === 0;
+  if (range === "week") return diffInDays >= 0 && diffInDays <= 7;
+  if (range === "month") return dateValue.slice(5, 7) === monthValue && diffInDays >= 0;
   if (range === "custom") {
     const lowerBound = fromDate ? getGigDate(fromDate) : null;
     const upperBound = toDate ? getGigDate(toDate) : null;
-
-    if (lowerBound && gigDate < lowerBound) {
-      return false;
-    }
-
-    if (upperBound && gigDate > upperBound) {
-      return false;
-    }
-
+    if (lowerBound && gigDate < lowerBound) return false;
+    if (upperBound && gigDate > upperBound) return false;
     return true;
   }
-
   return diffInDays >= 0;
 }
 
-function getInitialCalendarMonth(sourceGigs: Gig[]) {
-  const sortedGigs = [...sourceGigs].sort((left, right) => left.date.localeCompare(right.date));
+function formatFriendlyDate(dateStr: string) {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  const date = new Date(y, m - 1, d);
+  const today = normalizeDate(new Date());
+  const tomorrow = new Date(today);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const gigDate = normalizeDate(date);
 
-  if (sortedGigs.length === 0) {
-    return normalizeDate(new Date());
+  if (gigDate.getTime() === today.getTime()) return "Today";
+  if (gigDate.getTime() === tomorrow.getTime()) return "Tomorrow";
+
+  const diffDays = Math.floor((gigDate.getTime() - today.getTime()) / 86400000);
+  if (diffDays > 0 && diffDays <= 6) {
+    return new Intl.DateTimeFormat("en-GB", { weekday: "long" }).format(date);
   }
 
-  const today = normalizeDate(new Date());
-  const nextUpcomingGig =
-    sortedGigs.find((gig) => getGigDate(gig.date).getTime() >= today.getTime()) ??
-    sortedGigs[sortedGigs.length - 1];
-  const targetDate = getGigDate(nextUpcomingGig.date);
-  return new Date(targetDate.getFullYear(), targetDate.getMonth(), 1);
+  return new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short" }).format(date);
 }
 
-function addMonths(date: Date, amount: number) {
-  return new Date(date.getFullYear(), date.getMonth() + amount, 1);
-}
-
-function getIsoWeekNumber(date: Date) {
-  const copy = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
-  const dayNumber = copy.getUTCDay() || 7;
-  copy.setUTCDate(copy.getUTCDate() + 4 - dayNumber);
-  const yearStart = new Date(Date.UTC(copy.getUTCFullYear(), 0, 1));
-  return Math.ceil((((copy.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
-}
-
-function buildCalendarRows(viewMonth: Date, visibleGigs: Gig[]) {
-  const monthStart = new Date(viewMonth.getFullYear(), viewMonth.getMonth(), 1);
-  const gridStart = new Date(monthStart);
-  const mondayOffset = (monthStart.getDay() + 6) % 7;
-  gridStart.setDate(monthStart.getDate() - mondayOffset);
-
-  const gigMap = new Map<string, Gig[]>();
-  visibleGigs.forEach((gig) => {
-    const existing = gigMap.get(gig.date) ?? [];
-    existing.push(gig);
-    gigMap.set(gig.date, existing);
-  });
-
-  return Array.from({ length: 6 }, (_, weekIndex) => {
-    const weekStart = new Date(gridStart);
-    weekStart.setDate(gridStart.getDate() + weekIndex * 7);
-
-    return {
-      week: getIsoWeekNumber(weekStart),
-      days: Array.from({ length: 7 }, (_, dayIndex) => {
-        const dayDate = new Date(weekStart);
-        dayDate.setDate(weekStart.getDate() + dayIndex);
-        const key = formatDateKey(dayDate);
-
-        return {
-          key,
-          label: dayDate.getDate(),
-          inMonth: dayDate.getMonth() === viewMonth.getMonth(),
-          gigs: gigMap.get(key) ?? [],
-        };
-      }),
-    };
-  });
-}
-
-function formatMonthLabel(date: Date) {
-  return new Intl.DateTimeFormat("en-GB", {
-    month: "long",
-    year: "numeric",
-  }).format(date);
-}
-
-function formatDisplayDate(date: string) {
-  return date;
-}
-
-function formatToBeClosedCount(count: number) {
-  return count === 1 ? "1 gig" : `${count} gigs`;
-}
-
-function SummaryGlyph() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path
-        d="M6 6h12v12H6V6Zm2 2v8h8V8H8Zm2-5h4v2h-4V3Zm0 16h4v2h-4v-2Z"
-        fill="currentColor"
-      />
-    </svg>
-  );
-}
-
-function SummaryCard({
-  label,
-  value,
-}: {
-  label: string;
-  value: number;
-}) {
-  return (
-    <div className="summary-card compact">
-      <div>
-        <p>{label}</p>
-        <strong>{value}</strong>
-      </div>
-      <span className="summary-icon blue">
-        <SummaryGlyph />
-      </span>
-    </div>
-  );
+function formatRevenue(amount: number) {
+  if (amount >= 1_000_000) {
+    const millions = amount / 1_000_000;
+    // Show one decimal if not a round number
+    const formatted = millions % 1 === 0 ? millions.toFixed(0) : millions.toFixed(1);
+    return `${formatted}M SEK`;
+  }
+  return `${Math.round(amount / 1000).toLocaleString()}k SEK`;
 }
 
 function getOverviewIndicatorClass(gig: Gig) {
   return resolveGigOverviewIndicator(gig);
 }
 
-function ToBeClosedCountryCard({
-  country,
-  count,
-  active,
-  onClick,
-}: {
-  country: string;
-  count: number;
-  active: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      className={`overview-country-card compact ${active ? "active" : ""}`}
-      onClick={onClick}
-    >
-      <small>{country.toUpperCase()}</small>
-      <div className="overview-country-card-title-row">
-        <strong>To be closed</strong>
-        <span>{formatToBeClosedCount(count)}</span>
-      </div>
-    </button>
-  );
-}
-
 function DashboardGigRow({ gig }: { gig: Gig }) {
+  const friendlyDate = formatFriendlyDate(gig.date);
   return (
     <Link
       href={`/gigs/${gig.id}`}
@@ -317,7 +185,7 @@ function DashboardGigRow({ gig }: { gig: Gig }) {
         <div className="overview-gig-copy">
           <h3>{gig.artist}</h3>
           <p className="overview-gig-venue">
-            {gig.date} · {gig.arena}, {gig.city}, {gig.country}
+            {friendlyDate} · {gig.arena}, {gig.city}
           </p>
         </div>
 
@@ -330,40 +198,6 @@ function DashboardGigRow({ gig }: { gig: Gig }) {
   );
 }
 
-const greetingWords = ["Hey", "Welcome", "Hello", "Wassup", "Hola", "Howdy", "Yo", "Hi there"];
-
-function useTypewriterGreeting() {
-  const [wordIndex, setWordIndex] = useState(0);
-  const [charIndex, setCharIndex] = useState(0);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const currentWord = greetingWords[wordIndex];
-
-  useEffect(() => {
-    const timeout = setTimeout(
-      () => {
-        if (!isDeleting) {
-          if (charIndex < currentWord.length) {
-            setCharIndex((c) => c + 1);
-          } else {
-            setTimeout(() => setIsDeleting(true), 2000);
-          }
-        } else {
-          if (charIndex > 0) {
-            setCharIndex((c) => c - 1);
-          } else {
-            setIsDeleting(false);
-            setWordIndex((i) => (i + 1) % greetingWords.length);
-          }
-        }
-      },
-      isDeleting ? 60 : 120,
-    );
-    return () => clearTimeout(timeout);
-  }, [charIndex, isDeleting, currentWord]);
-
-  return currentWord.slice(0, charIndex);
-}
-
 export function DashboardClient({
   gigs,
   firstName,
@@ -371,7 +205,6 @@ export function DashboardClient({
   gigs: Gig[];
   firstName: string;
 }) {
-  const greetingWord = useTypewriterGreeting();
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -419,127 +252,54 @@ export function DashboardClient({
     activeMarker !== "all" ||
     activeFromDate !== "" ||
     activeToDate !== "";
-  const toBeClosedCountryCards = countryOptions.map((country) => ({
-    country,
-    count: gigs.filter(
-      (gig) =>
-        gig.country === country && resolveGigRegisterSection(gig) === "toBeClosed",
-    ).length,
-  }));
-
-  const filteredGigs = gigs.filter((gig) => {
-    const gigSection = resolveGigRegisterSection(gig);
-
-    if (gigSection === "closed" || isGigArchivedOnlyForRegister(gig)) {
-      return false;
-    }
-
-    if (activeGigView === "toBeClosed" && gigSection !== "toBeClosed") {
-      return false;
-    }
-
-    if (activeCountry !== "all" && gig.country !== activeCountry) {
-      return false;
-    }
-
-    if (activeCity !== "all" && gig.city !== activeCity) {
-      return false;
-    }
-
-    if (activeScmRep !== "all" && gig.scmRepresentative !== activeScmRep) {
-      return false;
-    }
-
-    if (activeArena !== "all" && gig.arena !== activeArena) {
-      return false;
-    }
-
-    if (activeArtist !== "all" && gig.artist !== activeArtist) {
-      return false;
-    }
-
-    if (!matchesMarkerFilter(gig, activeMarker)) {
-      return false;
-    }
-
-    if (activeGigView === "toBeClosed" && activeRange === "all") {
-      return true;
-    }
-
-    if (activeGigView === "toBeClosed" && activeRange === "month") {
-      return gig.date.slice(5, 7) === activeMonth;
-    }
-
-    return matchesDateFilter(
-      gig.date,
-      activeRange,
-      activeMonth,
-      activeFromDate,
-      activeToDate,
-    );
-  });
-
-  const openGigs = gigs.filter(
-    (gig) =>
-      resolveGigRegisterSection(gig) !== "closed" &&
-      !isGigArchivedOnlyForRegister(gig),
-  ).length;
-
-  const [statsRange, setStatsRange] = useState<"week" | "month" | "year" | "all">("month");
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  function getDateBoundary(direction: "future" | "past") {
-    if (statsRange === "all") return null;
-    const d = new Date(today);
-    const sign = direction === "future" ? 1 : -1;
-    if (statsRange === "week") d.setDate(d.getDate() + sign * 7);
-    else if (statsRange === "month") d.setDate(d.getDate() + sign * 30);
-    else if (statsRange === "year") d.setFullYear(d.getFullYear() + sign * 1);
-    return d;
-  }
-
-  const futureBound = getDateBoundary("future");
-  const pastBound = getDateBoundary("past");
-
-  const statsUpcoming = gigs.filter((gig) => {
-    const [y, m, d] = gig.date.split("-").map(Number);
-    const gigDate = new Date(y, m - 1, d);
-    if (gigDate < today || resolveGigRegisterSection(gig) === "closed") return false;
-    return futureBound ? gigDate <= futureBound : true;
+  const filteredGigs = gigs.filter((gig) => {
+    const gigSection = resolveGigRegisterSection(gig);
+    if (gigSection === "closed" || isGigArchivedOnlyForRegister(gig)) return false;
+    if (activeGigView === "toBeClosed" && gigSection !== "toBeClosed") return false;
+    if (activeCountry !== "all" && gig.country !== activeCountry) return false;
+    if (activeCity !== "all" && gig.city !== activeCity) return false;
+    if (activeScmRep !== "all" && gig.scmRepresentative !== activeScmRep) return false;
+    if (activeArena !== "all" && gig.arena !== activeArena) return false;
+    if (activeArtist !== "all" && gig.artist !== activeArtist) return false;
+    if (!matchesMarkerFilter(gig, activeMarker)) return false;
+    if (activeGigView === "toBeClosed" && activeRange === "all") return true;
+    if (activeGigView === "toBeClosed" && activeRange === "month") {
+      return gig.date.slice(5, 7) === activeMonth;
+    }
+    return matchesDateFilter(gig.date, activeRange, activeMonth, activeFromDate, activeToDate);
   });
 
-  const statsPast = gigs.filter((gig) => {
-    const [y, m, d] = gig.date.split("-").map(Number);
-    const gigDate = new Date(y, m - 1, d);
-    if (gigDate >= today) return false;
-    return pastBound ? gigDate >= pastBound : true;
-  });
+  const openGigs = gigs.filter(
+    (gig) => resolveGigRegisterSection(gig) !== "closed" && !isGigArchivedOnlyForRegister(gig),
+  ).length;
 
-  const statsSalesEstimate = statsUpcoming.reduce(
-    (sum, gig) => sum + (gig.salesEstimateOverride ?? gig.ticketsSold * gig.estimatedSpendPerVisitor),
-    0,
+  // Stats — computed from all gigs, not filtered
+  const upcomingGigs = gigs.filter((gig) => {
+    const [y, m, d] = gig.date.split("-").map(Number);
+    return new Date(y, m - 1, d) >= today && resolveGigRegisterSection(gig) !== "closed";
+  });
+  const pastGigs = gigs.filter((gig) => {
+    const [y, m, d] = gig.date.split("-").map(Number);
+    return new Date(y, m - 1, d) < today;
+  });
+  const totalRevenue = upcomingGigs.reduce(
+    (sum, gig) => sum + (gig.salesEstimateOverride ?? gig.ticketsSold * gig.estimatedSpendPerVisitor), 0,
   );
-  const statsTickets = statsUpcoming.reduce((sum, gig) => sum + gig.ticketsSold, 0);
+  const totalTickets = upcomingGigs.reduce((sum, gig) => sum + gig.ticketsSold, 0);
 
-  const statsRangeLabel = statsRange === "week" ? "7d" : statsRange === "month" ? "30d" : statsRange === "year" ? "1y" : "all";
-  const statsPastLabel = statsRange === "week" ? "Past Week" : statsRange === "month" ? "Past Month" : statsRange === "year" ? "Past Year" : "All Time";
-
-  const upcomingGigs = [...gigs]
-    .filter((gig) => {
-      const [y, m, d] = gig.date.split("-").map(Number);
-      return new Date(y, m - 1, d) >= today && resolveGigRegisterSection(gig) !== "closed";
-    })
-    .sort((a, b) => a.date.localeCompare(b.date))
-    .slice(0, 5);
+  // Next gig
+  const nextGig = [...upcomingGigs].sort((a, b) => a.date.localeCompare(b.date))[0] ?? null;
+  const nextGigDaysAway = nextGig
+    ? Math.floor((getGigDate(nextGig.date).getTime() - today.getTime()) / 86400000)
+    : null;
 
   function pushFilterRoute(nextFilters: DashboardFilters) {
     const params = new URLSearchParams(searchParams.toString());
-    // preserve current fp state — don't force-open the filter panel on every filter change
-    if (!isFilterPanelOpen) {
-      params.delete("fp");
-    }
+    if (!isFilterPanelOpen) params.delete("fp");
 
     [
       ["country", nextFilters.country],
@@ -548,48 +308,26 @@ export function DashboardClient({
       ["arena", nextFilters.arena],
       ["artist", nextFilters.artist],
     ].forEach(([key, value]) => {
-      if (value !== "all") {
-        params.set(key, value);
-      } else {
-        params.delete(key);
-      }
+      if (value !== "all") params.set(key, value);
+      else params.delete(key);
     });
 
-    if (nextFilters.view !== "all") {
-      params.set("view", nextFilters.view);
-    } else {
-      params.delete("view");
-    }
-
-    if (nextFilters.range !== "all") {
-      params.set("range", nextFilters.range);
-    } else {
-      params.delete("range");
-    }
-
-    if (nextFilters.marker !== "all") {
-      params.set("marker", nextFilters.marker);
-    } else {
-      params.delete("marker");
-    }
+    if (nextFilters.view !== "all") params.set("view", nextFilters.view);
+    else params.delete("view");
+    if (nextFilters.range !== "all") params.set("range", nextFilters.range);
+    else params.delete("range");
+    if (nextFilters.marker !== "all") params.set("marker", nextFilters.marker);
+    else params.delete("marker");
 
     if (nextFilters.range === "month") {
       params.set("month", nextFilters.month);
       params.delete("from");
       params.delete("to");
     } else if (nextFilters.range === "custom") {
-      if (nextFilters.fromDate) {
-        params.set("from", nextFilters.fromDate);
-      } else {
-        params.delete("from");
-      }
-
-      if (nextFilters.toDate) {
-        params.set("to", nextFilters.toDate);
-      } else {
-        params.delete("to");
-      }
-
+      if (nextFilters.fromDate) params.set("from", nextFilters.fromDate);
+      else params.delete("from");
+      if (nextFilters.toDate) params.set("to", nextFilters.toDate);
+      else params.delete("to");
       params.delete("month");
     } else {
       params.delete("month");
@@ -603,26 +341,11 @@ export function DashboardClient({
     });
   }
 
-  function updateCountryFilter(country: string) {
-    pushFilterRoute({ ...currentFilters, country });
-  }
-
-  function updateCityFilter(city: string) {
-    pushFilterRoute({ ...currentFilters, city });
-  }
-
-  function updateScmRepFilter(scmRep: string) {
-    pushFilterRoute({ ...currentFilters, scmRep });
-  }
-
-  function updateArenaFilter(arena: string) {
-    pushFilterRoute({ ...currentFilters, arena });
-  }
-
-  function updateArtistFilter(artist: string) {
-    pushFilterRoute({ ...currentFilters, artist });
-  }
-
+  function updateCountryFilter(country: string) { pushFilterRoute({ ...currentFilters, country }); }
+  function updateCityFilter(city: string) { pushFilterRoute({ ...currentFilters, city }); }
+  function updateScmRepFilter(scmRep: string) { pushFilterRoute({ ...currentFilters, scmRep }); }
+  function updateArenaFilter(arena: string) { pushFilterRoute({ ...currentFilters, arena }); }
+  function updateArtistFilter(artist: string) { pushFilterRoute({ ...currentFilters, artist }); }
   function updateRangeFilter(range: DashboardRangeFilter) {
     pushFilterRoute({
       ...currentFilters,
@@ -632,40 +355,15 @@ export function DashboardClient({
       toDate: range === "custom" ? activeToDate : "",
     });
   }
-
-  function updateMonthFilter(month: string) {
-    pushFilterRoute({ ...currentFilters, range: "month", month });
-  }
-
-  function updateMarkerFilter(marker: DashboardMarkerFilter) {
-    pushFilterRoute({ ...currentFilters, marker });
-  }
-
+  function updateMonthFilter(month: string) { pushFilterRoute({ ...currentFilters, range: "month", month }); }
+  function updateMarkerFilter(marker: DashboardMarkerFilter) { pushFilterRoute({ ...currentFilters, marker }); }
   function updateCustomDates(nextFromDate: string, nextToDate: string) {
-    pushFilterRoute({
-      ...currentFilters,
-      range: "custom",
-      fromDate: nextFromDate,
-      toDate: nextToDate,
-    });
+    pushFilterRoute({ ...currentFilters, range: "custom", fromDate: nextFromDate, toDate: nextToDate });
   }
-
   function clearAllFilters() {
     const params = new URLSearchParams();
-    params.set("fp", "1"); // keep filter panel open after clearing
-    startTransition(() => {
-      router.push(`${pathname}?${params.toString()}`);
-    });
-  }
-
-  function toggleToBeClosedCountry(country: string) {
-    const isActiveCountry = activeGigView === "toBeClosed" && activeCountry === country;
-
-    pushFilterRoute({
-      ...currentFilters,
-      view: isActiveCountry ? "all" : "toBeClosed",
-      country: isActiveCountry ? "all" : country,
-    });
+    params.set("fp", "1");
+    startTransition(() => { router.push(`${pathname}?${params.toString()}`); });
   }
 
   return (
@@ -680,29 +378,25 @@ export function DashboardClient({
                 {countryOptions.map((c) => <option key={c} value={c}>{c}</option>)}
               </select>
             </label>
-
             <label className="overview-filter-field">
               <span>Date range</span>
               <select value={activeRange} onChange={(e) => updateRangeFilter(e.currentTarget.value as DashboardRangeFilter)}>
                 {timeframeFilters.map((f) => <option key={f.value} value={f.value}>{f.label}</option>)}
               </select>
             </label>
-
             <label className="overview-filter-field">
               <span>Progress</span>
               <select value={activeMarker} onChange={(e) => updateMarkerFilter(e.currentTarget.value as DashboardMarkerFilter)}>
                 {markerFilters.map((f) => <option key={f.value} value={f.value}>{f.label}</option>)}
               </select>
             </label>
-
             <label className="overview-filter-field">
-              <span>SCM Rep</span>
+              <span>SCM Onsite Rep</span>
               <select value={activeScmRep} onChange={(e) => updateScmRepFilter(e.currentTarget.value)}>
                 <option value="all">All reps</option>
                 {scmRepOptions.map((r) => <option key={r} value={r}>{r}</option>)}
               </select>
             </label>
-
             <label className="overview-filter-field">
               <span>Arena</span>
               <select value={activeArena} onChange={(e) => updateArenaFilter(e.currentTarget.value)}>
@@ -710,7 +404,6 @@ export function DashboardClient({
                 {arenaOptions.map((a) => <option key={a} value={a}>{a}</option>)}
               </select>
             </label>
-
             <label className="overview-filter-field">
               <span>Artist</span>
               <select value={activeArtist} onChange={(e) => updateArtistFilter(e.currentTarget.value)}>
@@ -718,7 +411,6 @@ export function DashboardClient({
                 {artistOptions.map((a) => <option key={a} value={a}>{a}</option>)}
               </select>
             </label>
-
             <label className="overview-filter-field">
               <span>City</span>
               <select value={activeCity} onChange={(e) => updateCityFilter(e.currentTarget.value)}>
@@ -726,7 +418,6 @@ export function DashboardClient({
                 {cityOptions.map((c) => <option key={c} value={c}>{c}</option>)}
               </select>
             </label>
-
             {activeRange === "month" && (
               <label className="overview-filter-field">
                 <span>Month</span>
@@ -735,7 +426,6 @@ export function DashboardClient({
                 </select>
               </label>
             )}
-
             {activeRange === "custom" && (
               <>
                 <label className="overview-filter-field">
@@ -749,7 +439,6 @@ export function DashboardClient({
               </>
             )}
           </div>
-
           <div className="dashboard-filter-footer">
             <div className="dashboard-filter-stats">
               <span>{openGigs} open · {filteredGigs.length} shown</span>
@@ -763,98 +452,62 @@ export function DashboardClient({
         </div>
       ) : null}
 
-      <h2 className="dashboard-greeting">
-        <span className="greeting-word">{greetingWord}</span>
-        <span className="greeting-cursor">|</span>
-        {firstName ? `, ${firstName}` : ""}
-      </h2>
-
-      <div className="greeting-stats-section">
-        <div className="greeting-stats-range-row">
-          {(["week", "month", "year", "all"] as const).map((range) => (
-            <button
-              key={range}
-              type="button"
-              className={`greeting-range-chip ${statsRange === range ? "active" : ""}`}
-              onClick={() => setStatsRange(range)}
-            >
-              {range === "week" ? "1 Week" : range === "month" ? "1 Month" : range === "year" ? "1 Year" : "All time"}
-            </button>
-          ))}
-        </div>
-        <div className="greeting-stats">
-          <div className="greeting-stat-card">
-            <span className="greeting-stat-label">Upcoming gigs ({statsRangeLabel})</span>
-            <div className="greeting-stat-value-row">
-              <strong className="greeting-stat-value">{statsUpcoming.length}</strong>
-              <Link href="/gigs" className="greeting-stat-link">View gigs</Link>
-            </div>
-          </div>
-          <div className="greeting-stat-card">
-            <span className="greeting-stat-label">Est. sales ({statsRangeLabel})</span>
-            <strong className="greeting-stat-value">{statsSalesEstimate.toLocaleString("en-SE")} kr</strong>
-          </div>
-          <div className="greeting-stat-card">
-            <span className="greeting-stat-label">Tickets sold ({statsRangeLabel})</span>
-            <strong className="greeting-stat-value">{statsTickets.toLocaleString()}</strong>
-          </div>
-          <div className="greeting-stat-card">
-            <span className="greeting-stat-label">Gigs {statsPastLabel}</span>
-            <strong className="greeting-stat-value">{statsPast.length}</strong>
-          </div>
-        </div>
+      {/* ── Greeting with inline stats ─────────────────────────── */}
+      <div className="dashboard-greeting-block">
+        <h2 className="dashboard-greeting">Hi, {firstName || "there"}</h2>
+        <p className="dashboard-greeting-summary">
+          You have <strong>{upcomingGigs.length} upcoming gig{upcomingGigs.length !== 1 ? "s" : ""}</strong> with a total of{" "}
+          <strong>{totalTickets.toLocaleString()} tickets</strong> sold and an estimated revenue of{" "}
+          <strong>{formatRevenue(totalRevenue)}</strong>.
+          {pastGigs.length > 0 && (
+            <> You also have <strong>{pastGigs.length} completed gig{pastGigs.length !== 1 ? "s" : ""}</strong>.</>
+          )}
+        </p>
       </div>
 
-      {upcomingGigs.length > 0 && (
-        <div className="upcoming-gigs-block">
-          <p className="upcoming-gigs-label">Upcoming gigs</p>
-          <div className="upcoming-gigs-list">
-            {upcomingGigs.map((gig) => (
-              <div key={gig.id} className="upcoming-gig-row">
-                <span className="upcoming-gig-name">{gig.artist}</span>
-                <span className="upcoming-gig-date">{gig.date}</span>
-                <span className="upcoming-gig-venue">{gig.arena}, {gig.city}</span>
-                <Link href={`/gigs/${gig.id}`} className="upcoming-gig-info-btn">Gig Info</Link>
-              </div>
-            ))}
+      {/* ── Next gig highlight ─────────────────────────── */}
+      {nextGig && (
+        <Link href={`/gigs/${nextGig.id}`} className="next-gig-card">
+          <div className="next-gig-label">
+            Next gig · {nextGigDaysAway === 0 ? "Today" : nextGigDaysAway === 1 ? "Tomorrow" : `in ${nextGigDaysAway} days`}
           </div>
-        </div>
+          <div className="next-gig-artist">{nextGig.artist}</div>
+          <div className="next-gig-details">
+            {formatFriendlyDate(nextGig.date)} · {nextGig.arena}, {nextGig.city}
+          </div>
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="next-gig-arrow">
+            <path d="M6 3l5 5-5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </Link>
       )}
 
+      {/* ── Gig list ─────────────────────────── */}
       <div className="all-gigs-section">
         <div className="all-gigs-section-head">
-          <span className="all-gigs-title">All Gigs</span>
+          <span className="all-gigs-title">Gigs</span>
           <span className="all-gigs-count">{filteredGigs.length} gigs</span>
         </div>
 
         <div className="quick-filter-row">
-          <button
-            type="button"
-            className={`qf-chip ${activeGigView === "all" && activeCountry === "all" ? "active" : ""}`}
-            onClick={() => pushFilterRoute({ ...currentFilters, view: "all", country: "all" })}
-          >
-            All
-          </button>
-          {toBeClosedCountryCards.map((entry) => (
-            <button
-              type="button"
-              key={entry.country}
-              className={`qf-chip ${activeGigView === "toBeClosed" && activeCountry === entry.country ? "active" : ""}`}
-              onClick={() => toggleToBeClosedCountry(entry.country)}
-            >
-              {entry.country}
-              {entry.count > 0 ? <span className="qf-chip-count"> · {entry.count}</span> : null}
-            </button>
-          ))}
+          {countryOptions.map((country) => {
+            const count = filteredGigs.filter((g) => g.country === country).length;
+            return (
+              <button
+                type="button"
+                key={country}
+                className={`qf-chip ${activeCountry === country ? "active" : ""}`}
+                onClick={() => updateCountryFilter(activeCountry === country ? "all" : country)}
+              >
+                {country}
+                {count > 0 ? <span className="qf-chip-count"> · {count}</span> : null}
+              </button>
+            );
+          })}
         </div>
 
         <div className="overview-gig-list compact">
           {filteredGigs.length === 0 ? (
-            <div className="overview-empty-state">
-              {activeGigView === "toBeClosed"
-                ? "No closing gigs match your filters."
-                : "No gigs match your filters."}
-            </div>
+            <div className="overview-empty-state">No gigs found.</div>
           ) : (
             filteredGigs.map((gig) => <DashboardGigRow key={gig.id} gig={gig} />)
           )}

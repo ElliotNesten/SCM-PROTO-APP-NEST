@@ -270,7 +270,7 @@ export function ShiftOverviewEditor({
     setSaveMessage(null);
 
     if (form.requiredStaff < 1) {
-      setSaveMessage("Required headcount must be at least 1.");
+      setSaveMessage("Staff needed must be at least 1.");
       return;
     }
 
@@ -367,7 +367,7 @@ export function ShiftOverviewEditor({
           <div className="section-head">
             <div>
               <p className="eyebrow">Shift overview</p>
-              <h2>Role, time and coverage</h2>
+              <h2>Role, time and staffing</h2>
             </div>
             <span className="chip">Open slots {openSlots}</span>
           </div>
@@ -422,7 +422,7 @@ export function ShiftOverviewEditor({
             </div>
 
             <label className="field">
-              <span>Required headcount</span>
+              <span>Staff needed</span>
               <input
                 type="number"
                 min="1"
@@ -489,7 +489,7 @@ export function ShiftOverviewEditor({
           <div className="section-head">
             <div>
               <p className="eyebrow">Applications</p>
-              <h2>Applicants and booking</h2>
+              <h2>Applicants and assignments</h2>
             </div>
             <div className="section-actions">
               <button
@@ -723,13 +723,13 @@ export function ShiftOverviewEditor({
           <div className="section-head compact">
             <div>
               <p className="eyebrow">Booked staff</p>
-              <h3>Confirmed on this shift</h3>
+              <h3>Confirmed</h3>
             </div>
             <span className="chip">{confirmedCount} booked</span>
           </div>
 
           {bookedPeople.length === 0 ? (
-            <div className="empty-panel">No staff are booked on this shift yet.</div>
+            <div className="empty-panel">No one is booked yet. Use the booking tab to assign staff.</div>
           ) : (
             <div className="shift-detail-roster-list">
               {bookedPeople.map((person) => (
@@ -751,13 +751,13 @@ export function ShiftOverviewEditor({
           <div className="section-head compact">
             <div>
               <p className="eyebrow">Waitlist</p>
-              <h3>Standby on this shift</h3>
+              <h3>Standby</h3>
             </div>
             <span className="chip">{waitlistCount} waitlisted</span>
           </div>
 
           {waitlistedPeople.length === 0 ? (
-            <div className="empty-panel">No staff are on the waitlist for this shift yet.</div>
+            <div className="empty-panel">No one is on the waitlist yet.</div>
           ) : (
             <div className="shift-detail-roster-list">
               {waitlistedPeople.map((person) => (

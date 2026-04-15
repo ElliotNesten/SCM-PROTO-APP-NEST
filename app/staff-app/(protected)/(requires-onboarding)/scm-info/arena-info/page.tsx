@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { StaffAppArenaDirectory } from "@/components/staff-app/arena-directory";
 import { StaffAppGuidePdfLink } from "@/components/staff-app/guide-pdf-link";
 import { StaffAppPageBackLink } from "@/components/staff-app/page-back-link";
